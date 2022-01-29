@@ -1,0 +1,16 @@
+[
+  {
+    "modid": "ctmb",
+    "name": "Crafttweaked Multiblocks",
+    "description": "A Crafttweaker and Immersive Engineering addon. Allows adding custom multiblocks.",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": ["Pabilo8"],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]
