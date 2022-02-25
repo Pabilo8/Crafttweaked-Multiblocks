@@ -21,35 +21,36 @@ minecraft {
     version = project.forgeVersion
     runDir = "run"
 
-    // the mappings can be changed at any time, and must be in the following format.
-    // snapshot_YYYYMMDD   snapshot are built nightly.
-    // stable_#            stables are built at the discretion of the MCP team.
-    // Use non-default mappings at your own risk. they may not always work.
-    // simply re-run your setup task after changing the mappings to update your workspace.
+    replace "@VERSION@", project.version
+
     mappings = project.mcpVersion
-    // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
+
+    useDepAts = true
 }
 
 repositories {
     mavenCentral()
 
-    maven { // JEI & Tinkers
-        name 'DVS1 Maven FS'
+    maven {
+        name "Crafttweaker"
+        url "https://maven.blamejared.com"
+    }
+    maven {
+        name 'Tinkers/JEI'
         url 'https://dvs1.progwml6.com/files/maven'
     }
-
-    maven { // CraftTweaker
-        name 'jared maven'
-        url 'https://maven.blamejared.com/'
+    maven {
+        name 'Chickens'
+        url 'https://minecraft.curseforge.com/api/maven/'
     }
 
     maven { // ModMaven, there is a bunch of stuff on there
         name 'ModMaven'
-        url "http://modmaven.k-4u.nl/"
+        url "https://modmaven.k-4u.nl/"
     }
 
     //https://www.cursemaven.com/
-    //for Immersive Petroleum, Posts and Technology
+    //for Immersive Petroleum and Intelligence
     maven {
         url "https://www.cursemaven.com"
     }
@@ -57,19 +58,15 @@ repositories {
 
 dependencies {
     // compile against the good ol' 92
-    compileOnly "blusunrize:ImmersiveEngineering:0.12-92-+"
-    // but actually run 98, as it's newer but not published to maven
-    runtimeOnly "curse.maven:immersive-engineering-231951:2974106"
+    deobfCompile "blusunrize:ImmersiveEngineering:0.12-92-+"
+    deobfCompile "CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.1.8.468"
 
     // compile against the JEI API but do not include it at runtime
     compileOnly "mezz.jei:jei_1.12.2:4.16.1.301:api"
     // at runtime, use the full JEI jar
     runtimeOnly "mezz.jei:jei_1.12.2:4.16.1.301"
 
-    deobfCompile "CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.1.20.673"
-
     compileOnly "curse.maven:immersive-petroleum-268250:2544919"
-    compileOnly "curse.maven:immersive-intelligence-344344:3586937"
 }
 
 processResources {
@@ -88,5 +85,24 @@ processResources {
     // copy everything else, thats not the mcmod.info
     from(sourceSets.main.resources.srcDirs) {
         exclude "mcmod.info"
+    }
+}
+
+def libPrefix = 'META-INF/libraries'
+
+jar {
+    manifest {
+        attributes 'ContainedDeps': libPrefix + '/' + archivePath.name
+        attributes "FMLAT": "ctmb_at.cfg"
+        attributes 'Maven-Artifact': group + ':' + archivesBaseName + ':' + version
+    }
+}
+
+task deobfJar(type: Jar) {
+    from sourceSets.main.output
+    classifier = 'deobf'
+    manifest {
+        attributes 'FMLAT': 'ctmb_at.cfg'
+        attributes 'Maven-Artifact': group + ':' + archivesBaseName + ':' + version
     }
 }
