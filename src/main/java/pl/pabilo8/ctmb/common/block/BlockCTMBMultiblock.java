@@ -89,6 +89,7 @@ public class BlockCTMBMultiblock extends Block
 
 		this.setDefaultState(getInitDefaultState());
 		this.setUnlocalizedName(Lib.DESC_INFO+"multiblock."+mb.getUniqueName());
+		CommonProxy.itemblocks.add(new ItemBlockCTMBMultiblock(this));
 
 		//this.setCreativeTab(null);
 		//this.adjustSound();

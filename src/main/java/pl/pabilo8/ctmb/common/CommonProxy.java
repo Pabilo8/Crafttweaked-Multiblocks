@@ -11,6 +11,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 import pl.pabilo8.ctmb.CTMB;
 import pl.pabilo8.ctmb.common.block.BlockCTMBMultiblock;
+import pl.pabilo8.ctmb.common.block.ItemBlockCTMBMultiblock;
 import pl.pabilo8.ctmb.common.block.TileEntityBasicMultiblock;
 import pl.pabilo8.ctmb.common.crafttweaker.MultiblockBasic;
 import pl.pabilo8.ctmb.common.util.ResourceLoader;
@@ -27,6 +28,7 @@ public class CommonProxy implements IGuiHandler
 {
 	public static ArrayList<MultiblockBasic> multiblocks = new ArrayList<>();
 	public static ArrayList<BlockCTMBMultiblock> blocks = new ArrayList<>();
+	public static ArrayList<ItemBlockCTMBMultiblock> itemblocks = new ArrayList<>();
 
 	public static ResourceLoader resourceLoader = new ResourceLoader();
 
@@ -60,6 +62,14 @@ public class CommonProxy implements IGuiHandler
 
 		for(BlockCTMBMultiblock block : blocks)
 			event.getRegistry().register(block.setRegistryName(block.registryName));
+
+	}
+
+	@SubscribeEvent
+	public static void onItemRegister(RegistryEvent.Register<Item> event)
+	{
+		for(ItemBlockCTMBMultiblock item : itemblocks)
+			event.getRegistry().register(item.setRegistryName(item.getBlock().registryName));
 
 	}
 

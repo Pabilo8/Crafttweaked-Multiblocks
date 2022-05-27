@@ -9,9 +9,12 @@ import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.common.IEContent;
 import blusunrize.immersiveengineering.common.blocks.ItemBlockIEBase;
 import blusunrize.immersiveengineering.common.blocks.TileEntityMultiblockPart;
+import blusunrize.immersiveengineering.common.blocks.metal.BlockTypes_MetalMultiblock;
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
+import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
@@ -33,6 +36,8 @@ import net.minecraft.world.gen.structure.template.Template;
 import net.minecraft.world.gen.structure.template.Template.BlockInfo;
 import net.minecraft.world.gen.structure.template.TemplateManager;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
 import org.apache.commons.io.IOUtils;
 import pl.pabilo8.ctmb.common.CommonProxy;
@@ -259,28 +264,30 @@ public abstract class MultiblockStuctureBase<T extends TileEntityMultiblockPart<
 		return true;
 	}
 
-	private T te;
+	static ItemStack renderStack = ItemStack.EMPTY;
+
+	protected abstract Block getBlock();
 
 	@Override
+	@SideOnly(Side.CLIENT)
 	public void renderFormedStructure()
 	{
-		if(te==null)
-		{
-			te = getMBInstance();
-			te.facing = EnumFacing.NORTH;
-		}
+		if(renderStack.isEmpty())
+			renderStack = new ItemStack(getBlock(), 1);
+
 		GlStateManager.pushMatrix();
 		GlStateManager.translate(
 				size.getX()/2f-offset.getX(),
 				size.getY()/2f-offset.getY(),
 				size.getZ()/2f-offset.getZ());
-		TileEntitySpecialRenderer<TileEntity> tesr = TileEntityRendererDispatcher.instance.getRenderer(te);
-		if(tesr!=null)
-			tesr.render(te, 0, 0, 0, 0, 0, 0);
+
+		GlStateManager.scale(4, 4, 4);
+		GlStateManager.disableCull();
+		ClientUtils.mc().getRenderItem().renderItem(renderStack, ItemCameraTransforms.TransformType.GUI);
+		GlStateManager.enableCull();
+
 		GlStateManager.popMatrix();
 	}
-
-	protected abstract T getMBInstance();
 
 	/**
 	 * Checks state using IngredientStack
@@ -305,13 +312,16 @@ public abstract class MultiblockStuctureBase<T extends TileEntityMultiblockPart<
 		return stack.matchesItemStackIgnoringSize(new ItemStack(state.getBlock(), 1, state.getBlock().getMetaFromState(state)));
 	}
 
+	/**
+	 * @param info structure file information about the block
+	 * @return an item representation (with additional NBT if required (mainly for facing))
+	 */
 	private IngredientStack getIngredientStackForBlockInfo(BlockInfo info)
 	{
 		IBlockState state = info.blockState;
 
 		if(state.getBlock()==IEContent.blockConveyor)
 		{
-			// TODO: 08.08.2021 direction
 			ItemStack conveyorStack = ConveyorHandler.getConveyorStack(info.tileentityData.getString("conveyorBeltSubtype"));
 			ItemNBTHelper.setInt(conveyorStack, "conveyorFacing", info.tileentityData.getInteger("facing"));
 			return new IngredientStack(conveyorStack).setUseNBT(true);
@@ -332,28 +342,6 @@ public abstract class MultiblockStuctureBase<T extends TileEntityMultiblockPart<
 		}
 
 		return new IngredientStack(stack);
-
-		/*
-		if(state.getBlock()==IEContent.blockSheetmetal)
-			return new IngredientStack(Utils.toCamelCase("block_sheetmetal_"+BlockTypes_MetalsAll.values()[meta].getName().toLowerCase(), true));
-		if(state.getBlock()==IEContent.blockSheetmetalSlabs)
-			return new IngredientStack(Utils.toCamelCase("slab_sheetmetal_"+BlockTypes_MetalsAll.values()[meta].getName().toLowerCase(), true));
-		if(state.getBlock()==IIContent.blockSheetmetal)
-			return new IngredientStack(Utils.toCamelCase("block_sheetmetal_"+IIBlockTypes_Metal.values()[meta].getName().toLowerCase(), true));
-		if(state.getBlock()==IIContent.blockSheetmetalSlabs)
-			return new IngredientStack(Utils.toCamelCase("slab_sheetmetal_"+IIBlockTypes_Metal.values()[meta].getName().toLowerCase(), true));
-
-		if(state.getBlock()==IEContent.blockStorage)
-			return new IngredientStack(Utils.toCamelCase("block_"+BlockTypes_MetalsIE.values()[meta].getName().toLowerCase(), true));
-		if(state.getBlock()==IEContent.blockStorageSlabs)
-			return new IngredientStack(Utils.toCamelCase("slab_"+BlockTypes_MetalsIE.values()[meta].getName().toLowerCase(), true));
-		if(state.getBlock()==IIContent.blockMetalStorage)
-			return new IngredientStack(Utils.toCamelCase("block_"+BlockTypes_MetalsIE.values()[meta].getName().toLowerCase(), true));
-		if(state.getBlock()==IIContent.blockMetalSlabs)
-			return new IngredientStack(Utils.toCamelCase("slab_"+BlockTypes_MetalsIE.values()[meta].getName().toLowerCase(), true));
-
-			return new IngredientStack(new ItemStack(state.getBlock(), 1, meta));
-		 */
 	}
 
 	/**
@@ -373,9 +361,14 @@ public abstract class MultiblockStuctureBase<T extends TileEntityMultiblockPart<
 	public Tuple<ResourceLocation, EnumFacing> getConveyorKey(int h, int l, int w, EnumFacing facing)
 	{
 		IngredientStack is = checkStructure[h][l][w];
-		ResourceLocation rl = new ResourceLocation(ItemNBTHelper.getString(is.stack, "conveyorType"));
-		EnumFacing sf = EnumFacing.getFront(ItemNBTHelper.getInt(is.stack, "conveyorFacing"));
-		EnumFacing ff = EnumFacing.getHorizontal(sf.getHorizontalIndex()+facing.getHorizontalIndex());//
+		return getConveyorKey(is.stack,facing);
+	}
+
+	public Tuple<ResourceLocation, EnumFacing> getConveyorKey(ItemStack stack, EnumFacing facing)
+	{
+		ResourceLocation rl = new ResourceLocation(ItemNBTHelper.getString(stack, "conveyorType"));
+		EnumFacing sf = EnumFacing.getFront(ItemNBTHelper.getInt(stack, "conveyorFacing"));
+		EnumFacing ff = EnumFacing.getHorizontal(sf.getHorizontalIndex()+facing.getHorizontalIndex()); //
 		return new Tuple<>(rl, ff);
 	}
 

@@ -167,12 +167,33 @@ public class ResourceLoader
 				JsonObject facing = new JsonObject();
 				for(EnumFacing f : EnumFacing.HORIZONTALS)
 				{
-					facing.add(f.getName(), new JsonObject());
+					JsonObject fac = new JsonObject();
+					JsonObject transform = new JsonObject();
+					JsonObject rotation = new JsonObject();
+					rotation.addProperty("y", (int)f.getHorizontalAngle());
+					transform.add("rotation", rotation);
+					fac.add("transform", transform);
+
+					facing.add(f.getName(), fac);
 				}
+
+				String modelName = mb.getUniqueName().substring(mb.getUniqueName().indexOf(":")+1);
+
+				JsonObject inventory = new JsonObject();
+				inventory.addProperty("model", "ctmb:"+modelName+".obj");
+
+				JsonObject transform = new JsonObject();
+				transform.addProperty("scale", 0.1875);
+				transform.add("rotation", jsonArrayOf(
+						getIntProperty("x", 20),
+						getIntProperty("y", -45)
+				));
+
+				inventory.add("transform", transform);
+				variants.add("inventory", jsonArrayOf(inventory));
 
 				variants.add("facing", facing);
 
-				String modelName = mb.getUniqueName().replace(':', '_');
 
 				variants.add("_0multiblockslave", getBooleanProperty(
 						getNamedProperty("model", "immersiveengineering:ie_empty"),
@@ -203,6 +224,14 @@ public class ResourceLoader
 		JsonObject o = new JsonObject();
 		o.addProperty(name, value);
 		return o;
+	}
+
+	public JsonArray jsonArrayOf(JsonElement... elements)
+	{
+		JsonArray array = new JsonArray();
+		for(JsonElement element : elements)
+			array.add(element);
+		return array;
 	}
 
 }

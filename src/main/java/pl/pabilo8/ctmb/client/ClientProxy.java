@@ -4,8 +4,12 @@ import blusunrize.immersiveengineering.client.models.obj.IEOBJLoader;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.ModelRegistryEvent;
-import net.minecraftforge.client.model.ModelLoaderRegistry;
+import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.model.obj.OBJLoader;
+import net.minecraftforge.client.resource.IResourceType;
+import net.minecraftforge.client.resource.ISelectiveResourceReloadListener;
+import net.minecraftforge.client.resource.VanillaResourceType;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import pl.pabilo8.ctmb.CTMB;
 import pl.pabilo8.ctmb.common.CommonProxy;
@@ -30,7 +34,12 @@ public class ClientProxy extends CommonProxy
 	@SubscribeEvent
 	public static void registerModels(ModelRegistryEvent evt)
 	{
-
+		//itemblock models
+		for(ItemBlockCTMBMultiblock item : itemblocks)
+		{
+			final ResourceLocation loc = Block.REGISTRY.getNameForObject(item.getBlock());
+			ModelLoader.setCustomMeshDefinition(item, stack -> new ModelResourceLocation(loc, "inventory"));
+		}
 	}
 
 	// TODO: 29.01.2022 multiblock GUIs

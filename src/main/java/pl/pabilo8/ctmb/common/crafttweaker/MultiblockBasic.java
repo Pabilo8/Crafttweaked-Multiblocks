@@ -94,18 +94,13 @@ public class MultiblockBasic extends MultiblockStuctureBase<TileEntityBasicMulti
 		return (TileEntityBasicMultiblock)world.getTileEntity(pos);
 	}
 
-	@Override
-	protected TileEntityBasicMultiblock getMBInstance()
-	{
-		return new TileEntityBasicMultiblock(this);
-	}
-
 	public Material getMaterial()
 	{
 		return material;
 	}
 
 	@Nonnull
+	@Override
 	public BlockCTMBMultiblock getBlock()
 	{
 		return block;
