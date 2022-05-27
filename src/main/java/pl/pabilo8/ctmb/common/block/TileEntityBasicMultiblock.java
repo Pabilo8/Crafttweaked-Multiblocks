@@ -2,9 +2,7 @@ package pl.pabilo8.ctmb.common.block;
 
 import blusunrize.immersiveengineering.api.crafting.IMultiblockRecipe;
 import blusunrize.immersiveengineering.api.energy.immersiveflux.FluxStorageAdvanced;
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IGuiTile;
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IPlayerInteraction;
-import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.IRedstoneOutput;
+import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.*;
 import blusunrize.immersiveengineering.common.blocks.TileEntityMultiblockPart;
 import blusunrize.immersiveengineering.common.blocks.metal.TileEntityMultiblockMetal;
 import net.minecraft.block.Block;
@@ -15,6 +13,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
@@ -22,13 +22,15 @@ import pl.pabilo8.ctmb.common.crafttweaker.MultiblockBasic;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Pabilo8
  * @since 30.01.2022
  */
 @SuppressWarnings("unused")
-public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEntityBasicMultiblock, IMultiblockRecipe> implements IRedstoneOutput, IPlayerInteraction, IGuiTile
+public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEntityBasicMultiblock, IMultiblockRecipe> implements IRedstoneOutput, IPlayerInteraction, IGuiTile, IAdvancedCollisionBounds, IAdvancedSelectionBounds
 {
 	/**
 	 * Multiblock Instance for easy access
@@ -265,5 +267,26 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 	public MultiblockBasic getMultiblock()
 	{
 		return multiblock;
+	}
+
+	@Override
+	public List<AxisAlignedBB> getAdvancedColisionBounds()
+	{
+		ArrayList<AxisAlignedBB> boxes = new ArrayList<>();
+		for(AxisAlignedBB aabb : multiblock.getAABB(pos))
+			boxes.add(aabb.offset(getPos()));
+		return boxes;
+	}
+
+	@Override
+	public List<AxisAlignedBB> getAdvancedSelectionBounds()
+	{
+		return getAdvancedColisionBounds();
+	}
+
+	@Override
+	public boolean isOverrideBox(AxisAlignedBB box, EntityPlayer player, RayTraceResult mop, ArrayList<AxisAlignedBB> list)
+	{
+		return false;
 	}
 }

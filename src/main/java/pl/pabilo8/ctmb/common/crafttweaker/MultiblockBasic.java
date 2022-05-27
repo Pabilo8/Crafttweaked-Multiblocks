@@ -5,6 +5,7 @@ import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.world.IBlockPos;
 import net.minecraft.block.material.Material;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
@@ -28,12 +29,15 @@ import javax.annotation.Nullable;
 public class MultiblockBasic extends MultiblockStuctureBase<TileEntityBasicMultiblock>
 {
 	public static final MultiblockBasic DEFAULT_MULTIBLOCK = new MultiblockBasic("", new ResourceLocation("missingno"), Material.AIR);
+	private static final AxisAlignedBB[] AABB_CUBE = new AxisAlignedBB[]{new AxisAlignedBB(0, 0, 0, 1, 1, 1)};
 
 	/**
 	 * The block bound to this multiblock
 	 */
 	@Nonnull
 	private final BlockCTMBMultiblock block;
+
+	private HashMap<Integer, AxisAlignedBB[]> AABBs = new HashMap<>();
 
 	@ZenProperty
 	public boolean redstoneControl = false;
@@ -112,5 +116,21 @@ public class MultiblockBasic extends MultiblockStuctureBase<TileEntityBasicMulti
 	public String getFlattenedName()
 	{
 		return "multiblock_"+getUniqueName().replace(':', '_');
+	}
+
+	@ZenMethod
+	@ZenDoc("Adds an AABB to the multiblock block of given id")
+	public void addAABB(int[] pos, double[]... vectors)
+	{
+		AxisAlignedBB[] array = Arrays.stream(vectors)
+				.map(vector -> new AxisAlignedBB(vector[0], vector[1], vector[2], vector[3], vector[4], vector[5]))
+				.toArray(AxisAlignedBB[]::new);
+		for(int p : pos)
+			AABBs.put(p, array);
+	}
+
+	public AxisAlignedBB[] getAABB(int pos)
+	{
+		return AABBs.getOrDefault(pos, AABB_CUBE);
 	}
 }
