@@ -69,7 +69,7 @@ public class BlockCTMBMultiblock extends Block
 	protected static IProperty<?>[] tempProperties;
 	protected static IUnlistedProperty<?>[] tempUnlistedProperties;
 
-	public final String registryName;
+	public final String registryName, unlocalizedName;
 	public final MultiblockBasic multiblock;
 
 	private static final Map<DimensionBlockPos, TileEntity> TEMP_TILES = new HashMap<>();
@@ -88,7 +88,7 @@ public class BlockCTMBMultiblock extends Block
 		this.registryName = "ctmb:"+mb.getFlattenedName();
 
 		this.setDefaultState(getInitDefaultState());
-		this.setUnlocalizedName(Lib.DESC_INFO+"multiblock."+mb.getUniqueName());
+		this.setUnlocalizedName(unlocalizedName = Lib.DESC_INFO+"multiblock."+mb.getUniqueName());
 		CommonProxy.itemblocks.add(new ItemBlockCTMBMultiblock(this));
 
 		//this.setCreativeTab(null);
@@ -105,6 +105,12 @@ public class BlockCTMBMultiblock extends Block
 	{
 		setHardness(hardness);
 		setResistance(resistance);
+	}
+
+	@Override
+	public String getUnlocalizedName()
+	{
+		return unlocalizedName;
 	}
 
 	//Tile Entity / BlockState Creation & Handling
