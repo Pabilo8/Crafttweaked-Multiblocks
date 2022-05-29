@@ -26,6 +26,7 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumFacing.Axis;
 import net.minecraft.util.EnumFacing.AxisDirection;
@@ -622,6 +623,31 @@ public class BlockCTMBMultiblock extends Block
 			}
 		}
 		super.addCollisionBoxToList(state, world, pos, mask, list, ent, isActualState);
+	}
+
+
+	@Override
+	public BlockRenderLayer getBlockLayer()
+	{
+		return BlockRenderLayer.CUTOUT_MIPPED;
+	}
+
+	@Override
+	public boolean isOpaqueCube(IBlockState state)
+	{
+		return false;
+	}
+
+	@Override
+	public boolean isFullCube(IBlockState state)
+	{
+		return false;
+	}
+
+	@Override
+	public boolean isNormalCube(IBlockState state, IBlockAccess world, BlockPos pos)
+	{
+		return false;
 	}
 
 	//Redstone
