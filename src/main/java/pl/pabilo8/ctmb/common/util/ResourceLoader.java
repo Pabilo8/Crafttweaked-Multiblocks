@@ -1,9 +1,7 @@
 package pl.pabilo8.ctmb.common.util;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import blusunrize.lib.manual.IManualPage;
+import com.google.gson.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.util.EnumFacing;
@@ -15,12 +13,16 @@ import pl.pabilo8.ctmb.CTMB;
 import pl.pabilo8.ctmb.client.ClientProxy;
 import pl.pabilo8.ctmb.common.CommonProxy;
 import pl.pabilo8.ctmb.common.crafttweaker.MultiblockBasic;
+import pl.pabilo8.ctmb.common.crafttweaker.manual.CTMBManualEntry;
+import pl.pabilo8.ctmb.common.crafttweaker.manual.CTMBManualPage;
+import pl.pabilo8.ctmb.common.crafttweaker.manual.ManualTweaker;
 
 import javax.annotation.Nullable;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -121,6 +123,8 @@ public class ResourceLoader
 		{
 			CTMBFileUtils.writeStringToFile("", enUsLang);
 		}
+		File manual = new File(modFolder, "ie_manual");
+
 		File textures = new File(modFolder, "textures");
 		CTMBFileUtils.createFolder(textures);
 		CTMBFileUtils.createFolder(new File(textures, "blocks"));
@@ -138,6 +142,7 @@ public class ResourceLoader
 	{
 		File modFolder = new File(resourceFolder, CTMB.MODID);
 		File blockstates = new File(modFolder, "blockstates");
+		File manualEntries = new File(new File(modFolder, "ie_manual"), "en_us");
 
 		for(MultiblockBasic mb : CommonProxy.multiblocks)
 		{
@@ -209,6 +214,42 @@ public class ResourceLoader
 				CTMBFileUtils.writeStringToFile(gson.toJson(state), stateFile);
 			}
 		}
+
+		for(Entry<String, CTMBManualEntry> entry : ManualTweaker.PAGES.entries())
+		{
+			File entryFile = new File(manualEntries, entry.getKey()+".md");
+			if(!entryFile.exists())
+			{
+				StringBuilder text = new StringBuilder();
+				text.append("#meta\n"+"Title\n"+"Subtitle\n");
+
+				for(IManualPage page : entry.getValue().getPages())
+				{
+					assert page instanceof CTMBManualPage;
+					text
+							.append("\n")
+							.append("#")
+							.append(((CTMBManualPage)page).getPageName())
+							.append("\n")
+							.append("[Ingeniator] est qui **difficultates** solvit, *dolorem et laborem* __aliorum__ hominum levans.  "+"\n"+
+									"[Engineer] is a person who solves **problems**, relieving __others__ around of *the hardships*.  "+"\n"+
+									"[Inżynier] jest to człowiek, który rozwiązując **problemy**, łagodzi *ciężar pracy* __innych__.  "+"\n"+
+									"[Ein Ingenieur] ist wer durch **Problemlösung**, die *Schwierigkeiten* von __Anderes__ abnimmt.  "+"\n"
+							);
+				}
+
+				CTMBFileUtils.writeStringToFile(text.toString(), entryFile);
+			}
+
+		}
+
+	}
+
+	private JsonObject getIntProperty(String name, int value)
+	{
+		JsonObject o = new JsonObject();
+		o.addProperty(name, value);
+		return o;
 	}
 
 	public JsonObject getBooleanProperty(@Nullable JsonElement t, @Nullable JsonElement f)

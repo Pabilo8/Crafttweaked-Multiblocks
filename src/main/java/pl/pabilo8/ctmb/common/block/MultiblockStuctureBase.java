@@ -14,6 +14,8 @@ import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.ItemRenderer;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
@@ -276,15 +278,18 @@ public abstract class MultiblockStuctureBase<T extends TileEntityMultiblockPart<
 			renderStack = new ItemStack(getBlock(), 1);
 
 		GlStateManager.pushMatrix();
+		RenderHelper.enableGUIStandardItemLighting();
 		GlStateManager.translate(
 				size.getX()/2f-offset.getX(),
 				size.getY()/2f-offset.getY(),
 				size.getZ()/2f-offset.getZ());
+		GlStateManager.rotate(90,0,1,0);
+		GlStateManager.translate(-0.5,0.5,0);
 
-		GlStateManager.scale(4, 4, 4);
 		GlStateManager.disableCull();
-		ClientUtils.mc().getRenderItem().renderItem(renderStack, ItemCameraTransforms.TransformType.GUI);
+		ClientUtils.mc().getRenderItem().renderItem(renderStack, TransformType.NONE);
 		GlStateManager.enableCull();
+		RenderHelper.disableStandardItemLighting();
 
 		GlStateManager.popMatrix();
 	}

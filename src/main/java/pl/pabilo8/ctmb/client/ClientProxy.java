@@ -1,6 +1,17 @@
 package pl.pabilo8.ctmb.client;
 
+import blusunrize.immersiveengineering.api.ManualHelper;
+import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.models.obj.IEOBJLoader;
+import blusunrize.immersiveengineering.common.IEContent;
+import blusunrize.lib.manual.IManualPage;
+import blusunrize.lib.manual.ManualInstance.ManualEntry;
+import net.minecraft.block.Block;
+import net.minecraft.client.renderer.ItemMeshDefinition;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.resources.I18n;
+import net.minecraft.client.resources.IReloadableResourceManager;
+import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.ModelRegistryEvent;
@@ -15,12 +26,14 @@ import pl.pabilo8.ctmb.CTMB;
 import pl.pabilo8.ctmb.common.CommonProxy;
 
 import javax.annotation.Nullable;
+import java.util.function.Predicate;
 
 /**
  * @author Pabilo8
  * @since 29.01.2022
  */
-public class ClientProxy extends CommonProxy
+@EventBusSubscriber(modid = CTMB.MODID, value = Side.CLIENT)
+public class ClientProxy extends CommonProxy implements ISelectiveResourceReloadListener
 {
 	@Override
 	public void preInit()
@@ -29,6 +42,27 @@ public class ClientProxy extends CommonProxy
 
 		OBJLoader.INSTANCE.addDomain(CTMB.MODID);
 		IEOBJLoader.instance.addDomain(CTMB.MODID);
+	}
+
+	@Override
+	public void init()
+	{
+		super.init();
+
+		//for handling languages
+		((IReloadableResourceManager)ClientUtils.mc().getResourceManager()).registerReloadListener(this);
+	}
+
+	@Override
+	public void postInit()
+	{
+		super.postInit();
+
+		for(ManualEntry manual : ManualTweaker.PAGES.values())
+			for(IManualPage page : manual.getPages())
+				if(page instanceof CTMBManualPage)
+					((CTMBManualPage)page).setManual();
+		ManualHelper.ieManualInstance.manualContents.putAll(ManualTweaker.PAGES);
 	}
 
 	@SubscribeEvent
@@ -51,4 +85,13 @@ public class ClientProxy extends CommonProxy
 	}
 
 
+	@Override
+	public void onResourceManagerReload(IResourceManager resourceManager, Predicate<IResourceType> resourcePredicate)
+	{
+		if(resourcePredicate.test(VanillaResourceType.LANGUAGES))
+		{
+			ManualTweaker.PAGES.values().forEach(ctmbManualEntry -> ctmbManualEntry.loadTexts(true));
+			CTMBLogger.info(I18n.format("ie.manual.entry.melter.name"));
+		}
+	}
 }
