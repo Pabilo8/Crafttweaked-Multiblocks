@@ -4,6 +4,9 @@ import blusunrize.immersiveengineering.api.MultiblockHandler;
 import crafttweaker.CraftTweakerAPI;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -14,6 +17,7 @@ import pl.pabilo8.ctmb.common.block.BlockCTMBMultiblock;
 import pl.pabilo8.ctmb.common.block.ItemBlockCTMBMultiblock;
 import pl.pabilo8.ctmb.common.block.TileEntityBasicMultiblock;
 import pl.pabilo8.ctmb.common.crafttweaker.MultiblockBasic;
+import pl.pabilo8.ctmb.common.crafttweaker.gui.MultiblockContainer;
 import pl.pabilo8.ctmb.common.util.ResourceLoader;
 
 import javax.annotation.Nullable;
@@ -79,11 +83,19 @@ public class CommonProxy implements IGuiHandler
 			mb.updateStructure();
 	}
 
-	// TODO: 29.01.2022 multiblock GUIs
 	@Nullable
 	@Override
 	public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z)
 	{
+		//ID is used as a page identifier
+
+		TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
+		if(te instanceof TileEntityBasicMultiblock)
+		{
+			MultiblockBasic mb = ((TileEntityBasicMultiblock)te).getMultiblock();
+			if((ID==0&&mb.mainGui!=null)||(mb.assignedGuis.size() >= ID))
+				return new MultiblockContainer(player.inventory, ((TileEntityBasicMultiblock)te), ID);
+		}
 		return null;
 	}
 

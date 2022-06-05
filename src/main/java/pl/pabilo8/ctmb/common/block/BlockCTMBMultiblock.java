@@ -49,6 +49,8 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
+import pl.pabilo8.ctmb.CTMB;
+import pl.pabilo8.ctmb.common.CommonProxy;
 import pl.pabilo8.ctmb.common.crafttweaker.MultiblockBasic;
 
 import javax.annotation.Nonnull;
@@ -191,6 +193,7 @@ public class BlockCTMBMultiblock extends Block
 	public TileEntity createTileEntity(World world, IBlockState state)
 	{
 		TileEntityBasicMultiblock basic = new TileEntityBasicMultiblock(this.multiblock);
+		basic.ensureMBLoaded(this);
 
 		//facing
 		EnumFacing newFacing = null;
@@ -421,10 +424,12 @@ public class BlockCTMBMultiblock extends Block
 			TileEntity te = world.getTileEntity(pos);
 			if(te!=null)
 			{
-				if(te instanceof IAdvancedHasObjProperty)
-					extended = extended.withProperty(Properties.AnimationProperty, ((IAdvancedHasObjProperty)te).getOBJState());
-				else if(te instanceof IHasObjProperty)
-					extended = extended.withProperty(Properties.AnimationProperty, new OBJState(((IHasObjProperty)te).compileDisplayList(), true));
+				if(te instanceof TileEntityBasicMultiblock)
+
+					if(te instanceof IAdvancedHasObjProperty)
+						extended = extended.withProperty(Properties.AnimationProperty, ((IAdvancedHasObjProperty)te).getOBJState());
+					else if(te instanceof IHasObjProperty)
+						extended = extended.withProperty(Properties.AnimationProperty, new OBJState(((IHasObjProperty)te).compileDisplayList(), true));
 
 				if(te instanceof IDynamicTexture)
 					extended = extended.withProperty(IEProperties.OBJ_TEXTURE_REMAP, ((IDynamicTexture)te).getTextureReplacements());
@@ -493,10 +498,11 @@ public class BlockCTMBMultiblock extends Block
 			{
 				TileEntityBasicMultiblock master = mb.master();
 
-				// TODO: 20.02.2022 replace commonproxy
 				if(!world.isRemote&&master!=null&&master.canOpenGui(player))
 				{
-					//CommonProxy.openGuiForTile(player, master);
+					BlockPos masterPos = master.getPos();
+					player.openGui(CTMB.INSTANCE, master.getGuiID(), world, masterPos.getX(),
+							masterPos.getY(), masterPos.getZ());
 				}
 				return true;
 			}

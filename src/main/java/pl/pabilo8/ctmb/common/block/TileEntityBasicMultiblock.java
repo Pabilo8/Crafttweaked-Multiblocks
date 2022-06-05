@@ -1,10 +1,14 @@
 package pl.pabilo8.ctmb.common.block;
 
+import blusunrize.immersiveengineering.ImmersiveEngineering;
+import blusunrize.immersiveengineering.api.ApiUtils;
 import blusunrize.immersiveengineering.api.crafting.IMultiblockRecipe;
 import blusunrize.immersiveengineering.api.energy.immersiveflux.FluxStorageAdvanced;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.*;
 import blusunrize.immersiveengineering.common.blocks.TileEntityMultiblockPart;
 import blusunrize.immersiveengineering.common.blocks.metal.TileEntityMultiblockMetal;
+import blusunrize.immersiveengineering.common.util.network.MessageTileSync;
+import crafttweaker.api.minecraft.CraftTweakerMC;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
@@ -16,9 +20,13 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.FluidTank;
 import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import pl.pabilo8.ctmb.common.CommonProxy;
+import pl.pabilo8.ctmb.common.CommonUtils;
 import pl.pabilo8.ctmb.common.crafttweaker.MultiblockBasic;
+import pl.pabilo8.ctmb.common.crafttweaker.MultiblockTileCTWrapper;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -36,6 +44,11 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 	 * Multiblock Instance for easy access
 	 **/
 	private MultiblockBasic multiblock = MultiblockBasic.DEFAULT_MULTIBLOCK;
+	private MultiblockTileCTWrapper mbWrapper;
+
+	public FluxStorageAdvanced[] energy;
+	public FluidTank[] tanks;
+	public NonNullList<ItemStack>[] inventory;
 
 	public TileEntityBasicMultiblock()
 	{
@@ -45,47 +58,143 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 
 	public TileEntityBasicMultiblock(MultiblockBasic mb)
 	{
-		super(mb, mb.getSize(), mb.energyCapacity, mb.redstoneControl);
+		super(mb, mb.getSize(), 0, mb.redstonePositions.length > 0);
 		this.multiblock = mb;
 	}
 
-	@Override
-	public void onLoad()
+	void ensureMBLoaded(Block block)
 	{
-		ensureMBLoaded();
-		super.onLoad();
-	}
-
-	private void ensureMBLoaded()
-	{
-		if((multiblock==null||multiblock==MultiblockBasic.DEFAULT_MULTIBLOCK)&&world!=null)
+		if((multiblock==null||multiblock==MultiblockBasic.DEFAULT_MULTIBLOCK))
 		{
-			Block block = world.getBlockState(getPos()).getBlock();
 			if(block instanceof BlockCTMBMultiblock)
 			{
 				BlockCTMBMultiblock mbBlock = (BlockCTMBMultiblock)block;
-
+				this.multiblock = mbBlock.multiblock;
+				this.mbWrapper = new MultiblockTileCTWrapper(this);
 				ReflectionHelper.setPrivateValue(TileEntityMultiblockMetal.class, this, mbBlock.multiblock, "mutliblockInstance");
 				ReflectionHelper.setPrivateValue(TileEntityMultiblockPart.class, this, mbBlock.multiblock.getSize(), "structureDimensions");
-				ReflectionHelper.setPrivateValue(TileEntityMultiblockMetal.class, this, new FluxStorageAdvanced(mbBlock.multiblock.energyCapacity), "energyStorage");
-				ReflectionHelper.setPrivateValue(TileEntityMultiblockMetal.class, this, mbBlock.multiblock.redstoneControl, "hasRedstoneControl");
+				ReflectionHelper.setPrivateValue(TileEntityMultiblockMetal.class, this, new FluxStorageAdvanced(0), "energyStorage");
+				ReflectionHelper.setPrivateValue(TileEntityMultiblockMetal.class, this, mbBlock.multiblock.redstonePositions.length > 0, "hasRedstoneControl");
 			}
 			//else ur fucked)))
 		}
 	}
 
+	//--- NBT Messages ---//
+
+	@Override
+	public void receiveMessageFromClient(NBTTagCompound message)
+	{
+		super.receiveMessageFromClient(message);
+
+		if(multiblock.onReceiveMessage!=null)
+			multiblock.onReceiveMessage.execute(mbWrapper, CraftTweakerMC.getIData(message), false);
+	}
+
+	@Override
+	public void receiveMessageFromServer(NBTTagCompound message)
+	{
+		super.receiveMessageFromServer(message);
+
+		if(multiblock.onReceiveMessage!=null)
+			multiblock.onReceiveMessage.execute(mbWrapper, CraftTweakerMC.getIData(message), true);
+	}
+
+	public void sendMessageServer(NBTTagCompound message)
+	{
+		if(multiblock.onSendMessage!=null)
+			multiblock.onSendMessage.execute(mbWrapper, CraftTweakerMC.getIData(message), world.isRemote);
+
+		ImmersiveEngineering.packetHandler.sendToServer(new MessageTileSync(this, message));
+	}
+
+	public void sendMessageClients(NBTTagCompound message, int range)
+	{
+		if(multiblock.onSendMessage!=null)
+			multiblock.onSendMessage.execute(mbWrapper, CraftTweakerMC.getIData(message), world.isRemote);
+
+		ImmersiveEngineering.packetHandler.sendToAllAround(new MessageTileSync(this, message), CommonUtils.targetPointFromTile(this, range));
+	}
+
+	//--- NBT ---//
+
 	@Override
 	public void writeCustomNBT(NBTTagCompound nbt, boolean descPacket)
 	{
-		super.writeCustomNBT(nbt, descPacket);
+		//Base
+		nbt.setBoolean("formed", formed);
+		nbt.setInteger("pos", pos);
+		nbt.setIntArray("offset", offset);
+		nbt.setBoolean("mirrored", mirrored);
+		nbt.setInteger("facing", facing.ordinal());
+
+		if(multiblock!=MultiblockBasic.DEFAULT_MULTIBLOCK)
+			nbt.setString("multiblock", multiblock.getUniqueName());
+		else if(hasWorld())
+		{
+			Block bb = world.getBlockState(getPos()).getBlock();
+			if(bb instanceof BlockCTMBMultiblock)
+				nbt.setString("multiblock", ((BlockCTMBMultiblock)bb).multiblock.getUniqueName());
+		}
+
+		if(mbWrapper!=null)
+		{
+			NBTTagCompound custom = mbWrapper.saveData();
+			if(!custom.hasNoTags())
+				nbt.setTag("custom", custom);
+		}
+
 	}
 
 	@Override
 	public void readCustomNBT(NBTTagCompound nbt, boolean descPacket)
 	{
-		ensureMBLoaded();
-		super.readCustomNBT(nbt, descPacket);
+		//Base
+		formed = nbt.getBoolean("formed");
+		pos = nbt.getInteger("pos");
+		offset = nbt.getIntArray("offset");
+		mirrored = nbt.getBoolean("mirrored");
+		facing = EnumFacing.getFront(nbt.getInteger("facing"));
+
+		if(multiblock==MultiblockBasic.DEFAULT_MULTIBLOCK&&nbt.hasKey("multiblock"))
+		{
+			final String mb = nbt.getString("multiblock");
+			CommonProxy.multiblocks.stream().filter(multiblockBasic -> multiblockBasic.getUniqueName().equals(mb)).findFirst().ifPresent(m -> ensureMBLoaded(m.getBlock()));
+		}
+
+		//load storage
+		if(!isDummy()&&nbt.hasKey("custom"))
+		{
+			if(mbWrapper==null)
+				mbWrapper = new MultiblockTileCTWrapper(this);
+			mbWrapper.loadData(nbt.getCompoundTag("custom"));
+		}
 	}
+
+	//--- Update ---//
+
+	@Override
+	public void update()
+	{
+		ApiUtils.checkForNeedlessTicking(this);
+		tickedProcesses = 0;
+		if(world.isRemote||isDummy()) //||isRSDisabled()
+			return;
+
+		if(multiblock!=MultiblockBasic.DEFAULT_MULTIBLOCK&&multiblock.onUpdate!=null)
+			multiblock.onUpdate.execute(this.mbWrapper);
+
+		// TODO: 30.05.2022 processes
+	}
+
+	//--- Utility Methods ---//
+
+	public MultiblockTileCTWrapper getMbWrapper()
+	{
+		return mbWrapper;
+	}
+
+	//--- IE Methods ---//
 
 	@Override
 	protected IMultiblockRecipe readRecipeFromNBT(NBTTagCompound tag)
@@ -93,10 +202,11 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 		return null;
 	}
 
+	// TODO: 01.06.2022 energy pos
 	@Override
 	public int[] getEnergyPos()
 	{
-		return multiblock.energyPositions;
+		return new int[0];
 	}
 
 	@Override
@@ -205,7 +315,7 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 	@Override
 	public NonNullList<ItemStack> getInventory()
 	{
-		return null;
+		return NonNullList.create();
 	}
 
 	@Override
@@ -242,7 +352,7 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 	@Override
 	public boolean canOpenGui()
 	{
-		return false;
+		return multiblock.mainGui!=null;
 	}
 
 	@Override
@@ -268,6 +378,8 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 	{
 		return multiblock;
 	}
+
+	//--- AABB ---//
 
 	@Override
 	public List<AxisAlignedBB> getAdvancedColisionBounds()
