@@ -3,7 +3,11 @@ buildscript {
         mavenCentral()
         maven {
             name = "forge"
-            url = "https://files.minecraftforge.net/maven"
+            url = "https://maven.minecraftforge.net/"
+        }
+        maven {
+            name = "sonatype"
+            url = "https://oss.sonatype.org/content/repositories/snapshots/"
         }
     }
     dependencies {
@@ -55,6 +59,14 @@ repositories {
         url "https://www.cursemaven.com"
     }
 }
+
+// change default maven url of FG2 to the new one.
+repositories.each {
+    if (it instanceof MavenArtifactRepository && it.url.toString() == "https://files.minecraftforge.net/maven") {
+        it.url = "https://maven.minecraftforge.net/"
+    }
+}
+
 
 dependencies {
     // compile against the good ol' 92
