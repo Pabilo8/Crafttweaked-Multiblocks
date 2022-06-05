@@ -18,7 +18,7 @@ import javax.annotation.Nullable;
  * @author Pabilo8
  * @since 29.01.2022
  */
-@ZenClass(value = "mods.ctmb.MultiblockFactory")
+@ZenClass(value = "mods.ctmb.multiblock.MultiblockFactory")
 @ZenRegister
 @SuppressWarnings("unused")
 public class MultiblockFactory
