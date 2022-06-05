@@ -59,12 +59,10 @@ repositories {
 dependencies {
     // compile against the good ol' 92
     deobfCompile "blusunrize:ImmersiveEngineering:0.12-92-+"
-    deobfCompile "CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.1.8.468"
+    compile "CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.1.20.675"
 
-    // compile against the JEI API but do not include it at runtime
-    compileOnly "mezz.jei:jei_1.12.2:4.16.1.301:api"
-    // at runtime, use the full JEI jar
-    runtimeOnly "mezz.jei:jei_1.12.2:4.16.1.301"
+    compile "mezz.jei:jei_1.12.2:4.16.1.302"
+    //compile "CraftTweaker2:CraftTweaker2-MC1120-Mod-JEI:1.12-4.1.20.675"
 
     compileOnly "curse.maven:immersive-petroleum-268250:2544919"
 }
