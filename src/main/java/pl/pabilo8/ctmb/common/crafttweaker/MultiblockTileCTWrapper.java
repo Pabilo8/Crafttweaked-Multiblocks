@@ -2,7 +2,6 @@ package pl.pabilo8.ctmb.common.crafttweaker;
 
 import crafttweaker.annotations.ZenDoc;
 import crafttweaker.annotations.ZenRegister;
-import crafttweaker.api.data.DataMap;
 import crafttweaker.api.data.IData;
 import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.liquid.ILiquidStack;
@@ -18,14 +17,12 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.items.ItemHandlerHelper;
 import pl.pabilo8.ctmb.CTMB;
 import pl.pabilo8.ctmb.common.block.TileEntityBasicMultiblock;
+import pl.pabilo8.ctmb.common.crafttweaker.storage.MultiblockInventoryInfo;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 
 /**
  * @author Pabilo8
@@ -159,32 +156,38 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 	@ZenDoc("Returns the items stored in an inventory.")
 	public IItemStack[] getInventory(int id)
 	{
-		return te.inventory[id]
-				.stream()
-				.map(CraftTweakerMC::getIItemStack)
-				.toArray(IItemStack[]::new);
+		MultiblockInventoryInfo inv = te.getMultiblock().inventory.get(id);
+		IItemStack[] array = new IItemStack[inv.capacity];
+
+		for(int i = inv.getOffset(); i < inv.capacity; i++)
+			array[i] = CraftTweakerMC.getIItemStack(te.inventory.get(id));
+
+		return array;
 	}
 
 	@ZenMethod
 	@ZenDoc("Returns the item stored in inventory.")
 	public IItemStack getItem(int id, int slot)
 	{
-		return CraftTweakerMC.getIItemStack(te.inventory[id].get(slot));
+		MultiblockInventoryInfo inv = te.getMultiblock().inventory.get(id);
+		return CraftTweakerMC.getIItemStack(te.inventory.get(inv.getOffset()+slot));
 	}
 
 	@ZenMethod
 	@ZenDoc("Sets the item stored in inventory.")
 	public void setItem(int id, int slot, IItemStack to)
 	{
-		te.inventory[id].set(slot, CraftTweakerMC.getItemStack(to));
+		MultiblockInventoryInfo inv = te.getMultiblock().inventory.get(id);
+		te.inventory.set(inv.getOffset()+slot, CraftTweakerMC.getItemStack(to));
 	}
 
 	@ZenMethod
 	@ZenDoc("Extracts item, abides to the limits set.")
 	public IItemStack extractItem(int id, int slot)
 	{
-		IItemStack stack = CraftTweakerMC.getIItemStack(te.inventory[id].get(slot));
-		te.inventory[id].set(slot, ItemStack.EMPTY);
+		MultiblockInventoryInfo inv = te.getMultiblock().inventory.get(id);
+		IItemStack stack = CraftTweakerMC.getIItemStack(te.inventory.get(inv.getOffset()+slot));
+		te.inventory.set(inv.getOffset()+slot, ItemStack.EMPTY);
 		return stack;
 	}
 
@@ -192,7 +195,8 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 	@ZenDoc("Tries to put (merge) an item into the slot, abides to the limits set. Returns the remains that couldn't be put.")
 	public IItemStack fillItem(int id, int slot, IItemStack with)
 	{
-		ItemStack stack = te.inventory[id].get(slot);
+		MultiblockInventoryInfo inv = te.getMultiblock().inventory.get(id);
+		ItemStack stack = te.inventory.get(inv.getOffset()+slot).copy();
 		ItemStack stacked = CraftTweakerMC.getItemStack(with);
 
 		if(ItemHandlerHelper.canItemStacksStack(stack, stacked))
@@ -204,7 +208,7 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 			);
 
 			stack.grow(added);
-			te.inventory[id].set(slot, stack);
+			te.inventory.set(inv.getOffset()+slot, stack);
 
 			return with.withAmount(with.getAmount()-added);
 		}

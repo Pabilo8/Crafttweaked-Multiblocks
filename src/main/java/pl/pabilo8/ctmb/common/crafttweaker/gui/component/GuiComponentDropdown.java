@@ -15,6 +15,7 @@ import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -79,7 +80,7 @@ public class GuiComponentDropdown extends GuiComponent
 
 	@SideOnly(Side.CLIENT)
 	@Override
-	@Nonnull
+	@Nullable
 	public Gui provide(int id, int x, int y, MultiblockGui gui)
 	{
 		Stream<String> stream = Arrays.stream(translations).map(s -> StyledGuiUtils.processText(gui, s));

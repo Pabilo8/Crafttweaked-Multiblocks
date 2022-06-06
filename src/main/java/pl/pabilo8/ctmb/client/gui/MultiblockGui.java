@@ -112,14 +112,17 @@ public class MultiblockGui extends GuiIEContainerBase
 		for(GuiComponent component : layout.components.values())
 		{
 			Gui gui = component.provide(i++, guiLeft, guiTop, this);
+			if(gui!=null)
+			{
+				if(gui instanceof IGuiTweakable)
+					ctComponents.put(component.name, ((IGuiTweakable)gui));
 
-			if(gui instanceof IGuiTweakable)
-				ctComponents.put(component.name, ((IGuiTweakable)gui));
+				if(gui instanceof GuiButton)
+					buttonList.add(((GuiButton)gui));
+				else if(gui instanceof GuiLabel)
+					labelList.add(((GuiLabel)gui));
+			}
 
-			if(gui instanceof GuiButton)
-				buttonList.add(((GuiButton)gui));
-			else if(gui instanceof GuiLabel)
-				labelList.add(((GuiLabel)gui));
 		}
 
 		if(layout.onOpen!=null)

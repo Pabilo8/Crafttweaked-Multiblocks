@@ -7,6 +7,7 @@ import blusunrize.immersiveengineering.api.energy.immersiveflux.FluxStorageAdvan
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.*;
 import blusunrize.immersiveengineering.common.blocks.TileEntityMultiblockPart;
 import blusunrize.immersiveengineering.common.blocks.metal.TileEntityMultiblockMetal;
+import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.network.MessageTileSync;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import net.minecraft.block.Block;
@@ -14,15 +15,20 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
 import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 import pl.pabilo8.ctmb.common.CommonProxy;
 import pl.pabilo8.ctmb.common.CommonUtils;
 import pl.pabilo8.ctmb.common.crafttweaker.MultiblockBasic;
@@ -31,7 +37,9 @@ import pl.pabilo8.ctmb.common.crafttweaker.MultiblockTileCTWrapper;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Pabilo8
@@ -48,7 +56,8 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 
 	public FluxStorageAdvanced[] energy;
 	public FluidTank[] tanks;
-	public NonNullList<ItemStack>[] inventory;
+	public NonNullList<ItemStack> inventory = NonNullList.create();
+	public CombinedInvWrapper itemHandler;
 
 	public TileEntityBasicMultiblock()
 	{
@@ -137,6 +146,15 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 				nbt.setString("multiblock", ((BlockCTMBMultiblock)bb).multiblock.getUniqueName());
 		}
 
+		if(inventory.size()>0)
+			nbt.setTag("inventory",Utils.writeInventory(inventory));
+		if(tanks.length>0)
+		{
+			NBTTagList list = new NBTTagList();
+			//Arrays.stream(tanks).map(t->t.writeToNBT(new NBTTagCompound())).collect(Collectors.toList())
+			nbt.setTag("inventory",Utils.writeInventory(inventory));
+		}
+
 		if(mbWrapper!=null)
 		{
 			NBTTagCompound custom = mbWrapper.saveData();
@@ -160,6 +178,28 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 		{
 			final String mb = nbt.getString("multiblock");
 			CommonProxy.multiblocks.stream().filter(multiblockBasic -> multiblockBasic.getUniqueName().equals(mb)).findFirst().ifPresent(m -> ensureMBLoaded(m.getBlock()));
+		}
+
+		inventory = NonNullList.withSize(
+				multiblock.inventory.stream().mapToInt(i -> i.capacity).sum(),
+				ItemStack.EMPTY);
+		if(nbt.hasKey("inventory"))
+			inventory = Utils.readInventory(nbt.getTagList("inventory", NBT.TAG_COMPOUND),inventory.size());
+		if(nbt.hasKey("tanks"))
+		{
+			NBTTagList t = nbt.getTagList("tanks", NBT.TAG_COMPOUND);
+			tanks = multiblock.tanks.stream().map(i -> new FluidTank(i.capacity)).toArray(FluidTank[]::new);
+			final int lim = Math.min(t.tagCount(),tanks.length);
+			for(int i =0;i<lim;i++)
+				tanks[i].readFromNBT(t.getCompoundTagAt(i));
+		}
+		if(nbt.hasKey("energy"))
+		{
+			NBTTagList t = nbt.getTagList("energy", NBT.TAG_COMPOUND);
+			energy = multiblock.energy.stream().map(i -> new FluxStorageAdvanced(i.capacity)).toArray(FluxStorageAdvanced[]::new);
+			final int lim = Math.min(t.tagCount(),energy.length);
+			for(int i =0;i<lim;i++)
+				energy[i].readFromNBT(t.getCompoundTagAt(i));
 		}
 
 		//load storage
@@ -315,7 +355,7 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 	@Override
 	public NonNullList<ItemStack> getInventory()
 	{
-		return NonNullList.create();
+		return inventory;
 	}
 
 	@Override

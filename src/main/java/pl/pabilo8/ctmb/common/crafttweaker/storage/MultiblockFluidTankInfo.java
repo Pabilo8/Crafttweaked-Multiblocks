@@ -17,9 +17,9 @@ public class MultiblockFluidTankInfo extends MultiblockStorageInfo<FluidTank>
 {
 	public Predicate<FluidStack> filter = fluidStack -> true;
 
-	public MultiblockFluidTankInfo(int id, int capacity, boolean canInput)
+	public MultiblockFluidTankInfo(int id, int capacity)
 	{
-		super(id, capacity, canInput);
+		super(id, capacity);
 	}
 
 

@@ -7,12 +7,10 @@ package pl.pabilo8.ctmb.common.crafttweaker.storage;
 public abstract class MultiblockStorageInfo<T>
 {
 	public final int id, capacity;
-	public final boolean isInput;
 
-	public MultiblockStorageInfo(int id, int capacity, boolean isInput)
+	public MultiblockStorageInfo(int id, int capacity)
 	{
 		this.id = id;
 		this.capacity = capacity;
-		this.isInput = isInput;
 	}
 }

@@ -11,11 +11,11 @@ import pl.pabilo8.ctmb.client.gui.MultiblockGui;
 import pl.pabilo8.ctmb.client.gui.StyledGuiUtils;
 import pl.pabilo8.ctmb.client.gui.elements.buttons.GuiButtonCTMBSwitch;
 import pl.pabilo8.ctmb.common.CommonUtils;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.MultiblockGuiLayout;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Map;
 
 /**
@@ -92,7 +92,7 @@ public class GuiComponentSwitch extends GuiComponent
 
 	@SideOnly(Side.CLIENT)
 	@Override
-	@Nonnull
+	@Nullable
 	public Gui provide(int id, int x, int y, MultiblockGui gui)
 	{
 		String on = translated?I18n.format(StyledGuiUtils.processText(gui, this.textOn)): StyledGuiUtils.processText(gui, this.textOn);

@@ -26,8 +26,6 @@ public class MultiblockGuiCTWrapper implements ICTWrapper
 {
 	private final MultiblockGui gui;
 
-	// TODO: 03.06.2022 getting components
-
 	@Nonnull
 	private NBTTagCompound data = new NBTTagCompound();
 

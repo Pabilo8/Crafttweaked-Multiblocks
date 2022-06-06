@@ -12,8 +12,8 @@ import stanhebben.zenscript.annotations.ZenClass;
 @ZenClass(value = "mods.ctmb.multiblock.Energy")
 public class MultiblockEnergyInfo extends MultiblockStorageInfo<FluxStorageAdvanced>
 {
-	public MultiblockEnergyInfo(int id, int capacity, boolean canInput)
+	public MultiblockEnergyInfo(int id, int capacity)
 	{
-		super(id, capacity, canInput);
+		super(id, capacity);
 	}
 }

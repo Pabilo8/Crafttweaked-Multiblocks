@@ -52,10 +52,9 @@ public class MultiblockBasic extends MultiblockStuctureBase<TileEntityBasicMulti
 
 	private final HashMap<Integer, AxisAlignedBB[]> AABBs = new HashMap<>();
 
-	private final ArrayList<MultiblockStorageInfo<?>> caps = new ArrayList<>();
-	private final HashMultimap<Integer, MultiblockFluidTankInfo> tanks = HashMultimap.create();
-	private final HashMultimap<Integer, MultiblockInventoryInfo> inventory = HashMultimap.create();
-	private final HashMultimap<Integer, MultiblockEnergyInfo> energy = HashMultimap.create();
+	public final ArrayList<MultiblockFluidTankInfo> tanks = new ArrayList<>();
+	public final ArrayList<MultiblockInventoryInfo> inventory = new ArrayList<>();
+	public final ArrayList<MultiblockEnergyInfo> energy = new ArrayList<>();
 
 	public int[] redstonePositions = {}, dataPositions = {};
 
@@ -76,6 +75,7 @@ public class MultiblockBasic extends MultiblockStuctureBase<TileEntityBasicMulti
 		this.block = new BlockCTMBMultiblock(this);
 	}
 
+	//--- Crafttweaker Methods ---//
 	@ZenMethod
 	@ZenDoc("Sets offset of the main multiblock tile used to form it with a hammer")
 	public void setOffset(int x, int y, int z)
@@ -196,53 +196,28 @@ public class MultiblockBasic extends MultiblockStuctureBase<TileEntityBasicMulti
 	//--- Storage ---//
 
 	@ZenMethod
-	public MultiblockFluidTankInfo setTank(int id, int capacity, int[] pos, boolean input)
+	public MultiblockFluidTankInfo setTank(int id, int capacity)
 	{
-		MultiblockFluidTankInfo info = tanks.values().stream()
-				.filter(value -> value.id==id)
-				.findFirst()
-				.orElse(new MultiblockFluidTankInfo(id, capacity, input));
-
-		if(!caps.contains(info))
-			caps.add(info);
-
-		for(int p : pos)
-			tanks.put(p, info);
-
+		MultiblockFluidTankInfo info = new MultiblockFluidTankInfo(id, capacity);
+		tanks.add(info);
 		return info;
 	}
 
 	@ZenMethod
-	public MultiblockEnergyInfo setEnergyStorage(int id, int capacity, int[] pos, boolean input)
+	public MultiblockEnergyInfo setEnergyStorage(int id, int capacity)
 	{
-		MultiblockEnergyInfo info = energy.values().stream()
-				.filter(value -> value.id==id)
-				.findFirst()
-				.orElse(new MultiblockEnergyInfo(id, capacity, input));
-
-		if(!caps.contains(info))
-			caps.add(info);
-
-		for(int p : pos)
-			energy.put(p, info);
-
+		MultiblockEnergyInfo info = new MultiblockEnergyInfo(id, capacity);
+		energy.add(info);
 		return info;
 	}
 
 	@ZenMethod
-	public MultiblockInventoryInfo setInventory(int id, int capacity, int[] pos, boolean input)
+	public MultiblockInventoryInfo setInventory(int id, int capacity)
 	{
-		MultiblockInventoryInfo info = inventory.values().stream()
-				.filter(value -> value.id==id)
-				.findFirst()
-				.orElse(new MultiblockInventoryInfo(id, capacity, input));
+		int offset = inventory.stream().mapToInt(MultiblockInventoryInfo::getOffset).sum();
 
-		if(!caps.contains(info))
-			caps.add(info);
-
-		for(int p : pos)
-			inventory.put(p, info);
-
+		MultiblockInventoryInfo info = new MultiblockInventoryInfo(id, capacity, offset);
+		inventory.add(info);
 		return info;
 	}
 

@@ -2,13 +2,14 @@ package pl.pabilo8.ctmb.common.crafttweaker.gui.component;
 
 import crafttweaker.annotations.ZenRegister;
 import net.minecraft.client.gui.Gui;
+import net.minecraft.inventory.Slot;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import pl.pabilo8.ctmb.client.gui.MultiblockGui;
-import pl.pabilo8.ctmb.client.gui.elements.IGuiTweakable;
+import pl.pabilo8.ctmb.common.crafttweaker.gui.MultiblockContainer;
 import stanhebben.zenscript.annotations.ZenClass;
 
-import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * @author Pabilo8
@@ -32,13 +33,19 @@ public abstract class GuiComponent
 	}
 
 	/**
-	 * @param id id of the button to be created
+	 * @param id  id of the button to be created
 	 * @param x
 	 * @param y
 	 * @param gui
 	 * @return a new gui element instance to be added into a GUI
 	 */
 	@SideOnly(Side.CLIENT)
-	@Nonnull
+	@Nullable
 	public abstract Gui provide(int id, int x, int y, MultiblockGui gui);
+
+	@Nullable
+	public Slot[] provideSlots(MultiblockContainer gui)
+	{
+		return null;
+	}
 }

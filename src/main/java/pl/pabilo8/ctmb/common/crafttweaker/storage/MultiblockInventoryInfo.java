@@ -15,15 +15,21 @@ import java.util.function.Predicate;
 @ZenClass(value = "mods.ctmb.multiblock.Inventory")
 public class MultiblockInventoryInfo extends MultiblockStorageInfo<NonNullList<ItemStack>>
 {
+	private final int offset;
 	public Predicate<ItemStack> filter = fluidStack -> true;
 
-	public MultiblockInventoryInfo(int id, int capacity, boolean canInput)
+	public MultiblockInventoryInfo(int id, int capacity, int offset)
 	{
-		super(id, capacity, canInput);
+		super(id, capacity);
+		this.offset = offset;
 	}
-
 	public void setFilter(Predicate<ItemStack> filter)
 	{
 		this.filter = filter;
+	}
+
+	public int getOffset()
+	{
+		return offset;
 	}
 }

@@ -2,6 +2,7 @@ package pl.pabilo8.ctmb.common;
 
 import crafttweaker.api.data.*;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.NonNullList;
@@ -23,9 +24,13 @@ import net.minecraftforge.oredict.OreDictionary;
 import pl.pabilo8.ctmb.CTMB;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
+import java.util.stream.Collectors.CollectorImpl;
 
 /**
  * @author Pabilo8
@@ -139,8 +144,8 @@ public class CommonUtils
 
 	public static float[] rgbIntToRGB(int rgb)
 	{
-		float r = ((rgb >> 16)&255)/255f;
-		float g = ((rgb >> 8)&255)/255f;
+		float r = ((rgb>>16)&255)/255f;
+		float g = ((rgb>>8)&255)/255f;
 		float b = (rgb&255)/255f;
 		return new float[]{r, g, b};
 	}
