@@ -2,6 +2,8 @@ package pl.pabilo8.ctmb.common.util;
 
 import blusunrize.lib.manual.IManualPage;
 import com.google.gson.*;
+import crafttweaker.api.minecraft.CraftTweakerMC;
+import crafttweaker.mc1120.util.CraftTweakerHacks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.util.EnumFacing;
@@ -45,9 +47,8 @@ public class ResourceLoader
 
 	public void setup() throws NoSuchFieldException, IllegalAccessException
 	{
-		Field minecraftDirField = Loader.class.getDeclaredField("minecraftDir");
-		minecraftDirField.setAccessible(true);
-		Object minecraftDirObject = minecraftDirField.get(null);
+		Object minecraftDirObject = CraftTweakerHacks.getPrivateStaticObject(Loader.class,"minecraftDir");
+
 		if(minecraftDirObject instanceof File)
 		{
 			File minecraftDir = (File)minecraftDirObject;
@@ -72,6 +73,7 @@ public class ResourceLoader
 	{
 		List<IResourcePack> defaultResourcePacks = ReflectionHelper.getPrivateValue(Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "field_110449_ao", "ap");
 		defaultResourcePacks.add(new DirectoryResourcePack(this.resourceFolder));
+		Minecraft.getMinecraft().refreshResources();
 	}
 
 	private void prepareResources()
