@@ -2,6 +2,7 @@ package pl.pabilo8.ctmb.client.gui;
 
 import blusunrize.immersiveengineering.api.Lib;
 import blusunrize.immersiveengineering.client.gui.GuiIEContainerBase;
+import crafttweaker.api.minecraft.CraftTweakerMC;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiLabel;
@@ -122,7 +123,7 @@ public class MultiblockGui extends GuiIEContainerBase
 		}
 
 		if(layout.onOpen!=null)
-			layout.onOpen.execute(ctWrapper, tile.getMbWrapper());
+			layout.onOpen.execute(ctWrapper, tile.getMbWrapper(), CraftTweakerMC.getIPlayer(ClientUtils.mc.player));
 	}
 
 	@Override
@@ -133,7 +134,7 @@ public class MultiblockGui extends GuiIEContainerBase
 		if(built)
 			GLAllocation.deleteDisplayLists(displayList);
 		if(layout.onClose!=null)
-			layout.onClose.execute(ctWrapper, tile.getMbWrapper());
+			layout.onClose.execute(ctWrapper, tile.getMbWrapper(), CraftTweakerMC.getIPlayer(ClientUtils.mc.player));
 	}
 
 	@Override
@@ -153,7 +154,7 @@ public class MultiblockGui extends GuiIEContainerBase
 		{
 			GuiComponent blueprint = ((IGuiTweakable)button).getBlueprint();
 			if(layout.onPress!=null&&blueprint!=null)
-				layout.onPress.execute(blueprint.name, ctWrapper, tile.getMbWrapper(), lastMX, lastMY);
+				layout.onPress.execute(blueprint.name, ctWrapper, tile.getMbWrapper(), lastMX, lastMY, CraftTweakerMC.getIPlayer(ClientUtils.mc.player));
 		}
 
 	}
@@ -181,7 +182,7 @@ public class MultiblockGui extends GuiIEContainerBase
 				{
 					GuiComponent blueprint = ((IGuiTweakable)b).getBlueprint();
 					if(blueprint!=null)
-						layout.onHover.execute(blueprint.name, ctWrapper, tile.getMbWrapper(), mouseX, mouseY);
+						layout.onHover.execute(blueprint.name, ctWrapper, tile.getMbWrapper(), mouseX, mouseY, CraftTweakerMC.getIPlayer(ClientUtils.mc.player));
 				}
 			}
 

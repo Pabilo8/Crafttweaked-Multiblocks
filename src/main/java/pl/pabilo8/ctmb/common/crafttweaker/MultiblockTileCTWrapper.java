@@ -7,19 +7,24 @@ import crafttweaker.api.data.IData;
 import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.liquid.ILiquidStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
+import crafttweaker.api.player.IPlayer;
 import crafttweaker.api.world.IBlockPos;
 import crafttweaker.api.world.IWorld;
 import crafttweaker.mc1120.liquid.MCLiquidStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.items.ItemHandlerHelper;
+import pl.pabilo8.ctmb.CTMB;
 import pl.pabilo8.ctmb.common.block.TileEntityBasicMultiblock;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 
 /**
@@ -248,6 +253,27 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 	public void sendMessageToClients(IData message, int range)
 	{
 		te.sendMessageClients(CraftTweakerMC.getNBTCompound(message), range);
+	}
+
+	//--- GUI Opening ---//
+
+	@ZenMethod
+	@ZenDoc("Opens a GUI")
+	public void openGUI(String guiName, IPlayer player)
+	{
+		if(te.getMultiblock().assignedGuis.containsKey(guiName))
+		{
+			int i = 0;
+			for(String s : te.getMultiblock().assignedGuis.keySet())
+				if(!s.equals(guiName))
+					i++;
+				else
+					break;
+
+			BlockPos pos = te.getPos();
+			CraftTweakerMC.getPlayer(player).openGui(CTMB.INSTANCE, i, te.getWorld(), pos.getX(),
+					pos.getY(), pos.getZ());
+		}
 	}
 
 	//--- CT Function Interfaces ---//

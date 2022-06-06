@@ -2,6 +2,7 @@ package pl.pabilo8.ctmb.common.crafttweaker.gui;
 
 import crafttweaker.annotations.ZenDoc;
 import crafttweaker.annotations.ZenRegister;
+import crafttweaker.api.player.IPlayer;
 import pl.pabilo8.ctmb.common.crafttweaker.MultiblockTileCTWrapper;
 import pl.pabilo8.ctmb.common.crafttweaker.gui.component.GuiComponent;
 import pl.pabilo8.ctmb.common.crafttweaker.gui.rectangle.GuiRectangle;
@@ -119,14 +120,14 @@ public class MultiblockGuiLayout
 	@ZenClass(value = "mods.ctmb.gui.IMultiblockGuiEventOnComponent")
 	public interface IMultiblockGuiEventOnComponent
 	{
-		void execute(String component, MultiblockGuiCTWrapper gui, MultiblockTileCTWrapper mb, int mx, int my);
+		void execute(String component, MultiblockGuiCTWrapper gui, MultiblockTileCTWrapper mb, int mx, int my, IPlayer player);
 	}
 
 	@ZenRegister
 	@ZenClass(value = "mods.ctmb.gui.IMultiblockGuiEventGeneral")
 	public interface IMultiblockGuiEventGeneral
 	{
-		void execute(MultiblockGuiCTWrapper gui, MultiblockTileCTWrapper mb);
+		void execute(MultiblockGuiCTWrapper gui, MultiblockTileCTWrapper mb, IPlayer player);
 	}
 
 }
