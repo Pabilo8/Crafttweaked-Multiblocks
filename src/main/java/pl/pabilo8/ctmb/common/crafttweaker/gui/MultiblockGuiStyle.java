@@ -38,7 +38,7 @@ public class MultiblockGuiStyle
 		new MultiblockGuiStyle(
 				"futur", new int[]{0xf78034, 0x0a0a0a, 0x1a1a1a},
 				0xE0E0E0,
-				0xf78034,
+				0x3493f7,
 				0
 		);
 
