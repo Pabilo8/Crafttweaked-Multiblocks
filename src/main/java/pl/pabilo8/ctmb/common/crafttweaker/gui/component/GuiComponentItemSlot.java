@@ -4,12 +4,14 @@ import crafttweaker.annotations.ZenDoc;
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.data.IData;
 import net.minecraft.client.gui.Gui;
+import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import pl.pabilo8.ctmb.client.gui.MultiblockGui;
 import pl.pabilo8.ctmb.common.CommonUtils;
 import pl.pabilo8.ctmb.common.crafttweaker.gui.MultiblockContainer;
+import pl.pabilo8.ctmb.common.crafttweaker.storage.CTMBSlot;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
@@ -24,11 +26,15 @@ import java.util.Map;
 @ZenRegister
 public class GuiComponentItemSlot extends GuiComponent
 {
-	private final int id;
+	//inventoryID - -1 is the player, 0... is the TileEntity
+	private final int id, inventoryID;
+	//0 - default, 1 - framed, 2 - input, 3 - output
 	private final int styleID;
-	public GuiComponentItemSlot(int x, int y, int w, int h, String name, int id, int styleID)
+
+	public GuiComponentItemSlot(int x, int y, String name, int inventoryID, int id, int styleID)
 	{
-		super(x, y, name, w, h);
+		super(x, y, name, 20, 20);
+		this.inventoryID = inventoryID;
 		this.id = id;
 		this.styleID = styleID;
 	}
@@ -37,8 +43,7 @@ public class GuiComponentItemSlot extends GuiComponent
 	@ZenDoc("Creates a new Gui Component instance")
 	public static GuiComponentItemSlot create(int x, int y, String name, IData data)
 	{
-		int styleID = 0, id=0;
-		int w = 20, h = 20;
+		int styleID = 0, id = 0, inventoryID = 0;
 
 		if(CommonUtils.dataCheck(data))
 		{
@@ -46,18 +51,17 @@ public class GuiComponentItemSlot extends GuiComponent
 
 			if(map.containsKey("id"))
 				id = map.get("id").asInt();
+			if(map.containsKey("id"))
+				id = map.get("id").asInt();
 
 			if(map.containsKey("style_id"))
 				styleID = map.get("style_id").asInt();
-
-			if(map.containsKey("width"))
-				w = map.get("width").asInt();
-			if(map.containsKey("height"))
-				h = map.get("height").asInt();
+			if(map.containsKey("inv_id"))
+				inventoryID = map.get("inv_id").asInt();
 
 		}
 
-		return new GuiComponentItemSlot(x, y, w, h, name, id, styleID);
+		return new GuiComponentItemSlot(x, y, name, inventoryID, id, styleID);
 	}
 
 	@SideOnly(Side.CLIENT)
@@ -70,9 +74,14 @@ public class GuiComponentItemSlot extends GuiComponent
 
 	@Nullable
 	@Override
-	public Slot[] provideSlots(MultiblockContainer gui)
+	public Slot[] provideSlots(MultiblockContainer gui, InventoryPlayer inventoryPlayer)
 	{
 		assert gui.inv!=null;
-		return new Slot[]{new Slot(gui.inv, id, x, y)};
+
+		return new Slot[]{
+				new CTMBSlot(inventoryID==-1?inventoryPlayer: gui.inv,
+						inventoryID!=-1?(gui.tile.getMultiblock().inventory.get(inventoryID).getOffset()+id): id,
+						x, y, styleID)
+		};
 	}
 }

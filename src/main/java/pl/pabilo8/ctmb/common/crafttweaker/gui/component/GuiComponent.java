@@ -2,6 +2,7 @@ package pl.pabilo8.ctmb.common.crafttweaker.gui.component;
 
 import crafttweaker.annotations.ZenRegister;
 import net.minecraft.client.gui.Gui;
+import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -44,7 +45,7 @@ public abstract class GuiComponent
 	public abstract Gui provide(int id, int x, int y, MultiblockGui gui);
 
 	@Nullable
-	public Slot[] provideSlots(MultiblockContainer gui)
+	public Slot[] provideSlots(MultiblockContainer gui, InventoryPlayer inventoryPlayer)
 	{
 		return null;
 	}

@@ -100,6 +100,7 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 	@ZenDoc("Sets the fluid stored in tank.")
 	public void setTank(int id, ILiquidStack to)
 	{
+		te.forceUpdate();
 		te.tanks[id].setFluid(CraftTweakerMC.getLiquidStack(to));
 	}
 
@@ -107,6 +108,7 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 	@ZenDoc("Extracts fluid from tank, abides to the limits set.")
 	public ILiquidStack extractTank(int id, int amount)
 	{
+		te.forceUpdate();
 		return new MCLiquidStack(te.tanks[id].drain(amount, true));
 	}
 
@@ -114,6 +116,7 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 	@ZenDoc("Fills tank with fluid, abides to the limits set. Returns the remains.")
 	public ILiquidStack fillTank(int id, ILiquidStack with)
 	{
+		te.forceUpdate();
 		return with.withAmount(with.getAmount()-te.tanks[id].fill(CraftTweakerMC.getLiquidStack(with), true));
 	}
 
@@ -130,6 +133,7 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 	@ZenDoc("Sets the energy stored.")
 	public void setEnergy(int id, int to)
 	{
+		te.forceUpdate();
 		te.energy[id].setEnergy(to);
 	}
 
@@ -138,6 +142,7 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 	@ZenDoc("Extracts energy, abides to the limits set.")
 	public int extractEnergy(int id, int amount)
 	{
+		te.forceUpdate();
 		return te.energy[id].extractEnergy(amount, false);
 	}
 
@@ -146,6 +151,7 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 	@ZenDoc("Fills with energy, abides to the limits set. Returns the remains.")
 	public int fillEnergy(int id, int with)
 	{
+		te.forceUpdate();
 		return te.energy[id].receiveEnergy(with, false);
 	}
 
@@ -177,6 +183,7 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 	@ZenDoc("Sets the item stored in inventory.")
 	public void setItem(int id, int slot, IItemStack to)
 	{
+		te.forceUpdate();
 		MultiblockInventoryInfo inv = te.getMultiblock().inventory.get(id);
 		te.inventory.set(inv.getOffset()+slot, CraftTweakerMC.getItemStack(to));
 	}
@@ -185,6 +192,7 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 	@ZenDoc("Extracts item, abides to the limits set.")
 	public IItemStack extractItem(int id, int slot)
 	{
+		te.forceUpdate();
 		MultiblockInventoryInfo inv = te.getMultiblock().inventory.get(id);
 		IItemStack stack = CraftTweakerMC.getIItemStack(te.inventory.get(inv.getOffset()+slot));
 		te.inventory.set(inv.getOffset()+slot, ItemStack.EMPTY);
@@ -195,6 +203,7 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 	@ZenDoc("Tries to put (merge) an item into the slot, abides to the limits set. Returns the remains that couldn't be put.")
 	public IItemStack fillItem(int id, int slot, IItemStack with)
 	{
+		te.forceUpdate();
 		MultiblockInventoryInfo inv = te.getMultiblock().inventory.get(id);
 		ItemStack stack = te.inventory.get(inv.getOffset()+slot).copy();
 		ItemStack stacked = CraftTweakerMC.getItemStack(with);
@@ -265,6 +274,7 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 	@ZenDoc("Opens a GUI")
 	public void openGUI(String guiName, IPlayer player)
 	{
+		te.forceUpdate();
 		if(te.getMultiblock().assignedGuis.containsKey(guiName))
 		{
 			int i = 0;

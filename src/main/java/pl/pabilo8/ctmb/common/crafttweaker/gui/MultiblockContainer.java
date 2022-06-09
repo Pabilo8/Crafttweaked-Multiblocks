@@ -25,15 +25,15 @@ public class MultiblockContainer extends ContainerIEBase<TileEntityBasicMultiblo
 		this.mb = tile.getMultiblock();
 		this.layout = page==0?mb.mainGui: CommonUtils.getMapElement(mb.assignedGuis, page);
 
-		initSlots();
+		initSlots(inventoryPlayer);
 	}
 
-	private void initSlots()
+	private void initSlots(InventoryPlayer inventoryPlayer)
 	{
 		this.slotCount = tile.getInventory().size();
 		for(GuiComponent comp : layout.components.values())
 		{
-			Slot[] slots = comp.provideSlots(this);
+			Slot[] slots = comp.provideSlots(this, inventoryPlayer);
 			if(slots!=null)
 				Arrays.stream(slots).forEach(this::addSlotToContainer);
 		}

@@ -18,7 +18,7 @@ public class GuiButtonCTMBState extends GuiButtonCTMB
 
 	public GuiButtonCTMBState(GuiComponent parent, int buttonId, int x, int y, int w, int h, int styleID, String textOn, String textOff, MultiblockGuiStyle style, boolean state)
 	{
-		super(parent, x, y, w, buttonId, styleID, textOff, style, h);
+		super(parent, x, y, w, h, buttonId, textOff, style, styleID);
 		this.state = state;
 		this.textOn = textOn;
 	}

@@ -2,6 +2,7 @@ package pl.pabilo8.ctmb.common;
 
 import crafttweaker.api.data.*;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -22,15 +23,13 @@ import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.oredict.OreDictionary;
 import pl.pabilo8.ctmb.CTMB;
+import pl.pabilo8.ctmb.common.util.NBTTagCollector;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collector;
-import java.util.stream.Collectors.CollectorImpl;
 
 /**
  * @author Pabilo8

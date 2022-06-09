@@ -15,6 +15,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.inventory.Slot;
 import org.lwjgl.opengl.GL11;
 import pl.pabilo8.ctmb.client.ClientUtils;
 import pl.pabilo8.ctmb.client.gui.elements.IGuiTweakable;
@@ -29,9 +30,12 @@ import pl.pabilo8.ctmb.common.crafttweaker.gui.component.GuiComponent;
 import pl.pabilo8.ctmb.common.crafttweaker.gui.rectangle.GuiRectangle;
 import pl.pabilo8.ctmb.common.crafttweaker.gui.rectangle.GuiRectangleCustom;
 import pl.pabilo8.ctmb.common.crafttweaker.gui.rectangle.GuiRectangleStyled;
+import pl.pabilo8.ctmb.common.crafttweaker.storage.CTMBSlot;
 
 import java.io.IOException;
 import java.util.HashMap;
+
+import static pl.pabilo8.ctmb.client.gui.StyledGuiUtils.drawItemSlot;
 
 /**
  * @author Pabilo8
@@ -176,6 +180,13 @@ public class MultiblockGui extends GuiIEContainerBase
 				drawRect(gL, gT, gL+rect.w, gT+rect.h, 0xff000000+rect.bgColor);
 		}
 
+		/*Tessellator tess = Tessellator.getInstance();
+		BufferBuilder buffer = tess.getBuffer();
+		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+		for (Slot slot : inventorySlots.inventorySlots)
+			drawItemSlot(guiLeft+slot.xPos, guiTop+slot.yPos, buffer);
+		tess.draw();*/
+
 		GlStateManager.popMatrix();
 
 		if(layout.onHover!=null)
@@ -231,11 +242,9 @@ public class MultiblockGui extends GuiIEContainerBase
 			buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
 			StyledGuiUtils.drawBackgroundRoundedMask(styledRects, buffer, firstX, firstY);
 
-			// TODO: 03.03.2022 slot drawing
-			/*
-			for (Slot slot : slots)
-				drawItemSlot(guiLeft+slot.xPos, guiTop+slot.yPos, buffer);
-			 */
+			for(Slot slot : inventorySlots.inventorySlots)
+				if(!(slot instanceof CTMBSlot)||((CTMBSlot)slot).getStyle()==0)
+					drawItemSlot(slot.xPos, slot.yPos, buffer);
 
 			tess.draw();
 
@@ -246,6 +255,39 @@ public class MultiblockGui extends GuiIEContainerBase
 
 			buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
 			StyledGuiUtils.drawBorderAround(styledRects, buffer);
+			tess.draw();
+
+			buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+			for(Slot slot : inventorySlots.inventorySlots)
+				if(slot instanceof CTMBSlot)
+				{
+					CTMBSlot s = (CTMBSlot)slot;
+					switch(s.getStyle())
+					{
+						default:
+						case 0:
+							break;
+						case 1:
+						{
+							ClientUtils.drawTexturedRect(buffer, slot.xPos-1, slot.yPos-1, 238,122,18,18);
+						}
+						break;
+						case 2:
+						{
+							ClientUtils.drawTexturedRect(buffer, slot.xPos-1, slot.yPos-1, 238,122,18,18);
+							ClientUtils.drawTexturedRect(buffer, slot.xPos-2, slot.yPos-2, 208,3,20,20);
+							ClientUtils.drawTexturedRect(buffer, slot.xPos-2+8, slot.yPos-2-3, 220,0,4,3);
+						}
+						break;
+						case 3:
+						{
+							ClientUtils.drawTexturedRect(buffer, slot.xPos-1, slot.yPos-1, 238,122,18,18);
+							ClientUtils.drawTexturedRect(buffer, slot.xPos-2, slot.yPos-2, 208,3,20,20);
+							ClientUtils.drawTexturedRect(buffer, slot.xPos-2+8, slot.yPos-2-3, 224,0,4,3);
+						}
+						break;
+					}
+				}
 			tess.draw();
 
 			GlStateManager.glEndList();
@@ -265,5 +307,15 @@ public class MultiblockGui extends GuiIEContainerBase
 	public MultiblockGuiStyle getStyle()
 	{
 		return layout.style;
+	}
+
+	public TileEntityBasicMultiblock getTile()
+	{
+		return tile;
+	}
+
+	public MultiblockBasic getMB()
+	{
+		return mb;
 	}
 }

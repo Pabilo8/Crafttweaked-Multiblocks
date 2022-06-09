@@ -3,6 +3,7 @@ package pl.pabilo8.ctmb.common.block;
 import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.api.ApiUtils;
 import blusunrize.immersiveengineering.api.crafting.IMultiblockRecipe;
+import blusunrize.immersiveengineering.api.energy.immersiveflux.FluxStorage;
 import blusunrize.immersiveengineering.api.energy.immersiveflux.FluxStorageAdvanced;
 import blusunrize.immersiveengineering.common.blocks.IEBlockInterfaces.*;
 import blusunrize.immersiveengineering.common.blocks.TileEntityMultiblockPart;
@@ -33,12 +34,17 @@ import pl.pabilo8.ctmb.common.CommonProxy;
 import pl.pabilo8.ctmb.common.CommonUtils;
 import pl.pabilo8.ctmb.common.crafttweaker.MultiblockBasic;
 import pl.pabilo8.ctmb.common.crafttweaker.MultiblockTileCTWrapper;
+import pl.pabilo8.ctmb.common.util.NBTTagCollector;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -54,10 +60,12 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 	private MultiblockBasic multiblock = MultiblockBasic.DEFAULT_MULTIBLOCK;
 	private MultiblockTileCTWrapper mbWrapper;
 
-	public FluxStorageAdvanced[] energy;
+	public FluxStorage[] energy;
 	public FluidTank[] tanks;
 	public NonNullList<ItemStack> inventory = NonNullList.create();
 	public CombinedInvWrapper itemHandler;
+
+	private boolean shouldSendUpdate = false;
 
 	public TileEntityBasicMultiblock()
 	{
@@ -79,7 +87,6 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 			{
 				BlockCTMBMultiblock mbBlock = (BlockCTMBMultiblock)block;
 				this.multiblock = mbBlock.multiblock;
-				this.mbWrapper = new MultiblockTileCTWrapper(this);
 				ReflectionHelper.setPrivateValue(TileEntityMultiblockMetal.class, this, mbBlock.multiblock, "mutliblockInstance");
 				ReflectionHelper.setPrivateValue(TileEntityMultiblockPart.class, this, mbBlock.multiblock.getSize(), "structureDimensions");
 				ReflectionHelper.setPrivateValue(TileEntityMultiblockMetal.class, this, new FluxStorageAdvanced(0), "energyStorage");
@@ -97,7 +104,7 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 		super.receiveMessageFromClient(message);
 
 		if(multiblock.onReceiveMessage!=null)
-			multiblock.onReceiveMessage.execute(mbWrapper, CraftTweakerMC.getIData(message), false);
+			multiblock.onReceiveMessage.execute(getMbWrapper(), CraftTweakerMC.getIData(message), false);
 	}
 
 	@Override
@@ -106,13 +113,13 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 		super.receiveMessageFromServer(message);
 
 		if(multiblock.onReceiveMessage!=null)
-			multiblock.onReceiveMessage.execute(mbWrapper, CraftTweakerMC.getIData(message), true);
+			multiblock.onReceiveMessage.execute(getMbWrapper(), CraftTweakerMC.getIData(message), true);
 	}
 
 	public void sendMessageServer(NBTTagCompound message)
 	{
 		if(multiblock.onSendMessage!=null)
-			multiblock.onSendMessage.execute(mbWrapper, CraftTweakerMC.getIData(message), world.isRemote);
+			multiblock.onSendMessage.execute(getMbWrapper(), CraftTweakerMC.getIData(message), world.isRemote);
 
 		ImmersiveEngineering.packetHandler.sendToServer(new MessageTileSync(this, message));
 	}
@@ -120,7 +127,7 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 	public void sendMessageClients(NBTTagCompound message, int range)
 	{
 		if(multiblock.onSendMessage!=null)
-			multiblock.onSendMessage.execute(mbWrapper, CraftTweakerMC.getIData(message), world.isRemote);
+			multiblock.onSendMessage.execute(getMbWrapper(), CraftTweakerMC.getIData(message), world.isRemote);
 
 		ImmersiveEngineering.packetHandler.sendToAllAround(new MessageTileSync(this, message), CommonUtils.targetPointFromTile(this, range));
 	}
@@ -146,14 +153,12 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 				nbt.setString("multiblock", ((BlockCTMBMultiblock)bb).multiblock.getUniqueName());
 		}
 
-		if(inventory.size()>0)
-			nbt.setTag("inventory",Utils.writeInventory(inventory));
-		if(tanks.length>0)
-		{
-			NBTTagList list = new NBTTagList();
-			//Arrays.stream(tanks).map(t->t.writeToNBT(new NBTTagCompound())).collect(Collectors.toList())
-			nbt.setTag("inventory",Utils.writeInventory(inventory));
-		}
+		if(inventory.size() > 0)
+			nbt.setTag("inventory", Utils.writeInventory(inventory));
+		if(tanks!=null&&tanks.length > 0)
+			nbt.setTag("tanks", Arrays.stream(tanks).map(t -> t.writeToNBT(new NBTTagCompound())).collect(new NBTTagCollector()));
+		if(energy!=null&&energy.length > 0)
+			nbt.setTag("energy", Arrays.stream(energy).map(t -> t.writeToNBT(new NBTTagCompound())).collect(new NBTTagCollector()));
 
 		if(mbWrapper!=null)
 		{
@@ -183,32 +188,25 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 		inventory = NonNullList.withSize(
 				multiblock.inventory.stream().mapToInt(i -> i.capacity).sum(),
 				ItemStack.EMPTY);
+
+		tanks = multiblock.tanks.stream()
+				.map(i -> new FluidTank(i.capacity))
+				.toArray(FluidTank[]::new);
+
+		energy = multiblock.energy.stream()
+				.map(i -> new FluxStorageAdvanced(i.capacity))
+				.toArray(FluxStorageAdvanced[]::new);
+
 		if(nbt.hasKey("inventory"))
-			inventory = Utils.readInventory(nbt.getTagList("inventory", NBT.TAG_COMPOUND),inventory.size());
+			inventory = Utils.readInventory(nbt.getTagList("inventory", NBT.TAG_COMPOUND), inventory.size());
 		if(nbt.hasKey("tanks"))
-		{
-			NBTTagList t = nbt.getTagList("tanks", NBT.TAG_COMPOUND);
-			tanks = multiblock.tanks.stream().map(i -> new FluidTank(i.capacity)).toArray(FluidTank[]::new);
-			final int lim = Math.min(t.tagCount(),tanks.length);
-			for(int i =0;i<lim;i++)
-				tanks[i].readFromNBT(t.getCompoundTagAt(i));
-		}
+			tanks = readArrayedProperty(nbt, "tanks", tanks, FluidTank::readFromNBT);
 		if(nbt.hasKey("energy"))
-		{
-			NBTTagList t = nbt.getTagList("energy", NBT.TAG_COMPOUND);
-			energy = multiblock.energy.stream().map(i -> new FluxStorageAdvanced(i.capacity)).toArray(FluxStorageAdvanced[]::new);
-			final int lim = Math.min(t.tagCount(),energy.length);
-			for(int i =0;i<lim;i++)
-				energy[i].readFromNBT(t.getCompoundTagAt(i));
-		}
+			energy = readArrayedProperty(nbt, "energy", energy, FluxStorage::readFromNBT);
 
 		//load storage
 		if(!isDummy()&&nbt.hasKey("custom"))
-		{
-			if(mbWrapper==null)
-				mbWrapper = new MultiblockTileCTWrapper(this);
-			mbWrapper.loadData(nbt.getCompoundTag("custom"));
-		}
+			getMbWrapper().loadData(nbt.getCompoundTag("custom"));
 	}
 
 	//--- Update ---//
@@ -218,11 +216,18 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 	{
 		ApiUtils.checkForNeedlessTicking(this);
 		tickedProcesses = 0;
-		if(world.isRemote||isDummy()) //||isRSDisabled()
+		if(!hasWorld()||world.isRemote||isDummy()) //||isRSDisabled()
 			return;
 
 		if(multiblock!=MultiblockBasic.DEFAULT_MULTIBLOCK&&multiblock.onUpdate!=null)
-			multiblock.onUpdate.execute(this.mbWrapper);
+			multiblock.onUpdate.execute(getMbWrapper());
+
+		if(shouldSendUpdate)
+		{
+			markDirty();
+			markContainingBlockForUpdate(null);
+			shouldSendUpdate = false;
+		}
 
 		// TODO: 30.05.2022 processes
 	}
@@ -231,7 +236,20 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 
 	public MultiblockTileCTWrapper getMbWrapper()
 	{
+		if(this.mbWrapper==null)
+			this.mbWrapper = new MultiblockTileCTWrapper(this);
 		return mbWrapper;
+	}
+
+	@Nonnull
+	@ParametersAreNonnullByDefault
+	public <T> T[] readArrayedProperty(NBTTagCompound nbt, String name, T[] array, BiFunction<T, NBTTagCompound, T> readFromNBT)
+	{
+		NBTTagList t = nbt.getTagList(name, NBT.TAG_COMPOUND);
+		final int lim = Math.min(t.tagCount(), array.length);
+		for(int i = 0; i < lim; i++)
+			array[i] = readFromNBT.apply(array[i], t.getCompoundTagAt(i));
+		return array;
 	}
 
 	//--- IE Methods ---//
@@ -417,6 +435,11 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 	public MultiblockBasic getMultiblock()
 	{
 		return multiblock;
+	}
+
+	public void forceUpdate()
+	{
+		this.shouldSendUpdate = true;
 	}
 
 	//--- AABB ---//

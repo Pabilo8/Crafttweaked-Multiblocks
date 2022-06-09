@@ -40,7 +40,7 @@ public class GuiButtonCTMBDropdownList extends GuiButtonCTMB
 
 	public GuiButtonCTMBDropdownList(GuiComponent parent, int buttonId, int x, int y, int w, int h, int styleID, MultiblockGuiStyle style, int perPage, String[] entries, String[] translated)
 	{
-		super(parent, x, y, w, buttonId, styleID, "", style, h);
+		super(parent, x, y, w, h, buttonId, "", style, styleID);
 		this.perPage = perPage;
 		this.entries = entries;
 		this.translated = translated;

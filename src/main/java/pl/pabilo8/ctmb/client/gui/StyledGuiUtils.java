@@ -192,7 +192,7 @@ public class StyledGuiUtils
 	{
 		ClientUtils.drawTexturedRect(buffer,
 				x-1, y-1,
-				78, 48,
+				40, 192,
 				18, 18);
 	}
 

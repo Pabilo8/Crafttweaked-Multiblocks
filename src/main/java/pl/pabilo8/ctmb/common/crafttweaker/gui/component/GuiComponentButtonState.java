@@ -54,10 +54,10 @@ public class GuiComponentButtonState extends GuiComponent
 		{
 			Map<String, IData> map = data.asMap();
 
-			if(map.containsKey("width"))
-				w = map.get("width").asInt();
-			if(map.containsKey("height"))
-				h = map.get("height").asInt();
+			if(map.containsKey("w"))
+				w = map.get("w").asInt();
+			if(map.containsKey("h"))
+				h = map.get("h").asInt();
 
 			if(map.containsKey("text"))
 				textOn = textOff = map.get("text").asString();

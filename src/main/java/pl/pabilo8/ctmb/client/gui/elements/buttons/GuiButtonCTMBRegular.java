@@ -12,7 +12,7 @@ public class GuiButtonCTMBRegular extends GuiButtonCTMB
 {
 	public GuiButtonCTMBRegular(GuiComponent parent, int buttonId, int x, int y, int w, int h, int styleID, String text, MultiblockGuiStyle style)
 	{
-		super(parent, x, y, w, buttonId, styleID, text, style, h);
+		super(parent, x, y, w, h, buttonId, text, style, styleID);
 	}
 
 	@Override

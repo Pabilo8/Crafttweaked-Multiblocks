@@ -4,10 +4,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.opengl.GL11;
@@ -132,6 +134,49 @@ public class ClientUtils
 		GlStateManager.disableBlend();
 		GlStateManager.enableAlpha();
 		GlStateManager.enableTexture2D();
+	}
+
+	public static void drawRepeatedFluidSprite(FluidStack fluid, float x, float y, float w, float h)
+	{
+		bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+		TextureAtlasSprite sprite = mc.getTextureMapBlocks().getAtlasSprite(fluid.getFluid().getStill(fluid).toString());
+
+		int col = fluid.getFluid().getColor(fluid);
+		GlStateManager.color((col>>16&255)/255.0f, (col>>8&255)/255.0f, (col&255)/255.0f, 1);
+		int iW = sprite.getIconWidth();
+		int iH = sprite.getIconHeight();
+		if(iW > 0&&iH > 0)
+			blusunrize.immersiveengineering.client.ClientUtils.drawRepeatedSprite(x, y, w, h, iW, iH, sprite.getMinU(), sprite.getMaxU(), sprite.getMinV(), sprite.getMaxV());
+	}
+
+	public static void drawFrame(BufferBuilder buffer, int x, int y, int w, int h, int frameW, int frameH, int u, int v)
+	{
+		int eX = Math.min(frameW, w/2), eY = Math.min(frameH, h/2);
+		int ww = w-(2*eX), hh = h-(2*eY);
+
+		//top
+		ClientUtils.drawTexturedRect(buffer, x, y, u, v, eX, eY);
+		ClientUtils.drawTexturedRect(buffer, x+ww+eX, y, u+(2*frameW), v, eX, eY);
+		for(int j = 0; j < ww; j += frameW)
+			ClientUtils.drawTexturedRect(buffer, x+eX+j, y, u+frameW, v, Math.min(ww-j, frameW), eY);
+
+		//bottom
+		ClientUtils.drawTexturedRect(buffer, x, y+hh+eY, u, v+(2*frameH), eX, eY);
+		ClientUtils.drawTexturedRect(buffer, x+ww+eX, y+hh+eY, u+(2*frameW), v+(2*frameH), eX, eY);
+
+		for(int j = 0; j < ww; j += frameW)
+			ClientUtils.drawTexturedRect(buffer, x+eX+j, y+hh+eY, u+frameW, v+(2*frameH), Math.min(ww-j, frameW), eY);
+
+		for(int i = 0; i < hh; i += frameH)
+		{
+			int aH = Math.min(hh-i, frameH); //actual height
+
+			ClientUtils.drawTexturedRect(buffer, x, y+eY+i, u, v+frameW, eX, aH);
+			ClientUtils.drawTexturedRect(buffer, x+ww+eX, y+eY+i, u+(2*frameW), v+frameH, eX, aH);
+
+			for(int j = 0; j < ww; j += frameW)
+				ClientUtils.drawTexturedRect(buffer, x+eX+j, y+eY+i, u+frameW, v+frameH, Math.min(ww-j, frameW), aH);
+		}
 	}
 
 	public static void bindTexture(ResourceLocation resLoc)

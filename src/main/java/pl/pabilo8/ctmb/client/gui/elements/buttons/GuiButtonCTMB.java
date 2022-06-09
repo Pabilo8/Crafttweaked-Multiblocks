@@ -25,7 +25,7 @@ public class GuiButtonCTMB extends GuiButton implements IGuiTweakable
 	protected boolean state = false;
 	protected MultiblockGuiStyle style;
 
-	public GuiButtonCTMB(@Nullable GuiComponent parent, int x, int y, int w, int buttonId, int styleID, String text, MultiblockGuiStyle style, int h)
+	public GuiButtonCTMB(@Nullable GuiComponent parent, int x, int y, int w, int h, int buttonId, String text, MultiblockGuiStyle style, int styleID)
 	{
 		super(buttonId, x, y, w, h, text);
 		this.parent = parent;
