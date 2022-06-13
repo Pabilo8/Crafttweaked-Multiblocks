@@ -1,6 +1,5 @@
 package pl.pabilo8.ctmb.common.crafttweaker;
 
-import com.google.common.collect.HashMultimap;
 import crafttweaker.annotations.ZenDoc;
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.world.IBlockPos;
@@ -13,17 +12,14 @@ import net.minecraft.world.World;
 import pl.pabilo8.ctmb.common.block.BlockCTMBMultiblock;
 import pl.pabilo8.ctmb.common.block.MultiblockStuctureBase;
 import pl.pabilo8.ctmb.common.block.TileEntityBasicMultiblock;
-import pl.pabilo8.ctmb.common.crafttweaker.MultiblockTileCTWrapper.IMultiblockFunction;
-import pl.pabilo8.ctmb.common.crafttweaker.MultiblockTileCTWrapper.IMultiblockMessageInFunction;
-import pl.pabilo8.ctmb.common.crafttweaker.MultiblockTileCTWrapper.IMultiblockMessageOutFunction;
+import pl.pabilo8.ctmb.common.crafttweaker.MultiblockTileCTWrapper.*;
 import pl.pabilo8.ctmb.common.crafttweaker.gui.MultiblockGuiLayout;
 import pl.pabilo8.ctmb.common.crafttweaker.storage.MultiblockEnergyInfo;
 import pl.pabilo8.ctmb.common.crafttweaker.storage.MultiblockFluidTankInfo;
 import pl.pabilo8.ctmb.common.crafttweaker.storage.MultiblockInventoryInfo;
-import pl.pabilo8.ctmb.common.crafttweaker.storage.MultiblockStorageInfo;
+import stanhebben.zenscript.annotations.Optional;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
-import stanhebben.zenscript.annotations.ZenProperty;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -61,6 +57,9 @@ public class MultiblockBasic extends MultiblockStuctureBase<TileEntityBasicMulti
 	public IMultiblockFunction onUpdate = null;
 	public IMultiblockMessageOutFunction onSendMessage = null;
 	public IMultiblockMessageInFunction onReceiveMessage = null;
+	public IMultiblockInteractionFunction onInteract = null;
+	public IMultiblockTooltipFunction onTooltip = null;
+	public boolean tooltipNixieFont = false;
 
 	//Is set only once
 	public final Material material;
@@ -143,6 +142,21 @@ public class MultiblockBasic extends MultiblockStuctureBase<TileEntityBasicMulti
 	public void setOnReceiveMessage(IMultiblockMessageInFunction function)
 	{
 		this.onReceiveMessage = function;
+	}
+
+	@ZenMethod
+	@ZenDoc("Sets the function called when an NBT message is received.")
+	public void setOnInteract(IMultiblockInteractionFunction function)
+	{
+		this.onInteract = function;
+	}
+
+	@ZenMethod
+	@ZenDoc("Sets the function called when an NBT message is received.")
+	public void setOnTooltip(IMultiblockTooltipFunction function, @Optional boolean tooltipNixieFont)
+	{
+		this.onTooltip = function;
+		this.tooltipNixieFont = tooltipNixieFont;
 	}
 
 	//--- Block Handling (non-CT) ---//

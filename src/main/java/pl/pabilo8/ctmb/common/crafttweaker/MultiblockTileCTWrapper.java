@@ -10,6 +10,7 @@ import crafttweaker.api.player.IPlayer;
 import crafttweaker.api.world.IBlockPos;
 import crafttweaker.api.world.IWorld;
 import crafttweaker.mc1120.liquid.MCLiquidStack;
+import crafttweaker.mc1120.world.MCVector3d;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
@@ -315,6 +316,20 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 	public interface IMultiblockFunction
 	{
 		void execute(MultiblockTileCTWrapper mb);
+	}
+
+	@ZenRegister
+	@ZenClass(value = "mods.ctmb.multiblock.IMultiblockInteractionFunction")
+	public interface IMultiblockInteractionFunction
+	{
+		boolean execute(MultiblockTileCTWrapper mb, int pos, IPlayer player, boolean hand, MCVector3d hitVec);
+	}
+
+	@ZenRegister
+	@ZenClass(value = "mods.ctmb.multiblock.IMultiblockTooltipFunction")
+	public interface IMultiblockTooltipFunction
+	{
+		String[] execute(MultiblockTileCTWrapper mb, int pos, IPlayer player, boolean hammer);
 	}
 
 	@ZenRegister

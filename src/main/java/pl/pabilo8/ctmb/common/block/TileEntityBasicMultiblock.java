@@ -11,6 +11,8 @@ import blusunrize.immersiveengineering.common.blocks.metal.TileEntityMultiblockM
 import blusunrize.immersiveengineering.common.util.Utils;
 import blusunrize.immersiveengineering.common.util.network.MessageTileSync;
 import crafttweaker.api.minecraft.CraftTweakerMC;
+import crafttweaker.mc1120.player.MCPlayer;
+import crafttweaker.mc1120.world.MCVector3d;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
@@ -22,6 +24,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
@@ -47,7 +50,7 @@ import java.util.function.BiFunction;
  * @since 30.01.2022
  */
 @SuppressWarnings("unused")
-public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEntityBasicMultiblock, IMultiblockRecipe> implements IRedstoneOutput, IPlayerInteraction, IGuiTile, IAdvancedCollisionBounds, IAdvancedSelectionBounds
+public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEntityBasicMultiblock, IMultiblockRecipe> implements IRedstoneOutput, IPlayerInteraction, IGuiTile, IAdvancedCollisionBounds, IAdvancedSelectionBounds, IBlockOverlayText
 {
 	/**
 	 * Multiblock Instance for easy access
@@ -438,6 +441,11 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 	@Override
 	public boolean interact(EnumFacing side, EntityPlayer player, EnumHand hand, ItemStack heldItem, float hitX, float hitY, float hitZ)
 	{
+		TileEntityBasicMultiblock master = master();
+
+		if(master!=null&&multiblock.onInteract!=null)
+			return multiblock.onInteract.execute(master.getMbWrapper(), pos, new MCPlayer(player),
+					hand==EnumHand.MAIN_HAND, new MCVector3d(new Vec3d(hitX, hitY, hitZ)));
 		return false;
 	}
 
@@ -472,5 +480,23 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 	public boolean isOverrideBox(AxisAlignedBB box, EntityPlayer player, RayTraceResult mop, ArrayList<AxisAlignedBB> list)
 	{
 		return false;
+	}
+
+	@Override
+	@Nonnull
+	public String[] getOverlayText(@Nonnull EntityPlayer player, @Nullable RayTraceResult mop, boolean hammer)
+	{
+		TileEntityBasicMultiblock master = master();
+
+		if(master!=null&&multiblock.onTooltip!=null)
+			return getMultiblock().onTooltip.execute(master.getMbWrapper(), pos, CraftTweakerMC.getIPlayer(player), hammer);
+
+		return new String[0];
+	}
+
+	@Override
+	public boolean useNixieFont(@Nonnull EntityPlayer player, @Nullable RayTraceResult mop)
+	{
+		return getMultiblock().tooltipNixieFont;
 	}
 }
