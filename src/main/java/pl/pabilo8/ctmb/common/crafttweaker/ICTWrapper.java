@@ -24,6 +24,10 @@ public interface ICTWrapper
 	IData getVar(String name);
 
 	@ZenMethod
+	@Nullable
+	IData getVarOr(String name, IData def);
+
+	@ZenMethod
 	void setVar(String name, IData value);
 
 	NBTTagCompound saveData();

@@ -53,6 +53,15 @@ public class MultiblockGuiCTWrapper implements ICTWrapper
 		return CraftTweakerMC.getIData(data.getTag(name));
 	}
 
+	@Nullable
+	@Override
+	public IData getVarOr(String name, IData def)
+	{
+		if(data.hasKey(name))
+			return CraftTweakerMC.getIData(data.getTag(name));
+		return def;
+	}
+
 	@ZenMethod
 	@Override
 	public void setVar(String name, IData value)
