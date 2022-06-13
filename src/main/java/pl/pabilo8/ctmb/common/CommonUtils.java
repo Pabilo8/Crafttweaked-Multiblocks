@@ -52,65 +52,6 @@ public class CommonUtils
 	{
 		return new TargetPoint(world.provider.getDimension(), pos.x, pos.y, pos.z, range);
 	}
-
-	/**
-	 * Same as method below, but without filter
-	 */
-	public static <T extends IFluidTank & IFluidHandler> boolean handleBucketTankInteraction(T tank, NonNullList<ItemStack> inventory, int bucketInputSlot, int bucketOutputSlot, boolean fillBucket)
-	{
-		return handleBucketTankInteraction(tank, inventory, bucketInputSlot, bucketOutputSlot, fillBucket, fluidStack -> true);
-	}
-
-	/**
-	 * @param tank
-	 * @param inventory
-	 * @param bucketInputSlot
-	 * @param bucketOutputSlot
-	 * @param fillBucket
-	 * @param filter
-	 * @param <T>
-	 * @return
-	 */
-	public static <T extends IFluidTank & IFluidHandler> boolean handleBucketTankInteraction(T tank, NonNullList<ItemStack> inventory, int bucketInputSlot, int bucketOutputSlot, boolean fillBucket, Predicate<FluidStack> filter)
-	{
-		if(inventory.get(bucketInputSlot).hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null))
-		{
-			IFluidHandlerItem capability = inventory.get(bucketInputSlot).getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
-			if(!filter.test(capability.getTankProperties()[0].getContents()))
-				return false;
-
-			int amount_prev = tank.getFluidAmount();
-			ItemStack emptyContainer;
-
-			if(fillBucket)
-			{
-				if(tank.getTankProperties()[0].getContents()==null)
-					return false;
-				emptyContainer = blusunrize.immersiveengineering.common.util.Utils.fillFluidContainer(tank, inventory.get(bucketInputSlot), inventory.get(bucketOutputSlot), null);
-			}
-			else
-			{
-				if(capability.getTankProperties()[0].getContents()==null)
-					return false;
-				emptyContainer = blusunrize.immersiveengineering.common.util.Utils.drainFluidContainer(tank, inventory.get(bucketInputSlot), inventory.get(bucketOutputSlot), null);
-			}
-
-			if(amount_prev!=tank.getFluidAmount())
-			{
-				if(!inventory.get(bucketOutputSlot).isEmpty()&&OreDictionary.itemMatches(inventory.get(bucketOutputSlot), emptyContainer, true))
-					inventory.get(bucketOutputSlot).grow(emptyContainer.getCount());
-				else if(inventory.get(bucketOutputSlot).isEmpty())
-					inventory.set(bucketOutputSlot, emptyContainer.copy());
-				inventory.get(bucketInputSlot).shrink(1);
-				if(inventory.get(bucketInputSlot).getCount() <= 0)
-					inventory.set(bucketInputSlot, ItemStack.EMPTY);
-
-				return true;
-			}
-		}
-		return false;
-	}
-
 	/**
 	 * Safely handles input into a tank
 	 *

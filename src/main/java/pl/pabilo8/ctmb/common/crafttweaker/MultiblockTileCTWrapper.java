@@ -34,7 +34,7 @@ import javax.annotation.Nullable;
 public class MultiblockTileCTWrapper implements ICTWrapper
 {
 	@Nonnull
-	private final TileEntityBasicMultiblock te;
+	public final TileEntityBasicMultiblock te;
 	/**
 	 * This represents the custom variables stored in the mb
 	 */
@@ -52,7 +52,6 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 	//--- Custom Variables ---//
 
 	@ZenMethod
-	@Nullable
 	@Override
 	public boolean hasVar(String name)
 	{
@@ -86,11 +85,18 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 		data = nbt;
 	}
 
+	@ZenMethod
+	@ZenDoc("Forces the TileEntity to send an update message.")
+	public void forceUpdate()
+	{
+		te.forceUpdate();
+	}
+
 	//--- Fluid Storage ---//
 
+	@Nullable
 	@ZenMethod
 	@ZenDoc("Returns the fluid stored in tank.")
-	@Nullable
 	public ILiquidStack getTank(int id)
 	{
 		return new MCLiquidStack(te.tanks[id].getFluid());
@@ -98,12 +104,13 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 
 	@ZenMethod
 	@ZenDoc("Sets the fluid stored in tank.")
-	public void setTank(int id, ILiquidStack to)
+	public void setTank(int id, @Nullable ILiquidStack to)
 	{
 		te.forceUpdate();
 		te.tanks[id].setFluid(CraftTweakerMC.getLiquidStack(to));
 	}
 
+	@Nullable
 	@ZenMethod
 	@ZenDoc("Extracts fluid from tank, abides to the limits set.")
 	public ILiquidStack extractTank(int id, int amount)
@@ -112,10 +119,14 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 		return new MCLiquidStack(te.tanks[id].drain(amount, true));
 	}
 
+	@Nullable
 	@ZenMethod
 	@ZenDoc("Fills tank with fluid, abides to the limits set. Returns the remains.")
-	public ILiquidStack fillTank(int id, ILiquidStack with)
+	public ILiquidStack fillTank(int id, @Nullable ILiquidStack with)
 	{
+		if(with==null)
+			return null;
+
 		te.forceUpdate();
 		return with.withAmount(with.getAmount()-te.tanks[id].fill(CraftTweakerMC.getLiquidStack(with), true));
 	}
@@ -208,6 +219,12 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 		ItemStack stack = te.inventory.get(inv.getOffset()+slot).copy();
 		ItemStack stacked = CraftTweakerMC.getItemStack(with);
 
+		if(stack.isEmpty())
+		{
+			te.inventory.set(inv.getOffset()+slot, stacked);
+			return CraftTweakerMC.getIItemStack(ItemStack.EMPTY);
+		}
+
 		if(ItemHandlerHelper.canItemStacksStack(stack, stacked))
 		{
 			int added = MathHelper.clamp(
@@ -218,8 +235,9 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 
 			stack.grow(added);
 			te.inventory.set(inv.getOffset()+slot, stack);
+			int remains = with.getAmount()-added;
 
-			return with.withAmount(with.getAmount()-added);
+			return remains > 0?with.withAmount(remains): CraftTweakerMC.getIItemStack(ItemStack.EMPTY);
 		}
 		return with;
 	}

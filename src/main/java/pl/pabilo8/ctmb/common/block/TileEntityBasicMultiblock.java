@@ -20,7 +20,6 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
-import net.minecraft.util.Util;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraftforge.common.util.Constants.NBT;
@@ -28,7 +27,6 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
 import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
-import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 import pl.pabilo8.ctmb.common.CommonProxy;
 import pl.pabilo8.ctmb.common.CommonUtils;
@@ -43,9 +41,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * @author Pabilo8
@@ -91,6 +86,7 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 				ReflectionHelper.setPrivateValue(TileEntityMultiblockPart.class, this, mbBlock.multiblock.getSize(), "structureDimensions");
 				ReflectionHelper.setPrivateValue(TileEntityMultiblockMetal.class, this, new FluxStorageAdvanced(0), "energyStorage");
 				ReflectionHelper.setPrivateValue(TileEntityMultiblockMetal.class, this, mbBlock.multiblock.redstonePositions.length > 0, "hasRedstoneControl");
+				initStorage();
 			}
 			//else ur fucked)))
 		}
@@ -185,17 +181,7 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 			CommonProxy.multiblocks.stream().filter(multiblockBasic -> multiblockBasic.getUniqueName().equals(mb)).findFirst().ifPresent(m -> ensureMBLoaded(m.getBlock()));
 		}
 
-		inventory = NonNullList.withSize(
-				multiblock.inventory.stream().mapToInt(i -> i.capacity).sum(),
-				ItemStack.EMPTY);
-
-		tanks = multiblock.tanks.stream()
-				.map(i -> new FluidTank(i.capacity))
-				.toArray(FluidTank[]::new);
-
-		energy = multiblock.energy.stream()
-				.map(i -> new FluxStorageAdvanced(i.capacity))
-				.toArray(FluxStorageAdvanced[]::new);
+		initStorage();
 
 		if(nbt.hasKey("inventory"))
 			inventory = Utils.readInventory(nbt.getTagList("inventory", NBT.TAG_COMPOUND), inventory.size());
@@ -237,19 +223,42 @@ public class TileEntityBasicMultiblock extends TileEntityMultiblockMetal<TileEnt
 	public MultiblockTileCTWrapper getMbWrapper()
 	{
 		if(this.mbWrapper==null)
+		{
 			this.mbWrapper = new MultiblockTileCTWrapper(this);
+			this.initStorage();
+		}
 		return mbWrapper;
+	}
+
+	public int getInvOffset(int inv, int id)
+	{
+		return multiblock.inventory.get(inv).getOffset()+id;
 	}
 
 	@Nonnull
 	@ParametersAreNonnullByDefault
-	public <T> T[] readArrayedProperty(NBTTagCompound nbt, String name, T[] array, BiFunction<T, NBTTagCompound, T> readFromNBT)
+	private <T> T[] readArrayedProperty(NBTTagCompound nbt, String name, T[] array, BiFunction<T, NBTTagCompound, T> readFromNBT)
 	{
 		NBTTagList t = nbt.getTagList(name, NBT.TAG_COMPOUND);
 		final int lim = Math.min(t.tagCount(), array.length);
 		for(int i = 0; i < lim; i++)
 			array[i] = readFromNBT.apply(array[i], t.getCompoundTagAt(i));
 		return array;
+	}
+
+	private void initStorage()
+	{
+		inventory = NonNullList.withSize(
+				multiblock.inventory.stream().mapToInt(i -> i.capacity).sum(),
+				ItemStack.EMPTY);
+
+		tanks = multiblock.tanks.stream()
+				.map(i -> new FluidTank(i.capacity))
+				.toArray(FluidTank[]::new);
+
+		energy = multiblock.energy.stream()
+				.map(i -> new FluxStorageAdvanced(i.capacity))
+				.toArray(FluxStorageAdvanced[]::new);
 	}
 
 	//--- IE Methods ---//
