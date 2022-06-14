@@ -20,18 +20,15 @@ import org.lwjgl.opengl.GL11;
 import pl.pabilo8.ctmb.client.ClientUtils;
 import pl.pabilo8.ctmb.client.gui.elements.IGuiTweakable;
 import pl.pabilo8.ctmb.common.CommonUtils;
-import pl.pabilo8.ctmb.common.block.TileEntityBasicMultiblock;
-import pl.pabilo8.ctmb.common.crafttweaker.MultiblockBasic;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.MultiblockContainer;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.MultiblockGuiCTWrapper;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.MultiblockGuiLayout;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.MultiblockGuiStyle;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.component.GuiComponent;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.rectangle.GuiRectangle;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.rectangle.GuiRectangleCustom;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.rectangle.GuiRectangleStyled;
-import pl.pabilo8.ctmb.common.crafttweaker.storage.CTMBSlot;
+import pl.pabilo8.ctmb.common.block.TileEntityMultiblock;
+import pl.pabilo8.ctmb.common.block.crafttweaker.Multiblock;
+import pl.pabilo8.ctmb.common.gui.*;
+import pl.pabilo8.ctmb.common.gui.component.GuiComponent;
+import pl.pabilo8.ctmb.common.gui.rectangle.GuiRectangle;
+import pl.pabilo8.ctmb.common.gui.rectangle.GuiRectangleCustom;
+import pl.pabilo8.ctmb.common.gui.rectangle.GuiRectangleStyled;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.HashMap;
 
@@ -43,9 +40,9 @@ import static pl.pabilo8.ctmb.client.gui.StyledGuiUtils.drawItemSlot;
  */
 public class MultiblockGui extends GuiIEContainerBase
 {
-	private final TileEntityBasicMultiblock tile;
+	private final TileEntityMultiblock tile;
 	private final MultiblockContainer container;
-	private final MultiblockBasic mb;
+	private final Multiblock mb;
 	private final MultiblockGuiLayout layout;
 	private final MultiblockGuiCTWrapper ctWrapper;
 
@@ -65,10 +62,10 @@ public class MultiblockGui extends GuiIEContainerBase
 		StyledGuiUtils.VARIABLES.put("player_name", gui -> ClientUtils.mc.player.getName());
 		StyledGuiUtils.VARIABLES.put("player_slots", gui -> String.valueOf(ClientUtils.mc.player.inventory.getSizeInventory()));
 		StyledGuiUtils.VARIABLES.put("mb_name", gui -> I18n.format(Lib.DESC_INFO+"multiblock."+gui.mb.getUniqueName()));
-		StyledGuiUtils.VARIABLES.put("mb_slots", gui -> String.valueOf(gui.inventorySlots.inventorySlots.size()));
+		StyledGuiUtils.VARIABLES.put("mb_slots", gui -> String.valueOf(gui.container.inventorySlots.size()));
 	}
 
-	public MultiblockGui(InventoryPlayer inventoryPlayer, TileEntityBasicMultiblock tile, int page)
+	public MultiblockGui(InventoryPlayer inventoryPlayer, TileEntityMultiblock tile, int page)
 	{
 		super(new MultiblockContainer(inventoryPlayer, tile, page));
 		this.tile = tile;
@@ -154,7 +151,7 @@ public class MultiblockGui extends GuiIEContainerBase
 	}
 
 	@Override
-	protected void actionPerformed(GuiButton button) throws IOException
+	protected void actionPerformed(@Nonnull GuiButton button) throws IOException
 	{
 		super.actionPerformed(button);
 		if(button instanceof IGuiTweakable)
@@ -179,13 +176,6 @@ public class MultiblockGui extends GuiIEContainerBase
 			if(rect.texture==null)
 				drawRect(gL, gT, gL+rect.w, gT+rect.h, 0xff000000+rect.bgColor);
 		}
-
-		/*Tessellator tess = Tessellator.getInstance();
-		BufferBuilder buffer = tess.getBuffer();
-		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-		for (Slot slot : inventorySlots.inventorySlots)
-			drawItemSlot(guiLeft+slot.xPos, guiTop+slot.yPos, buffer);
-		tess.draw();*/
 
 		GlStateManager.popMatrix();
 
@@ -242,7 +232,7 @@ public class MultiblockGui extends GuiIEContainerBase
 			buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
 			StyledGuiUtils.drawBackgroundRoundedMask(styledRects, buffer, firstX, firstY);
 
-			for(Slot slot : inventorySlots.inventorySlots)
+			for(Slot slot : container.inventorySlots)
 				if(!(slot instanceof CTMBSlot)||((CTMBSlot)slot).getStyle()==0)
 					drawItemSlot(slot.xPos, slot.yPos, buffer);
 
@@ -258,7 +248,7 @@ public class MultiblockGui extends GuiIEContainerBase
 			tess.draw();
 
 			buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-			for(Slot slot : inventorySlots.inventorySlots)
+			for(Slot slot : container.inventorySlots)
 				if(slot instanceof CTMBSlot)
 				{
 					CTMBSlot s = (CTMBSlot)slot;
@@ -269,21 +259,21 @@ public class MultiblockGui extends GuiIEContainerBase
 							break;
 						case 1:
 						{
-							ClientUtils.drawTexturedRect(buffer, slot.xPos-1, slot.yPos-1, 238,122,18,18);
+							ClientUtils.drawTexturedRect(buffer, slot.xPos-1, slot.yPos-1, 238, 122, 18, 18);
 						}
 						break;
 						case 2:
 						{
-							ClientUtils.drawTexturedRect(buffer, slot.xPos-1, slot.yPos-1, 238,122,18,18);
-							ClientUtils.drawTexturedRect(buffer, slot.xPos-2, slot.yPos-2, 208,3,20,20);
-							ClientUtils.drawTexturedRect(buffer, slot.xPos-2+8, slot.yPos-2-3, 220,0,4,3);
+							ClientUtils.drawTexturedRect(buffer, slot.xPos-1, slot.yPos-1, 238, 122, 18, 18);
+							ClientUtils.drawTexturedRect(buffer, slot.xPos-2, slot.yPos-2, 208, 3, 20, 20);
+							ClientUtils.drawTexturedRect(buffer, slot.xPos-2+8, slot.yPos-2-3, 220, 0, 4, 3);
 						}
 						break;
 						case 3:
 						{
-							ClientUtils.drawTexturedRect(buffer, slot.xPos-1, slot.yPos-1, 238,122,18,18);
-							ClientUtils.drawTexturedRect(buffer, slot.xPos-2, slot.yPos-2, 208,3,20,20);
-							ClientUtils.drawTexturedRect(buffer, slot.xPos-2+8, slot.yPos-2-3, 224,0,4,3);
+							ClientUtils.drawTexturedRect(buffer, slot.xPos-1, slot.yPos-1, 238, 122, 18, 18);
+							ClientUtils.drawTexturedRect(buffer, slot.xPos-2, slot.yPos-2, 208, 3, 20, 20);
+							ClientUtils.drawTexturedRect(buffer, slot.xPos-2+8, slot.yPos-2-3, 224, 0, 4, 3);
 						}
 						break;
 					}
@@ -309,13 +299,8 @@ public class MultiblockGui extends GuiIEContainerBase
 		return layout.style;
 	}
 
-	public TileEntityBasicMultiblock getTile()
+	public TileEntityMultiblock getTile()
 	{
 		return tile;
-	}
-
-	public MultiblockBasic getMB()
-	{
-		return mb;
 	}
 }

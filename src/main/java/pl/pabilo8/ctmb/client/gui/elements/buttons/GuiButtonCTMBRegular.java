@@ -1,8 +1,10 @@
 package pl.pabilo8.ctmb.client.gui.elements.buttons;
 
 import net.minecraft.client.Minecraft;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.MultiblockGuiStyle;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.component.GuiComponent;
+import pl.pabilo8.ctmb.common.gui.MultiblockGuiStyle;
+import pl.pabilo8.ctmb.common.gui.component.GuiComponent;
+
+import javax.annotation.Nonnull;
 
 /**
  * @author Pabilo8
@@ -16,13 +18,13 @@ public class GuiButtonCTMBRegular extends GuiButtonCTMB
 	}
 
 	@Override
-	public boolean mousePressed(Minecraft mc, int mouseX, int mouseY)
+	public boolean mousePressed(@Nonnull Minecraft mc, int mouseX, int mouseY)
 	{
 		return state = super.mousePressed(mc, mouseX, mouseY);
 	}
 
 	@Override
-	public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks)
+	public void drawButton(@Nonnull Minecraft mc, int mouseX, int mouseY, float partialTicks)
 	{
 		super.drawButton(mc, mouseX, mouseY, partialTicks);
 		state = false;

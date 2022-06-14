@@ -1,12 +1,8 @@
 package pl.pabilo8.ctmb.common;
 
 import crafttweaker.api.data.*;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -15,21 +11,14 @@ import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
 import net.minecraftforge.fluids.FluidUtil;
-import net.minecraftforge.fluids.IFluidTank;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.oredict.OreDictionary;
 import pl.pabilo8.ctmb.CTMB;
-import pl.pabilo8.ctmb.common.util.NBTTagCollector;
 
 import javax.annotation.Nullable;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.function.Predicate;
-import java.util.stream.Collector;
 
 /**
  * @author Pabilo8
@@ -52,6 +41,7 @@ public class CommonUtils
 	{
 		return new TargetPoint(world.provider.getDimension(), pos.x, pos.y, pos.z, range);
 	}
+
 	/**
 	 * Safely handles input into a tank
 	 *
@@ -67,6 +57,7 @@ public class CommonUtils
 		if(tank.getFluidAmount() > 0)
 		{
 			FluidStack out = blusunrize.immersiveengineering.common.util.Utils.copyFluidStackWithAmount(tank.getFluid(), Math.min(tank.getFluidAmount(), amount), false);
+			assert out!=null;
 			IFluidHandler output = FluidUtil.getFluidHandler(world, pos.offset(side), side);
 			if(output!=null)
 			{
@@ -134,7 +125,7 @@ public class CommonUtils
 	}
 
 	@Nullable
-	@SuppressWarnings("")
+	@SuppressWarnings("unchecked")
 	public static <T> T getMapElement(LinkedHashMap<String, T> map, int id)
 	{
 		return (T)map.values().toArray()[id];

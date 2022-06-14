@@ -5,6 +5,8 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
 
+import javax.annotation.Nonnull;
+
 /**
  * @author Pabilo8
  * @since 16.07.2021
@@ -32,7 +34,7 @@ public class GuiButtonTab extends GuiButton
 	 * Returns true if the mouse has been pressed on this control. Equivalent of MouseListener.mousePressed(MouseEvent e).
 	 */
 	@Override
-	public boolean mousePressed(Minecraft mc, int mouseX, int mouseY)
+	public boolean mousePressed(@Nonnull Minecraft mc, int mouseX, int mouseY)
 	{
 		return canClick(mc, mouseX, mouseY);
 	}
@@ -41,7 +43,7 @@ public class GuiButtonTab extends GuiButton
 	 * Draws this button to the screen.
 	 */
 	@Override
-	public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks)
+	public void drawButton(@Nonnull Minecraft mc, int mouseX, int mouseY, float partialTicks)
 	{
 		if(this.visible)
 		{

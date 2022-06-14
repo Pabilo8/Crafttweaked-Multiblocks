@@ -10,10 +10,11 @@ import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
+import javax.annotation.Nonnull;
 
 /**
  * @author Pabilo8
@@ -26,6 +27,7 @@ public class ItemBlockCTMBMultiblock extends ItemBlock
 		super(block);
 	}
 
+	@Nonnull
 	@Override
 	public BlockCTMBMultiblock getBlock()
 	{
@@ -34,13 +36,13 @@ public class ItemBlockCTMBMultiblock extends ItemBlock
 
 	@Override
 	@SideOnly(Side.CLIENT)
-	public FontRenderer getFontRenderer(ItemStack stack)
+	public FontRenderer getFontRenderer(@Nonnull ItemStack stack)
 	{
 		return ClientProxy.itemFont;
 	}
 
 	@Override
-	public boolean placeBlockAt(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, IBlockState newState)
+	public boolean placeBlockAt(@Nonnull ItemStack stack, @Nonnull EntityPlayer player, @Nonnull World world, @Nonnull BlockPos pos, @Nonnull EnumFacing side, float hitX, float hitY, float hitZ, @Nonnull IBlockState newState)
 	{
 		return false;
 	}
@@ -48,14 +50,16 @@ public class ItemBlockCTMBMultiblock extends ItemBlock
 	/**
 	 * Omit the .name part for no repetition in the lang file
 	 */
+	@Nonnull
 	@Override
-	public String getItemStackDisplayName(ItemStack stack)
+	public String getItemStackDisplayName(@Nonnull ItemStack stack)
 	{
 		return this.getUnlocalizedNameInefficiently(stack);
 	}
 
+	@Nonnull
 	@Override
-	public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ)
+	public EnumActionResult onItemUse(@Nonnull EntityPlayer player, @Nonnull World world, @Nonnull BlockPos pos, @Nonnull EnumHand hand, @Nonnull EnumFacing side, float hitX, float hitY, float hitZ)
 	{
 		return EnumActionResult.FAIL;
 	}

@@ -7,16 +7,15 @@ import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraftforge.fluids.FluidTank;
 import org.lwjgl.opengl.GL11;
 import pl.pabilo8.ctmb.client.ClientUtils;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.MultiblockGuiStyle;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.component.GuiComponent;
+import pl.pabilo8.ctmb.common.gui.MultiblockGuiStyle;
+import pl.pabilo8.ctmb.common.gui.component.GuiComponent;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
 /**
  * @author Pabilo8
@@ -24,7 +23,7 @@ import java.util.function.Supplier;
  */
 public class GuiBar extends GuiButton implements IGuiTweakable
 {
-	private MultiblockGuiStyle style;
+	private final MultiblockGuiStyle style;
 	private final GuiComponent parent;
 	private final int styleID;
 	private final int color1, color2;
@@ -54,7 +53,7 @@ public class GuiBar extends GuiButton implements IGuiTweakable
 	}
 
 	@Override
-	public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks)
+	public void drawButton(@Nonnull Minecraft mc, int mouseX, int mouseY, float partialTicks)
 	{
 		if(this.visible)
 		{

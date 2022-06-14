@@ -3,17 +3,14 @@ package pl.pabilo8.ctmb.client;
 import blusunrize.immersiveengineering.api.ManualHelper;
 import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.models.obj.IEOBJLoader;
-import blusunrize.immersiveengineering.common.IEContent;
 import blusunrize.lib.manual.IManualPage;
 import blusunrize.lib.manual.ManualInstance.ManualEntry;
 import net.minecraft.block.Block;
-import net.minecraft.client.renderer.ItemMeshDefinition;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.resources.IReloadableResourceManager;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
@@ -27,17 +24,17 @@ import net.minecraftforge.client.resource.VanillaResourceType;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import pl.pabilo8.ctmb.CTMB;
 import pl.pabilo8.ctmb.client.gui.MultiblockGui;
 import pl.pabilo8.ctmb.common.CommonProxy;
 import pl.pabilo8.ctmb.common.block.ItemBlockCTMBMultiblock;
-import pl.pabilo8.ctmb.common.block.TileEntityBasicMultiblock;
-import pl.pabilo8.ctmb.common.crafttweaker.MultiblockBasic;
-import pl.pabilo8.ctmb.common.crafttweaker.manual.CTMBManualPage;
-import pl.pabilo8.ctmb.common.crafttweaker.manual.ManualTweaker;
+import pl.pabilo8.ctmb.common.block.TileEntityMultiblock;
+import pl.pabilo8.ctmb.common.block.crafttweaker.Multiblock;
+import pl.pabilo8.ctmb.common.manual.CTMBManualPage;
+import pl.pabilo8.ctmb.common.manual.ManualTweaker;
 import pl.pabilo8.ctmb.common.util.CTMBLogger;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.function.Predicate;
 
@@ -82,7 +79,7 @@ public class ClientProxy extends CommonProxy implements ISelectiveResourceReload
 	public static void registerModels(ModelRegistryEvent evt)
 	{
 		//itemblock models
-		for(ItemBlockCTMBMultiblock item : itemblocks)
+		for(ItemBlockCTMBMultiblock item : ITEMBLOCKS)
 		{
 			final ResourceLocation loc = Block.REGISTRY.getNameForObject(item.getBlock());
 			ModelLoader.setCustomMeshDefinition(item, stack -> new ModelResourceLocation(loc, "inventory"));
@@ -97,11 +94,11 @@ public class ClientProxy extends CommonProxy implements ISelectiveResourceReload
 		//ID is used as a page identifier
 
 		TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
-		if(te instanceof TileEntityBasicMultiblock)
+		if(te instanceof TileEntityMultiblock)
 		{
-			MultiblockBasic mb = ((TileEntityBasicMultiblock)te).getMultiblock();
+			Multiblock mb = ((TileEntityMultiblock)te).getMultiblock();
 			if((ID==0&&mb.mainGui!=null)||(mb.assignedGuis.size() >= ID))
-				return new MultiblockGui(player.inventory, ((TileEntityBasicMultiblock)te), ID);
+				return new MultiblockGui(player.inventory, ((TileEntityMultiblock)te), ID);
 		}
 
 		return null;
@@ -109,7 +106,7 @@ public class ClientProxy extends CommonProxy implements ISelectiveResourceReload
 
 
 	@Override
-	public void onResourceManagerReload(IResourceManager resourceManager, Predicate<IResourceType> resourcePredicate)
+	public void onResourceManagerReload(@Nonnull IResourceManager resourceManager, Predicate<IResourceType> resourcePredicate)
 	{
 		if(resourcePredicate.test(VanillaResourceType.LANGUAGES))
 		{

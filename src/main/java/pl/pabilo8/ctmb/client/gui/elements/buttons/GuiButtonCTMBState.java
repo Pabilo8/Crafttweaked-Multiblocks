@@ -3,9 +3,10 @@ package pl.pabilo8.ctmb.client.gui.elements.buttons;
 import crafttweaker.api.data.DataMap;
 import crafttweaker.api.data.IData;
 import net.minecraft.client.Minecraft;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.MultiblockGuiStyle;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.component.GuiComponent;
+import pl.pabilo8.ctmb.common.gui.MultiblockGuiStyle;
+import pl.pabilo8.ctmb.common.gui.component.GuiComponent;
 
+import javax.annotation.Nonnull;
 import java.util.Map;
 
 /**
@@ -27,7 +28,7 @@ public class GuiButtonCTMBState extends GuiButtonCTMB
 	 * Returns true if the mouse has been pressed on this control. Equivalent of MouseListener.mousePressed(MouseEvent e).
 	 */
 	@Override
-	public boolean mousePressed(Minecraft mc, int mouseX, int mouseY)
+	public boolean mousePressed(@Nonnull Minecraft mc, int mouseX, int mouseY)
 	{
 		boolean b = super.mousePressed(mc, mouseX, mouseY);
 		if(b)

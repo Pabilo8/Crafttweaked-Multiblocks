@@ -7,9 +7,10 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.math.MathHelper;
 import pl.pabilo8.ctmb.client.ClientUtils;
 import pl.pabilo8.ctmb.client.gui.elements.IGuiTweakable;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.MultiblockGuiStyle;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.component.GuiComponent;
+import pl.pabilo8.ctmb.common.gui.MultiblockGuiStyle;
+import pl.pabilo8.ctmb.common.gui.component.GuiComponent;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,7 +24,7 @@ public class GuiButtonCTMB extends GuiButton implements IGuiTweakable
 	private final GuiComponent parent;
 	private final int texX;
 	protected boolean state = false;
-	protected MultiblockGuiStyle style;
+	protected final MultiblockGuiStyle style;
 
 	public GuiButtonCTMB(@Nullable GuiComponent parent, int x, int y, int w, int h, int buttonId, String text, MultiblockGuiStyle style, int styleID)
 	{
@@ -42,7 +43,7 @@ public class GuiButtonCTMB extends GuiButton implements IGuiTweakable
 	 * Returns true if the mouse has been pressed on this control. Equivalent of MouseListener.mousePressed(MouseEvent e).
 	 */
 	@Override
-	public boolean mousePressed(Minecraft mc, int mouseX, int mouseY)
+	public boolean mousePressed(@Nonnull Minecraft mc, int mouseX, int mouseY)
 	{
 		return canClick(mc, mouseX, mouseY);
 	}
@@ -51,7 +52,7 @@ public class GuiButtonCTMB extends GuiButton implements IGuiTweakable
 	 * Draws this button to the screen.
 	 */
 	@Override
-	public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks)
+	public void drawButton(@Nonnull Minecraft mc, int mouseX, int mouseY, float partialTicks)
 	{
 		if(this.visible)
 		{

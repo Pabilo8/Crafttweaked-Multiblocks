@@ -3,8 +3,9 @@ package pl.pabilo8.ctmb.client.gui.elements;
 import crafttweaker.api.data.*;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiLabel;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.component.GuiComponent;
+import pl.pabilo8.ctmb.common.gui.component.GuiComponent;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,9 +32,9 @@ public class GuiLabelCTMB extends GuiLabel implements IGuiTweakable
 	 * Without shadow.
 	 */
 	@Override
-	public void drawCenteredString(FontRenderer fontRendererIn, String text, int x, int y, int color)
+	public void drawCenteredString(FontRenderer fontRendererIn, @Nonnull String text, int x, int y, int color)
 	{
-		fontRendererIn.drawString(text, x-fontRendererIn.getStringWidth(text)/2, y, color, dropShadow);
+		fontRendererIn.drawString(text, x-fontRendererIn.getStringWidth(text)/2f, y, color, dropShadow);
 	}
 
 	/**
@@ -41,7 +42,7 @@ public class GuiLabelCTMB extends GuiLabel implements IGuiTweakable
 	 * Without shadow.
 	 */
 	@Override
-	public void drawString(FontRenderer fontRendererIn, String text, int x, int y, int color)
+	public void drawString(FontRenderer fontRendererIn, @Nonnull String text, int x, int y, int color)
 	{
 		fontRendererIn.drawString(text, x, y, color, dropShadow);
 	}
@@ -59,21 +60,27 @@ public class GuiLabelCTMB extends GuiLabel implements IGuiTweakable
 		Map<String, IData> params = map.asMap();
 
 		if(params.containsKey("x"))
-			this.x=params.get("x").asInt();
+			this.x = params.get("x").asInt();
 		if(params.containsKey("y"))
-			this.x=params.get("y").asInt();
+			this.x = params.get("y").asInt();
 
 		if(params.containsKey("w"))
-			this.width=params.get("w").asInt();
+			this.width = params.get("w").asInt();
 		if(params.containsKey("h"))
-			this.height=params.get("h").asInt();
+			this.height = params.get("h").asInt();
 
 		if(params.containsKey("visible"))
-			this.visible=params.get("visible").asBool();
+			this.visible = params.get("visible").asBool();
 
-		// TODO: 03.06.2022 change text on a label
-		/*if(params.containsKey("text"))
-			this.label=params.get("text").asString();*/
+		if(params.containsKey("text"))
+		{
+			labels.clear();
+			IData text = params.get("text");
+			if(text instanceof DataString)
+				labels.add(text.asString());
+			else if(text instanceof DataList)
+				text.asList().forEach(line -> labels.add(line.asString()));
+		}
 	}
 
 	@Override
@@ -81,13 +88,13 @@ public class GuiLabelCTMB extends GuiLabel implements IGuiTweakable
 	{
 		Map<String, IData> map = new HashMap<>();
 
-		map.put("x",new DataInt(x));
-		map.put("y",new DataInt(y));
+		map.put("x", new DataInt(x));
+		map.put("y", new DataInt(y));
 
-		map.put("w",new DataInt(width));
-		map.put("h",new DataInt(height));
+		map.put("w", new DataInt(width));
+		map.put("h", new DataInt(height));
 
-		map.put("visible",new DataBool(visible));
+		map.put("visible", new DataBool(visible));
 
 		return new DataMap(map, true);
 	}

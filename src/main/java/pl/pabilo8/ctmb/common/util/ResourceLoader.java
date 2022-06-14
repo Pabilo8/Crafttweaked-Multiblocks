@@ -2,7 +2,6 @@ package pl.pabilo8.ctmb.common.util;
 
 import blusunrize.lib.manual.IManualPage;
 import com.google.gson.*;
-import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.mc1120.util.CraftTweakerHacks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResourcePack;
@@ -14,14 +13,13 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import pl.pabilo8.ctmb.CTMB;
 import pl.pabilo8.ctmb.client.ClientProxy;
 import pl.pabilo8.ctmb.common.CommonProxy;
-import pl.pabilo8.ctmb.common.crafttweaker.MultiblockBasic;
-import pl.pabilo8.ctmb.common.crafttweaker.manual.CTMBManualEntry;
-import pl.pabilo8.ctmb.common.crafttweaker.manual.CTMBManualPage;
-import pl.pabilo8.ctmb.common.crafttweaker.manual.ManualTweaker;
+import pl.pabilo8.ctmb.common.block.crafttweaker.Multiblock;
+import pl.pabilo8.ctmb.common.manual.CTMBManualEntry;
+import pl.pabilo8.ctmb.common.manual.CTMBManualPage;
+import pl.pabilo8.ctmb.common.manual.ManualTweaker;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
@@ -69,6 +67,7 @@ public class ResourceLoader
 	}
 
 	@SideOnly(Side.CLIENT)
+	@SuppressWarnings("deprecation")
 	private void loadAsResourcePack()
 	{
 		List<IResourcePack> defaultResourcePacks = ReflectionHelper.getPrivateValue(Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "field_110449_ao", "ap");
@@ -99,7 +98,7 @@ public class ResourceLoader
 
 	}
 
-	Pattern pattern = Pattern.compile(" += +");
+	final Pattern pattern = Pattern.compile(" += +");
 
 	private void fixLangFile(File file)
 	{
@@ -125,7 +124,7 @@ public class ResourceLoader
 		{
 			CTMBFileUtils.writeStringToFile("", enUsLang);
 		}
-		File manual = new File(modFolder, "ie_manual");
+		new File(modFolder, "ie_manual");
 
 		File textures = new File(modFolder, "textures");
 		CTMBFileUtils.createFolder(textures);
@@ -146,7 +145,7 @@ public class ResourceLoader
 		File blockstates = new File(modFolder, "blockstates");
 		File manualEntries = new File(new File(modFolder, "ie_manual"), "en_us");
 
-		for(MultiblockBasic mb : CommonProxy.multiblocks)
+		for(Multiblock mb : CommonProxy.MULTIBLOCKS)
 		{
 			File stateFile = new File(blockstates, mb.getFlattenedName()+".json");
 			if(!stateFile.exists())

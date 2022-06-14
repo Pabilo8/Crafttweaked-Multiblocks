@@ -2,8 +2,10 @@ package pl.pabilo8.ctmb.client.gui.elements.buttons;
 
 import net.minecraft.client.gui.FontRenderer;
 import pl.pabilo8.ctmb.client.ClientUtils;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.MultiblockGuiStyle;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.component.GuiComponent;
+import pl.pabilo8.ctmb.common.gui.MultiblockGuiStyle;
+import pl.pabilo8.ctmb.common.gui.component.GuiComponent;
+
+import javax.annotation.Nonnull;
 
 /**
  * @author Pabilo8
@@ -38,7 +40,7 @@ public class GuiButtonCTMBCheckbox extends GuiButtonCTMBState
 	 * Without shadow.
 	 */
 	@Override
-	public void drawCenteredString(FontRenderer fontRendererIn, String text, int x, int y, int color)
+	public void drawCenteredString(FontRenderer fontRendererIn, @Nonnull String text, int x, int y, int color)
 	{
 		fontRendererIn.drawString(text, x-fontRendererIn.getStringWidth(text)/2, y, color);
 	}
@@ -48,7 +50,7 @@ public class GuiButtonCTMBCheckbox extends GuiButtonCTMBState
 	 * Without shadow.
 	 */
 	@Override
-	public void drawString(FontRenderer fontRendererIn, String text, int x, int y, int color)
+	public void drawString(FontRenderer fontRendererIn, @Nonnull String text, int x, int y, int color)
 	{
 		fontRendererIn.drawString(text, x, y, color);
 	}

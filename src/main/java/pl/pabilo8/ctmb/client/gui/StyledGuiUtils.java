@@ -1,11 +1,10 @@
 package pl.pabilo8.ctmb.client.gui;
 
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import pl.pabilo8.ctmb.client.ClientUtils;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.rectangle.GuiRectangleStyled;
+import pl.pabilo8.ctmb.common.gui.rectangle.GuiRectangleStyled;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -46,31 +45,31 @@ public class StyledGuiUtils
 						hasBR = outline[x+1][y+1]==1;
 
 						if(hasTL&&hasTR&&hasBL&&hasBR)
-							ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, (88-80), 8+192, 8, 8);
+							ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 8, 200, 8, 8);
 						else if(hasBL&&hasBR)
-							ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, hasTR?(104-80): (112-80), 0+192, 8, 8);
+							ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, hasTR?24: 32, 192, 8, 8);
 						else if(hasTL&&hasTR)
-							ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, hasBR?(104-80): (112-80), 8+192, 8, 8);
+							ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, hasBR?24: 32, 200, 8, 8);
 					}
 
 					else if(hasRight&&hasBottom&&hasTop)
-						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, (80-80), 8+192, 8, 8);
+						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 0, 200, 8, 8);
 					else if(hasLeft&&hasBottom&&hasTop)
-						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, (96-80), 8+192, 8, 8);
+						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 16, 200, 8, 8);
 					else if(hasBottom&&hasLeft&&hasRight)
-						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, (88-80), 0+192, 8, 8);
+						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 8, 192, 8, 8);
 					else if(hasTop&&hasLeft&&hasRight)
-						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, (88-80), 16+192, 8, 8);
+						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 8, 208, 8, 8);
 
 
 					else if(hasRight&&hasBottom)
-						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, (80-80), 0+192, 8, 8);
+						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 0, 192, 8, 8);
 					else if(hasLeft&&hasBottom)
-						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, (96-80), 0+192, 8, 8);
+						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 16, 192, 8, 8);
 					else if(hasRight&&hasTop)
-						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, (80-80), 16+192, 8, 8);
+						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 0, 208, 8, 8);
 					else if(hasLeft&&hasTop)
-						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, (16), 16+192, 8, 8);
+						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 16, 208, 8, 8);
 				}
 			}
 	}
@@ -80,15 +79,12 @@ public class StyledGuiUtils
 		if(rects.length==0)
 			return new byte[0][0];
 
-		int xx = 0;
-		int yy = 0;
+		int xx, yy;
 
-		GuiRectangleStyled b = Arrays.stream(rects).min((o1, o2) -> (o2.x+o2.w)-(o1.x+o1.w)).orElse(null);
-		if(b!=null)
-			xx = b.x+b.w-minXOffset;
-		b = Arrays.stream(rects).min((o1, o2) -> (o2.y+o2.h)-(o1.y+o1.h)).orElse(null);
-		if(b!=null)
-			yy = b.y+b.h-minYOffset;
+		GuiRectangleStyled b = Arrays.stream(rects).min((o1, o2) -> o2.x+o2.w-(o1.x+o1.w)).orElse(null);
+		xx = b.x+b.w-minXOffset;
+		b = Arrays.stream(rects).min((o1, o2) -> o2.y+o2.h-(o1.y+o1.h)).orElse(null);
+		yy = b.y+b.h-minYOffset;
 
 		xx /= unit;
 		yy /= unit;
@@ -113,7 +109,7 @@ public class StyledGuiUtils
 
 	}
 
-	public static void drawTooltip(int x, int y, int w, int h)
+	/*public static void drawTooltip(int x, int y, int w, int h)
 	{
 		GlStateManager.translate(0, 0, 300);
 		int j1 = -267386864;
@@ -123,13 +119,13 @@ public class StyledGuiUtils
 		ClientUtils.drawGradientRect(x-4, y-3, x-3, y+h+3, j1, j1, false);
 		ClientUtils.drawGradientRect(x+w+3, y-3, x+w+4, y+h+3, j1, j1, false);
 		int k1 = 1347420415;
-		int l1 = ((k1&16711422) >> 1|k1&-16777216);
+		int l1 = (k1&16711422)>>1|k1&-16777216;
 		ClientUtils.drawGradientRect(x-3, y-3+1, x-3+1, y+h+3-1, k1, l1, false);
 		ClientUtils.drawGradientRect(x+w+2, y-3+1, x+w+3, y+h+3-1, k1, l1, false);
 		ClientUtils.drawGradientRect(x-3, y-3, x+w+3, y-3+1, k1, k1, false);
 		ClientUtils.drawGradientRect(x-3, y+h+2, x+w+3, y+h+3, l1, l1, false);
 		GlStateManager.translate(0, 0, -300);
-	}
+	}*/
 
 	public static void drawBackgroundBlock(GuiRectangleStyled[] rects, BufferBuilder buffer)
 	{
@@ -158,13 +154,13 @@ public class StyledGuiUtils
 					ClientUtils.drawTexturedRect(buffer, x, y, texBegin, 64, ww, hh);
 
 				if(rect.border[0]&&rect.border[3]) //top left
-					ClientUtils.drawTexturedRect(buffer, x+(w-ww), y, texBegin+48-ww, 64, ww, hh);
+					ClientUtils.drawTexturedRect(buffer, x+w-ww, y, texBegin+48-ww, 64, ww, hh);
 
 				if(rect.border[2]&&rect.border[1]) //bottom right
-					ClientUtils.drawTexturedRect(buffer, x, y+(h-hh), texBegin, 64+48-ww, ww, hh);
+					ClientUtils.drawTexturedRect(buffer, x, y+h-hh, texBegin, 112-ww, ww, hh);
 
 				if(rect.border[2]&&rect.border[3]) //bottom left
-					ClientUtils.drawTexturedRect(buffer, x+(w-ww), y+(h-hh), texBegin+48-ww, 64+48-ww, ww, hh);
+					ClientUtils.drawTexturedRect(buffer, x+w-ww, y+h-hh, texBegin+48-ww, 112-ww, ww, hh);
 
 				if(w-ww > 0&&h-hh > 0)
 				{
@@ -173,14 +169,14 @@ public class StyledGuiUtils
 							ClientUtils.drawTexturedRect(buffer, x+i, y, texBegin+16, 64, Math.min(16, w-16-i), hh);
 					if(rect.border[2])
 						for(int i = 16; i < w-16; i += 16)
-							ClientUtils.drawTexturedRect(buffer, x+i, y+(h-hh), texBegin+16, 64+32, Math.min(16, w-16-i), hh);
+							ClientUtils.drawTexturedRect(buffer, x+i, y+h-hh, texBegin+16, 96, Math.min(16, w-16-i), hh);
 
 					if(rect.border[1])
 						for(int i = 16; i < h-16; i += 16)
-							ClientUtils.drawTexturedRect(buffer, x, y+i, texBegin, 64+16, ww, Math.min(16, h-16-i));
+							ClientUtils.drawTexturedRect(buffer, x, y+i, texBegin, 80, ww, Math.min(16, h-16-i));
 					if(rect.border[3])
 						for(int i = 16; i < h-16; i += 16)
-							ClientUtils.drawTexturedRect(buffer, x+w-16, y+i, texBegin+32, 64+16, ww, Math.min(16, h-16-i));
+							ClientUtils.drawTexturedRect(buffer, x+w-16, y+i, texBegin+32, 80, ww, Math.min(16, h-16-i));
 				}
 
 			}
@@ -198,7 +194,7 @@ public class StyledGuiUtils
 
 	public static String processText(MultiblockGui gui, String text)
 	{
-		Pattern pattern = Pattern.compile("\\$\\{(.+?)\\}");
+		Pattern pattern = Pattern.compile("\\$\\{(.+?)}");
 		Matcher matcher = pattern.matcher(text);
 
 		//populate the replacements map ...

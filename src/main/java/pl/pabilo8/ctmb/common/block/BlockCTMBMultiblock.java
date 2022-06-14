@@ -21,7 +21,6 @@ import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -51,7 +50,7 @@ import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import pl.pabilo8.ctmb.CTMB;
 import pl.pabilo8.ctmb.common.CommonProxy;
-import pl.pabilo8.ctmb.common.crafttweaker.MultiblockBasic;
+import pl.pabilo8.ctmb.common.block.crafttweaker.Multiblock;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -73,7 +72,7 @@ public class BlockCTMBMultiblock extends Block
 	protected static IUnlistedProperty<?>[] tempUnlistedProperties;
 
 	public final String registryName, unlocalizedName;
-	public final MultiblockBasic multiblock;
+	public final Multiblock multiblock;
 
 	private static final Map<DimensionBlockPos, TileEntity> TEMP_TILES = new HashMap<>();
 
@@ -84,18 +83,15 @@ public class BlockCTMBMultiblock extends Block
 			TEMP_TILES.clear();
 	}
 
-	public BlockCTMBMultiblock(MultiblockBasic mb)
+	public BlockCTMBMultiblock(Multiblock mb)
 	{
-		super(setTempProperties(mb.getMaterial(), new IProperty[]{IEProperties.FACING_HORIZONTAL, IEProperties.MULTIBLOCKSLAVE, IEProperties.BOOLEANS[0]}));
+		super(setTempProperties(mb.getMaterial(), IEProperties.FACING_HORIZONTAL, IEProperties.MULTIBLOCKSLAVE, IEProperties.BOOLEANS[0]));
 		this.multiblock = mb;
 		this.registryName = "ctmb:"+mb.getFlattenedName();
 
 		this.setDefaultState(getInitDefaultState());
 		this.setUnlocalizedName(unlocalizedName = Lib.DESC_INFO+"multiblock."+mb.getUniqueName());
-		CommonProxy.itemblocks.add(new ItemBlockCTMBMultiblock(this));
-
-		//this.setCreativeTab(null);
-		//this.adjustSound();
+		CommonProxy.ITEMBLOCKS.add(new ItemBlockCTMBMultiblock(this));
 
 		setHardness(2f);
 		setResistance(13f);
@@ -110,16 +106,17 @@ public class BlockCTMBMultiblock extends Block
 		setResistance(resistance);
 	}
 
+	@Nonnull
 	@Override
 	public String getUnlocalizedName()
 	{
 		return unlocalizedName;
 	}
 
-	//Tile Entity / BlockState Creation & Handling
+	//--- Tile Entity / BlockState Creation & Handling ---//
 
 	@Override
-	public int getMetaFromState(IBlockState state)
+	public int getMetaFromState(@Nonnull IBlockState state)
 	{
 		return 0;
 	}
@@ -161,7 +158,7 @@ public class BlockCTMBMultiblock extends Block
 		IBlockState state = this.blockState.getBaseState();
 		for(IProperty<?> property : this.additionalProperties)
 			if(property!=null&&!property.getAllowedValues().isEmpty())
-				state = applyProperty(state, property, property.getAllowedValues().iterator().next());
+				state = applyNextProperty(state, property);
 
 		if(state.getPropertyKeys().contains(IEProperties.FACING_HORIZONTAL))
 			state = state.withProperty(IEProperties.FACING_HORIZONTAL, EnumFacing.NORTH);
@@ -169,30 +166,33 @@ public class BlockCTMBMultiblock extends Block
 		return state;
 	}
 
-	protected <V extends Comparable<V>> IBlockState applyProperty(IBlockState in, IProperty<V> prop, Object val)
+	protected <V extends Comparable<V>> IBlockState applyNextProperty(IBlockState in, IProperty<V> prop)
 	{
-		return in.withProperty(prop, (V)val);
+		return applyProperty(in, prop, prop.getAllowedValues().iterator().next());
+	}
+
+	protected <V extends Comparable<V>> IBlockState applyProperty(IBlockState in, IProperty<V> prop, V val)
+	{
+		return in.withProperty(prop, val);
 	}
 
 	@Override
-	public boolean hasTileEntity(IBlockState state)
+	public boolean hasTileEntity(@Nonnull IBlockState state)
 	{
 		return true;
 	}
 
 	@Override
-	public void getSubBlocks(CreativeTabs itemIn, NonNullList<ItemStack> items)
+	public void getSubBlocks(@Nonnull CreativeTabs itemIn, @Nonnull NonNullList<ItemStack> items)
 	{
 
 	}
 
-	//Block breaking behaviour
-
 	@Nullable
 	@Override
-	public TileEntity createTileEntity(World world, IBlockState state)
+	public TileEntity createTileEntity(@Nonnull World world, IBlockState state)
 	{
-		TileEntityBasicMultiblock basic = new TileEntityBasicMultiblock(this.multiblock);
+		TileEntityMultiblock basic = new TileEntityMultiblock(this.multiblock);
 		basic.ensureMBLoaded(this);
 
 		//facing
@@ -209,7 +209,7 @@ public class BlockCTMBMultiblock extends Block
 		return basic;
 	}
 
-	//Block breaking behaviour
+	//--- Block breaking behaviour ---//
 
 	public ItemStack getOriginalBlock(World world, BlockPos pos)
 	{
@@ -221,7 +221,7 @@ public class BlockCTMBMultiblock extends Block
 
 	// TODO: 20.02.2022 custom drops
 	@Override
-	public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune)
+	public void getDrops(@Nonnull NonNullList<ItemStack> drops, IBlockAccess world, @Nonnull BlockPos pos, @Nonnull IBlockState state, int fortune)
 	{
 		TileEntity tile = world.getTileEntity(pos);
 		DimensionBlockPos dpos = new DimensionBlockPos(pos, world instanceof World?((World)world).provider.getDimension(): 0);
@@ -259,12 +259,12 @@ public class BlockCTMBMultiblock extends Block
 	}
 
 	@Override
-	public void breakBlock(World world, BlockPos pos, IBlockState state)
+	public void breakBlock(World world, @Nonnull BlockPos pos, @Nonnull IBlockState state)
 	{
 		TileEntity te = world.getTileEntity(pos);
-		if(te instanceof TileEntityBasicMultiblock)
+		if(te instanceof TileEntityMultiblock)
 		{
-			TileEntityBasicMultiblock tile = (TileEntityBasicMultiblock)te;
+			TileEntityMultiblock tile = (TileEntityMultiblock)te;
 
 			if(world.getGameRules().getBoolean("doTileDrops"))
 			{
@@ -273,7 +273,7 @@ public class BlockCTMBMultiblock extends Block
 
 				if(tile.formed)
 				{
-					IIEInventory master = (IIEInventory)tile.master();
+					IIEInventory master = tile.master();
 					if(master!=null&&(!(master instanceof ITileDrop)||!((ITileDrop)master).preventInventoryDrop())&&master.getDroppedItems()!=null)
 						for(ItemStack s : master.getDroppedItems())
 							if(!s.isEmpty())
@@ -291,14 +291,15 @@ public class BlockCTMBMultiblock extends Block
 		super.breakBlock(world, pos, state);
 	}
 
+	@Nonnull
 	@Override
-	public ItemStack getPickBlock(IBlockState state, RayTraceResult target, World world, BlockPos pos, EntityPlayer player)
+	public ItemStack getPickBlock(@Nonnull IBlockState state, @Nonnull RayTraceResult target, @Nonnull World world, @Nonnull BlockPos pos, @Nonnull EntityPlayer player)
 	{
 		ItemStack stack = getOriginalBlock(world, pos);
 		return stack.isEmpty()?super.getPickBlock(state, target, world, pos, player): stack;
 	}
 
-	//Update Stuff
+	//--- Update Stuff ---//
 
 	/**
 	 * Called when a neighboring block was changed and marks that this state should perform any checks during a neighbor
@@ -306,7 +307,7 @@ public class BlockCTMBMultiblock extends Block
 	 * block, etc.
 	 */
 	@Override
-	public void neighborChanged(IBlockState state, World world, BlockPos pos, Block block, BlockPos fromPos)
+	public void neighborChanged(@Nonnull IBlockState state, World world, @Nonnull BlockPos pos, @Nonnull Block block, @Nonnull BlockPos fromPos)
 	{
 		if(!world.isRemote)
 		{
@@ -331,16 +332,11 @@ public class BlockCTMBMultiblock extends Block
 	 * the client, the update may involve replacing tile entities or effects such as sounds or particles
 	 */
 	@Override
-	public boolean eventReceived(IBlockState state, World worldIn, BlockPos pos, int eventID, int eventParam)
+	public boolean eventReceived(@Nonnull IBlockState state, @Nonnull World worldIn, @Nonnull BlockPos pos, int eventID, int eventParam)
 	{
 		super.eventReceived(state, worldIn, pos, eventID, eventParam);
 		TileEntity tileentity = worldIn.getTileEntity(pos);
 		return tileentity!=null&&tileentity.receiveClientEvent(eventID, eventParam);
-	}
-
-	protected EnumFacing getDefaultFacing()
-	{
-		return EnumFacing.NORTH;
 	}
 
 	/**
@@ -349,7 +345,7 @@ public class BlockCTMBMultiblock extends Block
 	 */
 	@Override
 	@Nonnull
-	public IBlockState getActualState(IBlockState state, IBlockAccess world, BlockPos pos)
+	public IBlockState getActualState(@Nonnull IBlockState state, @Nonnull IBlockAccess world, @Nonnull BlockPos pos)
 	{
 		// TODO: 20.02.2022 investigate
 		state = super.getActualState(state, world, pos);
@@ -385,7 +381,7 @@ public class BlockCTMBMultiblock extends Block
 	}
 
 	@Override
-	public boolean rotateBlock(World world, BlockPos pos, EnumFacing axis)
+	public boolean rotateBlock(World world, @Nonnull BlockPos pos, @Nonnull EnumFacing axis)
 	{
 		TileEntity tile = world.getTileEntity(pos);
 		if(tile instanceof IDirectionalTile)
@@ -415,7 +411,7 @@ public class BlockCTMBMultiblock extends Block
 
 	@Override
 	@Nonnull
-	public IBlockState getExtendedState(IBlockState state, IBlockAccess world, BlockPos pos)
+	public IBlockState getExtendedState(@Nonnull IBlockState state, @Nonnull IBlockAccess world, @Nonnull BlockPos pos)
 	{
 		state = super.getExtendedState(state, world, pos);
 		if(state instanceof IExtendedBlockState)
@@ -424,7 +420,7 @@ public class BlockCTMBMultiblock extends Block
 			TileEntity te = world.getTileEntity(pos);
 			if(te!=null)
 			{
-				if(te instanceof TileEntityBasicMultiblock)
+				if(te instanceof TileEntityMultiblock)
 
 					if(te instanceof IAdvancedHasObjProperty)
 						extended = extended.withProperty(Properties.AnimationProperty, ((IAdvancedHasObjProperty)te).getOBJState());
@@ -434,7 +430,7 @@ public class BlockCTMBMultiblock extends Block
 				if(te instanceof IDynamicTexture)
 					extended = extended.withProperty(IEProperties.OBJ_TEXTURE_REMAP, ((IDynamicTexture)te).getTextureReplacements());
 				if(te instanceof IOBJModelCallback)
-					extended = extended.withProperty(IOBJModelCallback.PROPERTY, (IOBJModelCallback<TileEntity>)te);
+					extended = extended.withProperty(IOBJModelCallback.PROPERTY, (IOBJModelCallback<?>)te);
 
 				if(te.hasCapability(CapabilityShader.SHADER_CAPABILITY, null))
 					extended = extended.withProperty(CapabilityShader.BLOCKSTATE_PROPERTY, te.getCapability(CapabilityShader.SHADER_CAPABILITY, null));
@@ -445,29 +441,18 @@ public class BlockCTMBMultiblock extends Block
 		return state;
 	}
 
-	public void onIEBlockPlacedBy(World world, BlockPos pos, IBlockState state, EnumFacing side, float hitX, float hitY, float hitZ, EntityLivingBase placer, ItemStack stack)
-	{
-		TileEntity tile = world.getTileEntity(pos);
-
-		if(tile instanceof TileEntityBasicMultiblock)
-		{
-			EnumFacing f = ((IDirectionalTile)tile).getFacingForPlacement(placer, pos, side, hitX, hitY, hitZ);
-			((IDirectionalTile)tile).setFacing(f);
-		}
-	}
-
 	/**
-	 * Called when the block is right clicked by a player.
+	 * Called when the block is right-clicked by a player.
 	 */
 	@Override
-	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ)
+	public boolean onBlockActivated(World world, @Nonnull BlockPos pos, @Nonnull IBlockState state, EntityPlayer player, @Nonnull EnumHand hand, @Nonnull EnumFacing side, float hitX, float hitY, float hitZ)
 	{
 		ItemStack heldItem = player.getHeldItem(hand);
 		TileEntity te = world.getTileEntity(pos);
 
-		if(te instanceof TileEntityBasicMultiblock)
+		if(te instanceof TileEntityMultiblock)
 		{
-			TileEntityBasicMultiblock mb = (TileEntityBasicMultiblock)te;
+			TileEntityMultiblock mb = (TileEntityMultiblock)te;
 
 			//hammer rotation
 			if(Utils.isHammer(heldItem)&&mb.canHammerRotate(side, hitX, hitY, hitZ, player)&&!world.isRemote)
@@ -496,7 +481,7 @@ public class BlockCTMBMultiblock extends Block
 			//GUI display
 			if(hand==EnumHand.MAIN_HAND&&!player.isSneaking())
 			{
-				TileEntityBasicMultiblock master = mb.master();
+				TileEntityMultiblock master = mb.master();
 
 				if(!world.isRemote&&master!=null&&master.canOpenGui(player))
 				{
@@ -511,19 +496,19 @@ public class BlockCTMBMultiblock extends Block
 		return false;
 	}
 
-	//Collision
+	//--- Collision ---//
 
 	@Override
-	public void onEntityCollidedWithBlock(World world, BlockPos pos, IBlockState state, Entity entity)
+	public void onEntityCollidedWithBlock(World world, @Nonnull BlockPos pos, @Nonnull IBlockState state, @Nonnull Entity entity)
 	{
 		TileEntity te = world.getTileEntity(pos);
-		if(te instanceof TileEntityBasicMultiblock)
-			((TileEntityBasicMultiblock)te).onEntityCollision(world, entity);
+		if(te instanceof TileEntityMultiblock)
+			((TileEntityMultiblock)te).onEntityCollision(world, entity);
 	}
 
 	@Override
 	@Nullable
-	public RayTraceResult collisionRayTrace(IBlockState state, World world, BlockPos pos, Vec3d start, Vec3d end)
+	public RayTraceResult collisionRayTrace(@Nonnull IBlockState state, World world, @Nonnull BlockPos pos, @Nonnull Vec3d start, @Nonnull Vec3d end)
 	{
 		TileEntity te = world.getTileEntity(pos);
 		if(te instanceof IAdvancedSelectionBounds)
@@ -614,7 +599,7 @@ public class BlockCTMBMultiblock extends Block
 	}
 
 	@Override
-	public void addCollisionBoxToList(IBlockState state, World world, BlockPos pos, AxisAlignedBB mask, List<AxisAlignedBB> list, @Nullable Entity ent, boolean isActualState)
+	public void addCollisionBoxToList(@Nonnull IBlockState state, World world, @Nonnull BlockPos pos, @Nonnull AxisAlignedBB mask, @Nonnull List<AxisAlignedBB> list, @Nullable Entity ent, boolean isActualState)
 	{
 		TileEntity te = world.getTileEntity(pos);
 		if(te instanceof IAdvancedCollisionBounds)
@@ -632,6 +617,7 @@ public class BlockCTMBMultiblock extends Block
 	}
 
 
+	@Nonnull
 	@Override
 	public BlockRenderLayer getBlockLayer()
 	{
@@ -639,69 +625,69 @@ public class BlockCTMBMultiblock extends Block
 	}
 
 	@Override
-	public boolean isOpaqueCube(IBlockState state)
+	public boolean isOpaqueCube(@Nonnull IBlockState state)
 	{
 		return false;
 	}
 
 	@Override
-	public boolean isFullCube(IBlockState state)
+	public boolean isFullCube(@Nonnull IBlockState state)
 	{
 		return false;
 	}
 
 	@Override
-	public boolean isNormalCube(IBlockState state, IBlockAccess world, BlockPos pos)
+	public boolean isNormalCube(@Nonnull IBlockState state, @Nonnull IBlockAccess world, @Nonnull BlockPos pos)
 	{
 		return false;
 	}
 
-	//Redstone
+	//--- Redstone ---//
 
 	/**
 	 * Can this block provide power. Only wire currently seems to have this change based on its state.
 	 */
 	@Override
-	public boolean canProvidePower(IBlockState state)
+	public boolean canProvidePower(@Nonnull IBlockState state)
 	{
 		return true;
 	}
 
 	@Override
-	public int getWeakPower(IBlockState blockState, IBlockAccess world, BlockPos pos, EnumFacing side)
+	public int getWeakPower(@Nonnull IBlockState blockState, IBlockAccess world, @Nonnull BlockPos pos, @Nonnull EnumFacing side)
 	{
 		TileEntity te = world.getTileEntity(pos);
-		if(te instanceof TileEntityBasicMultiblock)
-			return ((TileEntityBasicMultiblock)te).getWeakRSOutput(blockState, side);
+		if(te instanceof TileEntityMultiblock)
+			return ((TileEntityMultiblock)te).getWeakRSOutput(blockState, side);
 		return 0;
 	}
 
 	@Override
-	public int getStrongPower(IBlockState blockState, IBlockAccess world, BlockPos pos, EnumFacing side)
+	public int getStrongPower(@Nonnull IBlockState blockState, IBlockAccess world, @Nonnull BlockPos pos, @Nonnull EnumFacing side)
 	{
 		TileEntity te = world.getTileEntity(pos);
-		if(te instanceof TileEntityBasicMultiblock)
-			return ((TileEntityBasicMultiblock)te).getStrongRSOutput(blockState, side);
+		if(te instanceof TileEntityMultiblock)
+			return ((TileEntityMultiblock)te).getStrongRSOutput(blockState, side);
 		return 0;
 	}
 
 	@Override
-	public boolean canConnectRedstone(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing side)
+	public boolean canConnectRedstone(@Nonnull IBlockState state, IBlockAccess world, @Nonnull BlockPos pos, EnumFacing side)
 	{
 		TileEntity te = world.getTileEntity(pos);
-		if(te instanceof TileEntityBasicMultiblock)
-			return ((TileEntityBasicMultiblock)te).canConnectRedstone(state, side);
+		if(te instanceof TileEntityMultiblock)
+			return ((TileEntityMultiblock)te).canConnectRedstone(state, side);
 		return false;
 	}
 
 	@Override
-	public boolean hasComparatorInputOverride(IBlockState state)
+	public boolean hasComparatorInputOverride(@Nonnull IBlockState state)
 	{
 		return true;
 	}
 
 	@Override
-	public int getComparatorInputOverride(IBlockState state, World world, BlockPos pos)
+	public int getComparatorInputOverride(@Nonnull IBlockState state, World world, @Nonnull BlockPos pos)
 	{
 		TileEntity te = world.getTileEntity(pos);
 		if(te instanceof IEBlockInterfaces.IComparatorOverride)

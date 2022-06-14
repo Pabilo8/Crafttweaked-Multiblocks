@@ -6,6 +6,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 
+import javax.annotation.Nonnull;
+
 /**
  * @author Pabilo8
  * @since 29.07.2021
@@ -50,7 +52,7 @@ public class GuiSliderII extends GuiSliderIE
 	 * Without shadow.
 	 */
 	@Override
-	public void drawCenteredString(FontRenderer fontRendererIn, String text, int x, int y, int color)
+	public void drawCenteredString(FontRenderer fontRendererIn, @Nonnull String text, int x, int y, int color)
 	{
 		fontRendererIn.drawString(text, x-fontRendererIn.getStringWidth(text)/2, y, color);
 	}
@@ -60,7 +62,7 @@ public class GuiSliderII extends GuiSliderIE
 	 * Without shadow.
 	 */
 	@Override
-	public void drawString(FontRenderer fontRendererIn, String text, int x, int y, int color)
+	public void drawString(FontRenderer fontRendererIn, @Nonnull String text, int x, int y, int color)
 	{
 		fontRendererIn.drawString(text, x, y, color);
 	}

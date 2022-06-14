@@ -15,8 +15,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.opengl.GL11;
 import pl.pabilo8.ctmb.common.CommonUtils;
 
-import java.util.Random;
-
 /**
  * @author Pabilo8
  * @since 29.01.2022
@@ -26,7 +24,6 @@ public class ClientUtils
 {
 	@SideOnly(Side.CLIENT)
 	public static Minecraft mc = Minecraft.getMinecraft();
-	public static final Random RAND = new Random();
 	public static float zLevel = 0;
 
 	public static void drawRectangle(int x, int y, int w, int h, int color)
@@ -98,6 +95,7 @@ public class ClientUtils
 		};
 	}
 
+	@SuppressWarnings("Duplicates")
 	public static void drawGradientRect(int x0, int y0, int x1, int y1, int colour0, int colour1, boolean horizontal)
 	{
 		float[] f0 = CommonUtils.rgbIntToRGB(colour0);

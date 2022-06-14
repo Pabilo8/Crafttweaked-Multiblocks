@@ -9,8 +9,8 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.item.ItemStack;
 import pl.pabilo8.ctmb.client.ClientUtils;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.MultiblockGuiStyle;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.component.GuiComponent;
+import pl.pabilo8.ctmb.common.gui.MultiblockGuiStyle;
+import pl.pabilo8.ctmb.common.gui.component.GuiComponent;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -54,6 +54,7 @@ public class GuiButtonCTMBTab extends GuiButtonCTMB
 
 	protected void drawWithOffset(int offset)
 	{
+		// TODO: 13.06.2022 finish
 		drawTexturedModalRect(x, y, 116, 227, 28, 24);
 
 		switch(displayType)
@@ -75,25 +76,6 @@ public class GuiButtonCTMBTab extends GuiButtonCTMB
 			case NONE:
 				break;
 		}
-
-		/*int wwCorner = MathHelper.clamp((width/2), 0, 20); //first/last part width
-		int ww = width-(2*wwCorner); //remaining width
-		int texY = 112+(offset*20); //offset by index
-
-		drawTexturedModalRect(x, y, texX, texY, wwCorner, 20); //draw beginning
-		for(int xx = 0; xx < ww; xx += 20)
-		{
-			drawTexturedModalRect(x+wwCorner+xx, y, texX+20, texY, Math.min(ww-xx, 20), 20); //draw middle
-		}
-		drawTexturedModalRect(x+ww+wwCorner, y, texX+40+(20-wwCorner), texY, wwCorner, 20); //draw end
-
-		if(displayString!=null&&!displayString.isEmpty()) //draw text
-		{
-			this.drawCenteredString(ClientUtils.mc.fontRenderer, getText(),
-					this.x+this.width/2, this.y+(this.height-8)/2,
-					this.enabled?(this.hovered?style.getHoverColor(): style.getLinkColor()): style.getDisabledColor()
-			);
-		}*/
 	}
 
 	@Override

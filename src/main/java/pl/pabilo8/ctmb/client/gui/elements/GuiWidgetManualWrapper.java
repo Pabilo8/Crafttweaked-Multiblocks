@@ -30,15 +30,14 @@ import java.util.List;
  * @since 04.09.2021
  */
 // TODO: 06.09.2021 scrolling
+@SuppressWarnings("deprecation")
 public class GuiWidgetManualWrapper extends GuiManual
 {
 	//See, isn't that hard to do
-	public int x;
-	public int y;
-	public int manualTime = 0;
+	public final int x;
+	public final int y;
+	public int manualTime;
 	private boolean opened = false;
-	//not to be confused with GuiManual's manual variable
-	private ManualInstance manualInstance;
 
 	public GuiWidgetManualWrapper(GuiManual manual, int x, int y, boolean opened)
 	{
@@ -73,7 +72,8 @@ public class GuiWidgetManualWrapper extends GuiManual
 	@Override
 	public void initGui()
 	{
-		manualInstance = ReflectionHelper.getPrivateValue(GuiManual.class, this, "manual");
+		//not to be confused with GuiManual's manual variable
+		ManualInstance manualInstance = ReflectionHelper.getPrivateValue(GuiManual.class, this, "manual");
 		manualInstance.openManual();
 		activeManual = this;
 
@@ -188,10 +188,6 @@ public class GuiWidgetManualWrapper extends GuiManual
 	@Override
 	public void drawHoveringText(List text, int x, int y, FontRenderer font)
 	{
-		/*
-		manualInstance.tooltipRenderPre();
-		super.drawHoveringText(text, x, y, font);
-		manualInstance.tooltipRenderPost();
-		 */
+		// TODO: 13.06.2022 draw hovering text
 	}
 }

@@ -9,22 +9,16 @@ import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.common.IEContent;
 import blusunrize.immersiveengineering.common.blocks.ItemBlockIEBase;
 import blusunrize.immersiveengineering.common.blocks.TileEntityMultiblockPart;
-import blusunrize.immersiveengineering.common.blocks.metal.BlockTypes_MetalMultiblock;
 import blusunrize.immersiveengineering.common.util.ItemNBTHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
-import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
-import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Tuple;
@@ -44,11 +38,12 @@ import net.minecraftforge.oredict.OreDictionary;
 import org.apache.commons.io.IOUtils;
 import pl.pabilo8.ctmb.common.CommonProxy;
 import pl.pabilo8.ctmb.common.CommonUtils;
+import pl.pabilo8.ctmb.common.util.CTMBLogger;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.*;
 
 
@@ -65,8 +60,6 @@ public abstract class MultiblockStuctureBase<T extends TileEntityMultiblockPart<
 	private final ResourceLocation res;
 	//the name generated from resLoc
 	private final String name;
-	//the .nbt file
-	private Template template;
 
 	//stacks for manual list
 	private IngredientStack[] materials = null;
@@ -100,9 +93,16 @@ public abstract class MultiblockStuctureBase<T extends TileEntityMultiblockPart<
 
 	public void updateStructure()
 	{
-		template = RES_LOC_TEMPLATE_MANAGER.getTemplate(null, res);
+		//the .nbt file
+		Template template = RES_LOC_TEMPLATE_MANAGER.getTemplate(null, res);
 		if(template.blocks.isEmpty())
 			template = readTemplateFromResources(res);
+
+		if(template==null)
+		{
+			CTMBLogger.warn("Couldn't initialize multiblock template for "+res);
+			return;
+		}
 
 		size = template.getSize();
 
@@ -283,8 +283,8 @@ public abstract class MultiblockStuctureBase<T extends TileEntityMultiblockPart<
 				size.getX()/2f-offset.getX(),
 				size.getY()/2f-offset.getY(),
 				size.getZ()/2f-offset.getZ());
-		GlStateManager.rotate(90,0,1,0);
-		GlStateManager.translate(-0.5,0.5,0);
+		GlStateManager.rotate(90, 0, 1, 0);
+		GlStateManager.translate(-0.5, 0.5, 0);
 
 		GlStateManager.disableCull();
 		ClientUtils.mc().getRenderItem().renderItem(renderStack, TransformType.NONE);
@@ -299,13 +299,12 @@ public abstract class MultiblockStuctureBase<T extends TileEntityMultiblockPart<
 	 *
 	 * @param state blockstate
 	 * @param stack to be compared to, uses stack's logic (ore/itemstack)
-	 * @param world
-	 * @param pos
+	 * @param world the multiblock is checked in
+	 * @param pos of the block
 	 * @return whether is equal
 	 */
 	private boolean checkState(IBlockState state, IngredientStack stack, @Nullable World world, @Nullable BlockPos pos)
 	{
-		// TODO: 08.08.2021 conveyor facing check
 		if(stack.stack.getItem() instanceof ItemBlockIEBase&&((ItemBlockIEBase)stack.stack.getItem()).getBlock()==IEContent.blockConveyor)
 		{
 			if(world!=null)
@@ -340,8 +339,7 @@ public abstract class MultiblockStuctureBase<T extends TileEntityMultiblockPart<
 			int[] oids = OreDictionary.getOreIDs(stack);
 			if(oids.length > 0)
 				return new IngredientStack(OreDictionary.getOreName(oids[0]));
-		}
-		catch(Exception ignored)
+		} catch(Exception ignored)
 		{
 
 		}
@@ -366,7 +364,7 @@ public abstract class MultiblockStuctureBase<T extends TileEntityMultiblockPart<
 	public Tuple<ResourceLocation, EnumFacing> getConveyorKey(int h, int l, int w, EnumFacing facing)
 	{
 		IngredientStack is = checkStructure[h][l][w];
-		return getConveyorKey(is.stack,facing);
+		return getConveyorKey(is.stack, facing);
 	}
 
 	public Tuple<ResourceLocation, EnumFacing> getConveyorKey(ItemStack stack, EnumFacing facing)
@@ -380,14 +378,15 @@ public abstract class MultiblockStuctureBase<T extends TileEntityMultiblockPart<
 	/**
 	 * Reads a template from the "resources" folder
 	 */
+	@SuppressWarnings("deprecation")
 	private Template readTemplateFromResources(ResourceLocation res)
 	{
 		InputStream stream = null;
 		try
 		{
 			//file input stream from resources/
-			File file1 = new File(CommonProxy.resourceLoader.getResourceFolder(), res.getResourceDomain()+"/structures/"+res.getResourcePath()+".nbt");
-			stream = new FileInputStream(file1);
+			File file1 = new File(CommonProxy.RESOURCE_LOADER.getResourceFolder(), res.getResourceDomain()+"/structures/"+res.getResourcePath()+".nbt");
+			stream = Files.newInputStream(file1.toPath());
 			NBTTagCompound nbttagcompound = CompressedStreamTools.readCompressed(stream);
 
 			//version shenanigans, it's in vanilla so I left it
@@ -404,8 +403,7 @@ public abstract class MultiblockStuctureBase<T extends TileEntityMultiblockPart<
 
 			//ah, yes, is  t e m p l a t e
 			return template;
-		}
-		catch(Throwable ignored)
+		} catch(Throwable ignored)
 		{
 		} finally
 		{

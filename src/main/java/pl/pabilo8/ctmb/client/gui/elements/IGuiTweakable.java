@@ -1,7 +1,7 @@
 package pl.pabilo8.ctmb.client.gui.elements;
 
 import crafttweaker.api.data.DataMap;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.component.GuiComponent;
+import pl.pabilo8.ctmb.common.gui.component.GuiComponent;
 
 import javax.annotation.Nullable;
 

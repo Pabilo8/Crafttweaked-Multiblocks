@@ -6,6 +6,7 @@ import java.io.*;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.zip.ZipEntry;
@@ -32,8 +33,7 @@ public class CTMBFileUtils
 		{
 			assert url!=null;
 			FileUtils.copyURLToFile(url, to);
-		}
-		catch(IOException|NullPointerException e)
+		} catch(IOException|NullPointerException e)
 		{
 			throw new RuntimeException(e);
 		}
@@ -42,17 +42,16 @@ public class CTMBFileUtils
 	/**
 	 * @param directory The directory to zip the contents of. Content structure will be
 	 *                  preserved.
-	 * @param zipfile   The zip file to output to.
+	 * @param zipFile   The zip file to output to.
 	 * @throws IOException if any file activity fails
 	 * @author McDowell - <a href="http://stackoverflow.com/questions/1399126/java-util-zip-recreating-directory-structure">http://stackoverflow.com/questions/1399126/java-util-zip-recreating-directory-structure</a>
 	 */
-	@SuppressWarnings("resource")
-	public static void zipFolderContents(File directory, File zipfile) throws IOException
+	public static void zipFolderContents(File directory, File zipFile) throws IOException
 	{
 		URI base = directory.toURI();
 		Deque<File> queue = new LinkedList<>();
 		queue.push(directory);
-		OutputStream out = new FileOutputStream(zipfile);
+		OutputStream out = Files.newOutputStream(zipFile.toPath());
 		Closeable res = out;
 		try
 		{
@@ -106,7 +105,7 @@ public class CTMBFileUtils
 	 */
 	private static void copy(File file, OutputStream out) throws IOException
 	{
-		try(InputStream in = new FileInputStream(file))
+		try(InputStream in = Files.newInputStream(file.toPath()))
 		{
 			copy(in, out);
 		}
@@ -117,8 +116,7 @@ public class CTMBFileUtils
 		try
 		{
 			return file.delete();
-		}
-		catch(Exception e)
+		} catch(Exception e)
 		{
 			CTMBLogger.error("Deleting file "+file.getAbsolutePath()+" failed.");
 		}
@@ -130,8 +128,7 @@ public class CTMBFileUtils
 		try
 		{
 			FileUtils.deleteDirectory(file);
-		}
-		catch(Exception e)
+		} catch(Exception e)
 		{
 			CTMBLogger.error("Deleting directory "+file.getAbsolutePath()+" failed.");
 		}
@@ -149,8 +146,7 @@ public class CTMBFileUtils
 		try
 		{
 			string = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-		}
-		catch(IOException e)
+		} catch(IOException e)
 		{
 			CTMBLogger.warn(e);
 		}
@@ -165,8 +161,7 @@ public class CTMBFileUtils
 			{
 				file.getParentFile().mkdirs();
 				exists = file.createNewFile();
-			}
-			catch(IOException e)
+			} catch(IOException e)
 			{
 				CTMBLogger.warn(e);
 			}
@@ -174,8 +169,7 @@ public class CTMBFileUtils
 			try
 			{
 				FileUtils.writeStringToFile(file, string, java.nio.charset.StandardCharsets.UTF_8);
-			}
-			catch(IOException e)
+			} catch(IOException e)
 			{
 				CTMBLogger.warn(e);
 			}
@@ -189,8 +183,7 @@ public class CTMBFileUtils
 		try
 		{
 			return file.createNewFile();
-		}
-		catch(IOException e)
+		} catch(IOException e)
 		{
 			CTMBLogger.error("Couldn't create File "+file.getName());
 		}

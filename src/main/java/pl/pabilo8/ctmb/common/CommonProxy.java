@@ -15,9 +15,9 @@ import net.minecraftforge.fml.common.network.IGuiHandler;
 import pl.pabilo8.ctmb.CTMB;
 import pl.pabilo8.ctmb.common.block.BlockCTMBMultiblock;
 import pl.pabilo8.ctmb.common.block.ItemBlockCTMBMultiblock;
-import pl.pabilo8.ctmb.common.block.TileEntityBasicMultiblock;
-import pl.pabilo8.ctmb.common.crafttweaker.MultiblockBasic;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.MultiblockContainer;
+import pl.pabilo8.ctmb.common.block.TileEntityMultiblock;
+import pl.pabilo8.ctmb.common.block.crafttweaker.Multiblock;
+import pl.pabilo8.ctmb.common.gui.MultiblockContainer;
 import pl.pabilo8.ctmb.common.util.ResourceLoader;
 
 import javax.annotation.Nullable;
@@ -30,18 +30,18 @@ import java.util.ArrayList;
 @EventBusSubscriber(modid = CTMB.MODID)
 public class CommonProxy implements IGuiHandler
 {
-	public static ArrayList<MultiblockBasic> multiblocks = new ArrayList<>();
-	public static ArrayList<BlockCTMBMultiblock> blocks = new ArrayList<>();
-	public static ArrayList<ItemBlockCTMBMultiblock> itemblocks = new ArrayList<>();
+	public static final ArrayList<Multiblock> MULTIBLOCKS = new ArrayList<>();
+	public static final ArrayList<BlockCTMBMultiblock> BLOCKS = new ArrayList<>();
+	public static final ArrayList<ItemBlockCTMBMultiblock> ITEMBLOCKS = new ArrayList<>();
 
-	public static ResourceLoader resourceLoader = new ResourceLoader();
+	public static final ResourceLoader RESOURCE_LOADER = new ResourceLoader();
 
 	public void preInit()
 	{
 		try
 		{
-			resourceLoader.setup();
-			resourceLoader.createFolders();
+			RESOURCE_LOADER.setup();
+			RESOURCE_LOADER.createFolders();
 		}
 		catch(NoSuchFieldException|IllegalAccessException ignored)
 		{
@@ -51,12 +51,12 @@ public class CommonProxy implements IGuiHandler
 
 	public void init()
 	{
-		CommonUtils.registerTile(TileEntityBasicMultiblock.class);
+		CommonUtils.registerTile(TileEntityMultiblock.class);
 
-		for(MultiblockBasic mb : multiblocks)
+		for(Multiblock mb : MULTIBLOCKS)
 			MultiblockHandler.registerMultiblock(mb);
 
-		resourceLoader.autoGenerateFiles();
+		RESOURCE_LOADER.autoGenerateFiles();
 	}
 
 	@SubscribeEvent
@@ -64,7 +64,7 @@ public class CommonProxy implements IGuiHandler
 	{
 		CraftTweakerAPI.tweaker.loadScript(false, "ctmb");
 
-		for(BlockCTMBMultiblock block : blocks)
+		for(BlockCTMBMultiblock block : BLOCKS)
 			event.getRegistry().register(block.setRegistryName(block.registryName));
 
 	}
@@ -72,14 +72,14 @@ public class CommonProxy implements IGuiHandler
 	@SubscribeEvent
 	public static void onItemRegister(RegistryEvent.Register<Item> event)
 	{
-		for(ItemBlockCTMBMultiblock item : itemblocks)
+		for(ItemBlockCTMBMultiblock item : ITEMBLOCKS)
 			event.getRegistry().register(item.setRegistryName(item.getBlock().registryName));
 
 	}
 
 	public void postInit()
 	{
-		for(MultiblockBasic mb : multiblocks)
+		for(Multiblock mb : MULTIBLOCKS)
 			mb.updateStructure();
 	}
 
@@ -90,11 +90,11 @@ public class CommonProxy implements IGuiHandler
 		//ID is used as a page identifier
 
 		TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
-		if(te instanceof TileEntityBasicMultiblock)
+		if(te instanceof TileEntityMultiblock)
 		{
-			MultiblockBasic mb = ((TileEntityBasicMultiblock)te).getMultiblock();
+			Multiblock mb = ((TileEntityMultiblock)te).getMultiblock();
 			if((ID==0&&mb.mainGui!=null)||(mb.assignedGuis.size() >= ID))
-				return new MultiblockContainer(player.inventory, ((TileEntityBasicMultiblock)te), ID);
+				return new MultiblockContainer(player.inventory, ((TileEntityMultiblock)te), ID);
 		}
 		return null;
 	}

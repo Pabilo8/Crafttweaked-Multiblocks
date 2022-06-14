@@ -10,9 +10,10 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.math.MathHelper;
 import org.lwjgl.input.Mouse;
 import pl.pabilo8.ctmb.client.ClientUtils;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.MultiblockGuiStyle;
-import pl.pabilo8.ctmb.common.crafttweaker.gui.component.GuiComponent;
+import pl.pabilo8.ctmb.common.gui.MultiblockGuiStyle;
+import pl.pabilo8.ctmb.common.gui.component.GuiComponent;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -22,9 +23,9 @@ import java.util.Map;
  */
 public class GuiButtonCTMBDropdownList extends GuiButtonCTMB
 {
-	private boolean needsSlider;
+	private final boolean needsSlider;
 	public boolean dropped = false;
-	private int perPage;
+	private final int perPage;
 	private int offset;
 	private int maxOffset;
 
@@ -63,9 +64,9 @@ public class GuiButtonCTMBDropdownList extends GuiButtonCTMB
 	 * Draws this button to the screen.
 	 */
 	@Override
-	public void drawButton(Minecraft mc, int mx, int my, float partialTicks)
+	public void drawButton(@Nonnull Minecraft mc, int mx, int my, float partialTicks)
 	{
-		// TODO: 07.03.2022 cleanup
+		// TODO: 14.06.2022 optimize
 		FontRenderer fr = ClientUtils.mc.fontRenderer;
 		if(!this.visible)
 			return;
@@ -204,7 +205,7 @@ public class GuiButtonCTMBDropdownList extends GuiButtonCTMB
 	 * Returns true if the mouse has been pressed on this control. Equivalent of MouseListener.mousePressed(MouseEvent e).
 	 */
 	@Override
-	public boolean mousePressed(Minecraft mc, int mx, int my)
+	public boolean mousePressed(@Nonnull Minecraft mc, int mx, int my)
 	{
 		if(!(this.enabled&&this.visible))
 			return false;
