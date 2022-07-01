@@ -4,11 +4,11 @@ import crafttweaker.api.data.*;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiLabel;
 import pl.pabilo8.ctmb.common.gui.component.GuiComponent;
+import pl.pabilo8.ctmb.common.util.GuiNBTData;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author Pabilo8
@@ -55,27 +55,20 @@ public class GuiLabelCTMB extends GuiLabel implements IGuiTweakable
 	}
 
 	@Override
-	public void setData(DataMap map)
+	public void setData(GuiNBTData map)
 	{
-		Map<String, IData> params = map.asMap();
+		this.x = map.getX(x);
+		this.y = map.getY(y);
 
-		if(params.containsKey("x"))
-			this.x = params.get("x").asInt();
-		if(params.containsKey("y"))
-			this.x = params.get("y").asInt();
+		this.width = map.getWidth(width);
+		this.height = map.getHeight(height);
 
-		if(params.containsKey("w"))
-			this.width = params.get("w").asInt();
-		if(params.containsKey("h"))
-			this.height = params.get("h").asInt();
+		this.visible = map.getProperty("visible", visible);
 
-		if(params.containsKey("visible"))
-			this.visible = params.get("visible").asBool();
-
-		if(params.containsKey("text"))
+		if(map.has("text"))
 		{
 			labels.clear();
-			IData text = params.get("text");
+			IData text = map.get("text");
 			if(text instanceof DataString)
 				labels.add(text.asString());
 			else if(text instanceof DataList)
@@ -84,9 +77,9 @@ public class GuiLabelCTMB extends GuiLabel implements IGuiTweakable
 	}
 
 	@Override
-	public DataMap getData()
+	public final DataMap getData()
 	{
-		Map<String, IData> map = new HashMap<>();
+		HashMap<String, IData> map = new HashMap<>();
 
 		map.put("x", new DataInt(x));
 		map.put("y", new DataInt(y));

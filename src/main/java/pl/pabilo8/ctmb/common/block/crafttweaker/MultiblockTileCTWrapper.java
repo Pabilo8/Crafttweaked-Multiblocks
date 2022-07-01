@@ -30,7 +30,6 @@ import javax.annotation.Nullable;
  * @author Pabilo8
  * @since 01.06.2022
  */
-@SuppressWarnings("unused")
 @ZenRegister
 @ZenClass(value = "mods.ctmb.multiblock.MultiblockTile")
 public class MultiblockTileCTWrapper implements ICTWrapper

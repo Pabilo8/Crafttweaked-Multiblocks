@@ -2,16 +2,10 @@ package pl.pabilo8.ctmb.common;
 
 import crafttweaker.api.data.*;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidTank;
-import net.minecraftforge.fluids.FluidUtil;
-import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fml.common.network.NetworkRegistry.TargetPoint;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import pl.pabilo8.ctmb.CTMB;
@@ -24,6 +18,7 @@ import java.util.List;
  * @author Pabilo8
  * @since 29.01.2022
  */
+@SuppressWarnings("unused")
 public class CommonUtils
 {
 	/**
@@ -31,7 +26,7 @@ public class CommonUtils
 	 */
 	public static TargetPoint targetPointFromTile(TileEntity tile, int range)
 	{
-		return new TargetPoint(tile.getWorld().provider.getDimension(), tile.getPos().getX(), tile.getPos().getY(), tile.getPos().getZ(), range);
+		return targetPointFromPos(new Vec3d(tile.getPos()), tile.getWorld(), range);
 	}
 
 	/**
@@ -40,37 +35,6 @@ public class CommonUtils
 	public static TargetPoint targetPointFromPos(Vec3d pos, World world, int range)
 	{
 		return new TargetPoint(world.provider.getDimension(), pos.x, pos.y, pos.z, range);
-	}
-
-	/**
-	 * Safely handles input into a tank
-	 *
-	 * @param tank   to be outputted to
-	 * @param amount of fluid
-	 * @param pos    of the {@link TileEntity}
-	 * @param world  of the {@link TileEntity}
-	 * @param side   of output
-	 * @return whether the tank filling was a success
-	 */
-	public static boolean outputFluidToTank(FluidTank tank, int amount, BlockPos pos, World world, EnumFacing side)
-	{
-		if(tank.getFluidAmount() > 0)
-		{
-			FluidStack out = blusunrize.immersiveengineering.common.util.Utils.copyFluidStackWithAmount(tank.getFluid(), Math.min(tank.getFluidAmount(), amount), false);
-			assert out!=null;
-			IFluidHandler output = FluidUtil.getFluidHandler(world, pos.offset(side), side);
-			if(output!=null)
-			{
-				int accepted = output.fill(out, false);
-				if(accepted > 0)
-				{
-					int drained = output.fill(blusunrize.immersiveengineering.common.util.Utils.copyFluidStackWithAmount(out, Math.min(out.amount, accepted), false), true);
-					tank.drain(drained, true);
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 
 	public static float[] rgbIntToRGB(int rgb)
@@ -190,12 +154,5 @@ public class CommonUtils
 	public static boolean dataCheck(IData data)
 	{
 		return data instanceof DataMap&&data.length() > 0;
-	}
-
-	public static String[] getStringArray(IData data)
-	{
-		if(data instanceof DataList)
-			return data.asList().stream().map(IData::asString).toArray(String[]::new);
-		return new String[0];
 	}
 }

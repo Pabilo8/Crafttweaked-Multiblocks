@@ -8,12 +8,11 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import pl.pabilo8.ctmb.client.gui.MultiblockGui;
 import pl.pabilo8.ctmb.client.gui.elements.GuiBar;
-import pl.pabilo8.ctmb.common.CommonUtils;
+import pl.pabilo8.ctmb.common.util.GuiNBTData;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
 import javax.annotation.Nullable;
-import java.util.Map;
 
 /**
  * @author Pabilo8
@@ -38,29 +37,16 @@ public class GuiComponentBar extends GuiComponent
 	@ZenDoc("Creates a new Gui Component instance")
 	public static GuiComponentBar create(int x, int y, String name, IData data)
 	{
-		int styleID = 0, id = 0;
-		int w = 12, h = 48;
-		int color1 = 0xb51500, color2 = 0x600b00;
+		GuiNBTData map = new GuiNBTData(data);
 
-		if(CommonUtils.dataCheck(data))
-		{
-			Map<String, IData> map = data.asMap();
-
-			if(map.containsKey("w"))
-				w = map.get("w").asInt();
-			if(map.containsKey("h"))
-				h = map.get("h").asInt();
-
-			if(map.containsKey("color1"))
-				color1 = CommonUtils.getColorFromData(map.get("color1"));
-			if(map.containsKey("color2"))
-				color2 = CommonUtils.getColorFromData(map.get("color2"));
-
-			if(map.containsKey("style_id"))
-				styleID = map.get("style_id").asInt();
-		}
-
-		return new GuiComponentBar(x, y, w, h, name, color1, color2, styleID);
+		return new GuiComponentBar(x, y,
+				map.getWidth(200),
+				map.getHeight(11),
+				name,
+				map.getColor("color1", 0xb51500),
+				map.getColor("color2", 0x600b00),
+				map.getStyle()
+		);
 	}
 
 	@SideOnly(Side.CLIENT)
@@ -68,7 +54,7 @@ public class GuiComponentBar extends GuiComponent
 	@Nullable
 	public Gui provide(int id, int x, int y, MultiblockGui gui)
 	{
-		return new GuiBar(this, id, this.x+x, this.y+y, w, h, gui.getStyle(), styleID,color1,color2);
+		return new GuiBar(this, id, this.x+x, this.y+y, w, h, gui.getStyle(), styleID, color1, color2);
 	}
 
 }

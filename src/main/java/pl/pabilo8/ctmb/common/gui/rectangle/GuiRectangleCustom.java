@@ -3,10 +3,7 @@ package pl.pabilo8.ctmb.common.gui.rectangle;
 import crafttweaker.api.data.DataMap;
 import crafttweaker.api.data.IData;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import pl.pabilo8.ctmb.common.CommonUtils;
-import pl.pabilo8.ctmb.common.gui.MultiblockGuiLayout;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -62,25 +59,5 @@ public class GuiRectangleCustom extends GuiRectangle
 			if(map.containsKey("border_width"))
 				this.borderLine = CommonUtils.get4ParIntArrayFromData(map.get("border_width"));
 		}
-	}
-
-	/**
-	 * Called when the GUI is initialised, used to update draw call lists
-	 */
-	@SideOnly(Side.CLIENT)
-	@Override
-	public void validate(MultiblockGuiLayout layout)
-	{
-
-	}
-
-	/**
-	 * Called when the GUI is closed, used to remove draw call lists
-	 */
-	@SideOnly(Side.CLIENT)
-	@Override
-	public void invalidate(MultiblockGuiLayout layout)
-	{
-
 	}
 }

@@ -43,9 +43,9 @@ public class ResourceLoader
 		gson = new GsonBuilder().setPrettyPrinting().create();
 	}
 
-	public void setup() throws NoSuchFieldException, IllegalAccessException
+	public void setup()
 	{
-		Object minecraftDirObject = CraftTweakerHacks.getPrivateStaticObject(Loader.class,"minecraftDir");
+		Object minecraftDirObject = CraftTweakerHacks.getPrivateStaticObject(Loader.class, "minecraftDir");
 
 		if(minecraftDirObject instanceof File)
 		{

@@ -7,19 +7,17 @@ import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.util.math.MathHelper;
-import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
 import org.lwjgl.opengl.GL11;
 import pl.pabilo8.ctmb.client.ClientUtils;
 import pl.pabilo8.ctmb.common.gui.MultiblockGuiStyle;
 import pl.pabilo8.ctmb.common.gui.component.GuiComponent;
+import pl.pabilo8.ctmb.common.util.GuiNBTData;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Supplier;
 
 /**
@@ -120,51 +118,31 @@ public class GuiFluidTankCTMB extends GuiButton implements IGuiTweakable
 	}
 
 	@Override
-	public void setData(DataMap map)
+	public void setData(GuiNBTData map)
 	{
-		Map<String, IData> params = map.asMap();
+		this.x = map.getX(x);
+		this.y = map.getY(y);
 
-		if(params.containsKey("x"))
-			this.x = params.get("x").asInt();
-		if(params.containsKey("y"))
-			this.x = params.get("y").asInt();
+		this.width = map.getWidth(width);
+		this.height = map.getHeight(height);
 
-		if(params.containsKey("w"))
-			this.width = params.get("w").asInt();
-		if(params.containsKey("h"))
-			this.height = params.get("h").asInt();
-
-		if(params.containsKey("visible"))
-			this.visible = params.get("visible").asBool();
-
-		if(params.containsKey("text"))
-			this.displayString = params.get("text").asString();
+		this.visible = map.getProperty("visible", visible);
 	}
 
-	/**
-	 * Overriden by children classes, for adding entries in an easier way
-	 *
-	 * @return parent's map + own values
-	 */
-	protected Map<String, IData> getDataInternal(Map<String, IData> map)
+	@Override
+	public final DataMap getData()
 	{
+		HashMap<String, IData> map = new HashMap<>();
+
 		map.put("x", new DataInt(x));
 		map.put("y", new DataInt(y));
 
 		map.put("w", new DataInt(width));
 		map.put("h", new DataInt(height));
 
-		map.put("text", new DataString(displayString));
-
 		map.put("visible", new DataBool(visible));
 		map.put("hovered", new DataBool(hovered));
 
-		return map;
-	}
-
-	@Override
-	public final DataMap getData()
-	{
-		return new DataMap(getDataInternal(new HashMap<>()), true);
+		return new DataMap(map, true);
 	}
 }

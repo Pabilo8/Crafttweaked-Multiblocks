@@ -413,7 +413,6 @@ public class CTMBManualMultiblock extends CTMBManualObject
 	{
 		public final IMultiblock multiblock;
 		public ItemStack[][][] data;
-		public int blockCount = 0;
 		public int[] countPerLevel;
 		public int structureHeight = 0;
 		public int structureLength = 0;
@@ -438,7 +437,6 @@ public class CTMBManualMultiblock extends CTMBManualObject
 			structureLength = 0;
 
 			countPerLevel = new int[structureHeight];
-			blockCount = 0;
 			for(int h = 0; h < structure.length; h++)
 			{
 				if(structure[h].length > structureLength)
@@ -453,7 +451,6 @@ public class CTMBManualMultiblock extends CTMBManualObject
 							perLvl++;
 				}
 				countPerLevel[h] = perLvl;
-				blockCount += perLvl;
 			}
 		}
 

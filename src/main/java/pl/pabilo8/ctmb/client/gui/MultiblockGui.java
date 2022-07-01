@@ -103,7 +103,6 @@ public class MultiblockGui extends GuiIEContainerBase
 	public void initGui()
 	{
 		super.initGui();
-		layout.rectangles.forEach(rect -> rect.validate(layout));
 
 		buttonList.clear();
 		labelList.clear();
@@ -134,7 +133,6 @@ public class MultiblockGui extends GuiIEContainerBase
 	public void onGuiClosed()
 	{
 		super.onGuiClosed();
-		layout.rectangles.forEach(rect -> rect.invalidate(layout));
 		if(built)
 			GLAllocation.deleteDisplayLists(displayList);
 		if(layout.onClose!=null)

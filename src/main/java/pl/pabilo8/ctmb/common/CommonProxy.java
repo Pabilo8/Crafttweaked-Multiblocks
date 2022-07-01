@@ -38,15 +38,8 @@ public class CommonProxy implements IGuiHandler
 
 	public void preInit()
 	{
-		try
-		{
-			RESOURCE_LOADER.setup();
-			RESOURCE_LOADER.createFolders();
-		}
-		catch(NoSuchFieldException|IllegalAccessException ignored)
-		{
-
-		}
+		RESOURCE_LOADER.setup();
+		RESOURCE_LOADER.createFolders();
 	}
 
 	public void init()

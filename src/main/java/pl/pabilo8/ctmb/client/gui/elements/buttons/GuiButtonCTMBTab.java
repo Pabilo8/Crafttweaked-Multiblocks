@@ -11,10 +11,10 @@ import net.minecraft.item.ItemStack;
 import pl.pabilo8.ctmb.client.ClientUtils;
 import pl.pabilo8.ctmb.common.gui.MultiblockGuiStyle;
 import pl.pabilo8.ctmb.common.gui.component.GuiComponent;
+import pl.pabilo8.ctmb.common.util.GuiNBTData;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Map;
 
 /**
  * @author Pabilo8
@@ -79,13 +79,12 @@ public class GuiButtonCTMBTab extends GuiButtonCTMB
 	}
 
 	@Override
-	public void setData(DataMap map)
+	public void setData(GuiNBTData map)
 	{
 		super.setData(map);
-		Map<String, IData> params = map.asMap();
 
-		if(params.containsKey("display"))
-			this.displayType = this.findType(params.get("display"));
+		if(map.has("display"))
+			this.displayType = this.findType(map.get("display"));
 	}
 
 	enum Type

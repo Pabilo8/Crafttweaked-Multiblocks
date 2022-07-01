@@ -65,7 +65,7 @@ public class CTMBManualImage extends CTMBManualObject
 			ClientUtils.bindTexture(res);
 			GlStateManager.color(1, 1, 1, 1);
 			GlStateManager.enableBlend();
-			ManualUtils.drawTexturedRect(x, y, width, height, 0, 1, 0, 1);
+			ManualUtils.drawTexturedRect(x, y, width, height, uv[0], uv[2], uv[1], uv[3]);
 		}
 		else if(!alt.isEmpty())
 		{

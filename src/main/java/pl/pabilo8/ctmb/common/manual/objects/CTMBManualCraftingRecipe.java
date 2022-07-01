@@ -34,9 +34,9 @@ import java.util.stream.IntStream;
 public class CTMBManualCraftingRecipe extends CTMBManualObject
 {
 	GuiButtonManualNavigation buttonNext, buttonPrev;
-	ItemStack[] stacks;
+	final ItemStack[] stacks;
 	ItemStack highlighted = ItemStack.EMPTY;
-	ArrayList<PositionedItemStack[]> recipes = new ArrayList<>();
+	final ArrayList<PositionedItemStack[]> recipes = new ArrayList<>();
 	int recipePage;
 	int yOff;
 

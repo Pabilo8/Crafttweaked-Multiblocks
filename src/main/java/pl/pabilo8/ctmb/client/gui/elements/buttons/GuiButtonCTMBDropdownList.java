@@ -1,7 +1,6 @@
 package pl.pabilo8.ctmb.client.gui.elements.buttons;
 
 import crafttweaker.api.data.DataInt;
-import crafttweaker.api.data.DataMap;
 import crafttweaker.api.data.DataString;
 import crafttweaker.api.data.IData;
 import net.minecraft.client.Minecraft;
@@ -12,6 +11,7 @@ import org.lwjgl.input.Mouse;
 import pl.pabilo8.ctmb.client.ClientUtils;
 import pl.pabilo8.ctmb.common.gui.MultiblockGuiStyle;
 import pl.pabilo8.ctmb.common.gui.component.GuiComponent;
+import pl.pabilo8.ctmb.common.util.GuiNBTData;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
@@ -238,25 +238,24 @@ public class GuiButtonCTMBDropdownList extends GuiButtonCTMB
 
 	public String getEntry(int selectedEntry)
 	{
-		return selectedEntry==-1?"":entries[MathHelper.clamp(selectedEntry, 0, entries.length-1)];
+		return selectedEntry==-1?"": entries[MathHelper.clamp(selectedEntry, 0, entries.length-1)];
 	}
 
 	@Override
-	public void setData(DataMap map)
+	public void setData(GuiNBTData map)
 	{
 		super.setData(map);
-		Map<String, IData> params = map.asMap();
 
-		if(params.containsKey("selected_entry"))
-			this.selectedEntry=Arrays.asList(entries).indexOf(params.get("selected_entry").asString());
+		if(map.has("selected_entry"))
+			this.selectedEntry = Arrays.asList(entries).indexOf(map.getText("selected_entry"));
 	}
 
 	@Override
 	protected Map<String, IData> getDataInternal(Map<String, IData> map)
 	{
-		map.put("selected_entry",new DataString(getEntry(selectedEntry)));
-		map.put("hovered_entry",new DataString(getEntry(hoveredEntry)));
-		map.put("hover_timer",new DataInt(hoverTimer));
+		map.put("selected_entry", new DataString(getEntry(selectedEntry)));
+		map.put("hovered_entry", new DataString(getEntry(hoveredEntry)));
+		map.put("hover_timer", new DataInt(hoverTimer));
 
 		return super.getDataInternal(map);
 	}

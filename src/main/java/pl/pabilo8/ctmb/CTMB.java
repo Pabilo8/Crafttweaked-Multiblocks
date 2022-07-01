@@ -13,6 +13,7 @@ import pl.pabilo8.ctmb.common.CommonProxy;
 import static pl.pabilo8.ctmb.CTMB.MODID;
 import static pl.pabilo8.ctmb.CTMB.VERSION;
 
+@SuppressWarnings("unused")
 @Mod(
 		modid = MODID,
 		name = "Crafttweaked Multiblocks",

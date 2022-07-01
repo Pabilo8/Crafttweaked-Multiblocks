@@ -48,6 +48,11 @@ public class MultiblockBracketHandler implements IBracketHandler
 		return null;
 	}
 
+	/**
+	 * <b>DO NOT REMOVE</b><br>
+	 * Used in constructor via string reference
+	 */
+	@SuppressWarnings("unused")
 	public static Multiblock getMultiblock(String name)
 	{
 		if(name==null)

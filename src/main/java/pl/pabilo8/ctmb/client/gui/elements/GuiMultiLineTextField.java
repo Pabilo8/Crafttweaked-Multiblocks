@@ -30,6 +30,7 @@ import java.util.function.Predicate;
  * Only changes to the original are the text offset fix to be in top left corner (see line 698) and this JavaDoc
  * @since 15.07.2021
  */
+@SuppressWarnings("unused")
 public class GuiMultiLineTextField extends GuiTextField
 {
 	private final int id;

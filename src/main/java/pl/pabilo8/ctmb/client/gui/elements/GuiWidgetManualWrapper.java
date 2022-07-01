@@ -1,7 +1,6 @@
 package pl.pabilo8.ctmb.client.gui.elements;
 
 import blusunrize.immersiveengineering.api.ManualHelper;
-import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.lib.manual.IManualPage;
 import blusunrize.lib.manual.ManualInstance;
 import blusunrize.lib.manual.ManualInstance.ManualEntry;
@@ -18,6 +17,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
+import pl.pabilo8.ctmb.client.ClientUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -166,23 +166,12 @@ public class GuiWidgetManualWrapper extends GuiManual
 		ReflectionHelper.setPrivateValue(GuiManual.class, this, -1, "hasSuggestions");
 
 		GlStateManager.pushMatrix();
-		scissor(x, y, 186, 198);
+		ClientUtils.scissor(x, y, 186, 198);
 		GlStateManager.translate(-(146*(1f-(manualTime/100f))), 0, 0);
 		super.drawScreen(mx, my, f);
 		GL11.glDisable(GL11.GL_SCISSOR_TEST);
 		GlStateManager.popMatrix();
 		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-	}
-
-	private void scissor(int x, int y, int xSize, int ySize)
-	{
-		GL11.glEnable(GL11.GL_SCISSOR_TEST);
-		ScaledResolution res = new ScaledResolution(ClientUtils.mc());
-		x = x*res.getScaleFactor();
-		ySize = ySize*res.getScaleFactor();
-		y = ClientUtils.mc().displayHeight-(y*res.getScaleFactor())-ySize;
-		xSize = xSize*res.getScaleFactor();
-		GL11.glScissor(x, y, xSize, ySize);
 	}
 
 	@Override

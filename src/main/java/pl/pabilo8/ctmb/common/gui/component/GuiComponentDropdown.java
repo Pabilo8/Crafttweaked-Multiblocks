@@ -10,13 +10,12 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import pl.pabilo8.ctmb.client.gui.MultiblockGui;
 import pl.pabilo8.ctmb.client.gui.StyledGuiUtils;
 import pl.pabilo8.ctmb.client.gui.elements.buttons.GuiButtonCTMBDropdownList;
-import pl.pabilo8.ctmb.common.CommonUtils;
+import pl.pabilo8.ctmb.common.util.GuiNBTData;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.stream.Stream;
 
 /**
@@ -48,33 +47,17 @@ public class GuiComponentDropdown extends GuiComponent
 	@ZenDoc("Creates a new Gui Component instance")
 	public static GuiComponentDropdown create(int x, int y, String name, IData data)
 	{
-		int styleID = 0, perPage = 6;
-		boolean translated = false;
-		String[] entries = new String[0], translations = new String[0];
+		GuiNBTData map = new GuiNBTData(data);
 
-		int w = 64;
-
-		if(CommonUtils.dataCheck(data))
-		{
-			Map<String, IData> map = data.asMap();
-
-			if(map.containsKey("width"))
-				w = map.get("width").asInt();
-
-			if(map.containsKey("entries"))
-				entries = translations = CommonUtils.getStringArray(map.get("entries"));
-			if(map.containsKey("translations"))
-				translations = CommonUtils.getStringArray(map.get("translations"));
-
-			if(map.containsKey("translated"))
-				translated = map.get("translated").asBool();
-			if(map.containsKey("per_page"))
-				perPage = map.get("per_page").asInt();
-			if(map.containsKey("style_id"))
-				styleID = map.get("style_id").asInt();
-		}
-
-		return new GuiComponentDropdown(x, y, w, name, styleID, entries, translations, perPage, translated);
+		return new GuiComponentDropdown(x, y,
+				map.getWidth(64),
+				name,
+				map.getStyle(),
+				map.getStringArray("entries"),
+				map.getStringArray("translations"),
+				map.getInt("per_page", 6),
+				map.getTranslated()
+		);
 	}
 
 	@SideOnly(Side.CLIENT)
@@ -86,6 +69,9 @@ public class GuiComponentDropdown extends GuiComponent
 		if(translated)
 			stream = stream.map(I18n::format);
 
-		return new GuiButtonCTMBDropdownList(this, id, this.x+x, this.y+y, w, h, styleID, gui.getStyle(), perPage, entries, stream.toArray(String[]::new));
+		return new GuiButtonCTMBDropdownList(this, id, this.x+x, this.y+y,
+				w, h, styleID, gui.getStyle(), perPage, entries,
+				stream.toArray(String[]::new)
+		);
 	}
 }

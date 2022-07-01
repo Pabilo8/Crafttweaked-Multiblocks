@@ -2,11 +2,13 @@ package pl.pabilo8.ctmb.common.gui.component;
 
 import crafttweaker.annotations.ZenRegister;
 import net.minecraft.client.gui.Gui;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import pl.pabilo8.ctmb.client.gui.MultiblockGui;
+import pl.pabilo8.ctmb.client.gui.StyledGuiUtils;
 import pl.pabilo8.ctmb.common.gui.MultiblockContainer;
 import stanhebben.zenscript.annotations.ZenClass;
 
@@ -35,8 +37,8 @@ public abstract class GuiComponent
 
 	/**
 	 * @param id  id of the component to be created
-	 * @param x the horizontal position of the component
-	 * @param y the vertical position of the component
+	 * @param x   the horizontal position of the component
+	 * @param y   the vertical position of the component
 	 * @param gui the gui containing this component
 	 * @return a new gui element instance to be added into a GUI
 	 */
@@ -48,5 +50,11 @@ public abstract class GuiComponent
 	public Slot[] provideSlots(MultiblockContainer gui, InventoryPlayer inventoryPlayer)
 	{
 		return null;
+	}
+
+	@SideOnly(Side.CLIENT)
+	protected final String getTranslation(boolean translated, MultiblockGui gui, String text)
+	{
+		return translated?I18n.format(StyledGuiUtils.processText(gui, text)): StyledGuiUtils.processText(gui, text);
 	}
 }

@@ -7,6 +7,7 @@ import crafttweaker.api.minecraft.CraftTweakerMC;
 import net.minecraft.nbt.NBTTagCompound;
 import pl.pabilo8.ctmb.client.gui.MultiblockGui;
 import pl.pabilo8.ctmb.client.gui.elements.IGuiTweakable;
+import pl.pabilo8.ctmb.common.util.GuiNBTData;
 import pl.pabilo8.ctmb.common.util.ICTWrapper;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
@@ -19,7 +20,6 @@ import java.util.HashMap;
  * @author Pabilo8
  * @since 03.06.2022
  */
-@SuppressWarnings("unused")
 @ZenRegister
 @ZenClass(value = "mods.ctmb.gui.MultiblockGui")
 public class MultiblockGuiCTWrapper implements ICTWrapper
@@ -74,15 +74,17 @@ public class MultiblockGuiCTWrapper implements ICTWrapper
 		IGuiTweakable comp = gui.ctComponents.getOrDefault(name, null);
 		if(comp!=null)
 			return comp.getData();
-		return new DataMap(new HashMap<>(),true);
+		return new DataMap(new HashMap<>(), true);
 	}
 
 	@ZenMethod
 	public void setComponentData(String name, IData value)
 	{
 		IGuiTweakable comp = gui.ctComponents.getOrDefault(name, null);
-		if(comp!=null&&value instanceof DataMap)
-			comp.setData(((DataMap)value));
+		GuiNBTData map = new GuiNBTData(value);
+
+		if(comp!=null&&map.isValid())
+			comp.setData(map);
 	}
 
 	@Override

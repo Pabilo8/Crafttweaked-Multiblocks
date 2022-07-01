@@ -18,7 +18,6 @@ import java.util.*;
  * @author Pabilo8
  * @since 25.02.2022
  */
-@SuppressWarnings("unused")
 @ZenClass("mods.ctmb.gui.Layout")
 @ZenDoc("A Layout used when displaying a GUI for a CTMB multiblock")
 @ZenRegister

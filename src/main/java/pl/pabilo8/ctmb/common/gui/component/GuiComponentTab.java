@@ -8,12 +8,11 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import pl.pabilo8.ctmb.client.gui.MultiblockGui;
 import pl.pabilo8.ctmb.client.gui.elements.buttons.GuiButtonCTMBTab;
-import pl.pabilo8.ctmb.common.CommonUtils;
+import pl.pabilo8.ctmb.common.util.GuiNBTData;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
 import javax.annotation.Nullable;
-import java.util.Map;
 
 /**
  * @author Pabilo8
@@ -39,27 +38,16 @@ public class GuiComponentTab extends GuiComponent
 	@ZenDoc("Creates a new Gui Component instance")
 	public static GuiComponentTab create(int x, int y, String name, IData data)
 	{
-		int styleID = 0;
-		boolean vertical = false;
-		IData display = null;
+		GuiNBTData map = new GuiNBTData(data);
+		boolean vertical = map.getProperty("vertical");
 
-		if(CommonUtils.dataCheck(data))
-		{
-			Map<String, IData> map = data.asMap();
-
-			if(map.containsKey("vertical"))
-				vertical = map.get("vertical").asBool();
-
-			if(map.containsKey("display"))
-				display = map.get("display");
-
-			if(map.containsKey("style_id"))
-				styleID = map.get("style_id").asInt();
-		}
-
-		int w = vertical?32: 28, h = vertical?12: 24;
-
-		return new GuiComponentTab(x, y, w, h, name, display, styleID);
+		return new GuiComponentTab(x, y,
+				vertical?32: 28,
+				vertical?12: 24,
+				name,
+				map.get("display"),
+				map.getStyle()
+		);
 	}
 
 	@SideOnly(Side.CLIENT)

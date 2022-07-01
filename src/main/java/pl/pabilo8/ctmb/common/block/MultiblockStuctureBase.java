@@ -74,6 +74,7 @@ public abstract class MultiblockStuctureBase<T extends TileEntityMultiblockPart<
 	//scale for manual display
 	protected float manualScale = 0;
 
+	@SuppressWarnings("unused")
 	public MultiblockStuctureBase(ResourceLocation res)
 	{
 		this(nameFromResLoc(res), res);
@@ -300,7 +301,7 @@ public abstract class MultiblockStuctureBase<T extends TileEntityMultiblockPart<
 	 * @param state blockstate
 	 * @param stack to be compared to, uses stack's logic (ore/itemstack)
 	 * @param world the multiblock is checked in
-	 * @param pos of the block
+	 * @param pos   of the block
 	 * @return whether is equal
 	 */
 	private boolean checkState(IBlockState state, IngredientStack stack, @Nullable World world, @Nullable BlockPos pos)
@@ -361,6 +362,7 @@ public abstract class MultiblockStuctureBase<T extends TileEntityMultiblockPart<
 	 * @param w width (x)
 	 * @return resource location in string format if tile is a conveyor or empty string
 	 */
+	// TODO: 01.07.2022 Immersive Petroleum integration
 	public Tuple<ResourceLocation, EnumFacing> getConveyorKey(int h, int l, int w, EnumFacing facing)
 	{
 		IngredientStack is = checkStructure[h][l][w];

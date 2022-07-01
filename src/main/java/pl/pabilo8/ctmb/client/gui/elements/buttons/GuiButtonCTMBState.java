@@ -1,13 +1,11 @@
 package pl.pabilo8.ctmb.client.gui.elements.buttons;
 
-import crafttweaker.api.data.DataMap;
-import crafttweaker.api.data.IData;
 import net.minecraft.client.Minecraft;
 import pl.pabilo8.ctmb.common.gui.MultiblockGuiStyle;
 import pl.pabilo8.ctmb.common.gui.component.GuiComponent;
+import pl.pabilo8.ctmb.common.util.GuiNBTData;
 
 import javax.annotation.Nonnull;
-import java.util.Map;
 
 /**
  * @author Pabilo8
@@ -43,12 +41,10 @@ public class GuiButtonCTMBState extends GuiButtonCTMB
 	}
 
 	@Override
-	public void setData(DataMap map)
+	public void setData(GuiNBTData map)
 	{
 		super.setData(map);
-		Map<String, IData> params = map.asMap();
 
-		if(params.containsKey("activated"))
-			this.state=params.get("activated").asBool();
+		this.state=map.getProperty("activated",this.state);
 	}
 }

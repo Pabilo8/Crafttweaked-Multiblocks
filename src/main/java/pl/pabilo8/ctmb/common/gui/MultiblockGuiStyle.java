@@ -14,7 +14,6 @@ import java.util.HashMap;
  */
 @ZenRegister
 @ZenClass("mods.ctmb.gui.Style")
-@SuppressWarnings("unused")
 public class MultiblockGuiStyle
 {
 	public static final HashMap<String, MultiblockGuiStyle> STYLES = new HashMap<>();

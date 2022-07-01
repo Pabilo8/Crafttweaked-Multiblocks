@@ -12,12 +12,11 @@ import pl.pabilo8.ctmb.client.ClientUtils;
 import pl.pabilo8.ctmb.client.gui.MultiblockGui;
 import pl.pabilo8.ctmb.client.gui.StyledGuiUtils;
 import pl.pabilo8.ctmb.client.gui.elements.GuiLabelCTMB;
-import pl.pabilo8.ctmb.common.CommonUtils;
+import pl.pabilo8.ctmb.common.util.GuiNBTData;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
 import javax.annotation.Nullable;
-import java.util.Map;
 
 /**
  * @author Pabilo8
@@ -46,34 +45,17 @@ public class GuiComponentLabel extends GuiComponent
 	@ZenDoc("Creates a new Gui Component instance")
 	public static GuiComponentLabel create(int x, int y, String name, IData data)
 	{
-		int textColor = -1;
-		boolean translated = false, dropShadow = false, center = false;
-		String text = name;
-		int w = 200, h = 11;
+		GuiNBTData map = new GuiNBTData(data);
 
-		if(CommonUtils.dataCheck(data))
-		{
-			Map<String, IData> map = data.asMap();
-
-			if(map.containsKey("w"))
-				w = map.get("w").asInt();
-			if(map.containsKey("h"))
-				h = map.get("h").asInt();
-
-			if(map.containsKey("text"))
-				text = map.get("text").asString();
-
-			if(map.containsKey("color"))
-				textColor = CommonUtils.getColorFromData(map.get("color"));
-			if(map.containsKey("translated"))
-				translated = map.get("translated").asBool();
-			if(map.containsKey("drop_shadow"))
-				dropShadow = map.get("drop_shadow").asBool();
-			if(map.containsKey("center"))
-				center = map.get("center").asBool();
-		}
-
-		return new GuiComponentLabel(x, y, w, h, name, text, translated, textColor, dropShadow, center);
+		return new GuiComponentLabel(x, y,
+				map.getWidth(200), map.getHeight(11),
+				name,
+				map.getText(name),
+				map.getTranslated(),
+				map.getColor(-1),
+				map.getProperty("drop_shadow"),
+				map.getProperty("center")
+		);
 	}
 
 	@SideOnly(Side.CLIENT)

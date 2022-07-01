@@ -9,6 +9,7 @@ import pl.pabilo8.ctmb.client.ClientUtils;
 import pl.pabilo8.ctmb.client.gui.elements.IGuiTweakable;
 import pl.pabilo8.ctmb.common.gui.MultiblockGuiStyle;
 import pl.pabilo8.ctmb.common.gui.component.GuiComponent;
+import pl.pabilo8.ctmb.common.util.GuiNBTData;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -105,47 +106,39 @@ public class GuiButtonCTMB extends GuiButton implements IGuiTweakable
 	}
 
 	@Override
-	public void setData(DataMap map)
+	public void setData(GuiNBTData map)
 	{
-		Map<String, IData> params = map.asMap();
+		this.x = map.getX(x);
+		this.y = map.getY(y);
 
-		if(params.containsKey("x"))
-			this.x=params.get("x").asInt();
-		if(params.containsKey("y"))
-			this.x=params.get("y").asInt();
+		this.width = map.getWidth(width);
+		this.height = map.getHeight(height);
 
-		if(params.containsKey("w"))
-			this.width=params.get("w").asInt();
-		if(params.containsKey("h"))
-			this.height=params.get("h").asInt();
+		this.enabled = map.getProperty("enabled", enabled);
+		this.visible = map.getProperty("visible", visible);
 
-		if(params.containsKey("enabled"))
-			this.enabled=params.get("enabled").asBool();
-		if(params.containsKey("visible"))
-			this.visible=params.get("visible").asBool();
-
-		if(params.containsKey("text"))
-			this.displayString=params.get("text").asString();
+		this.displayString = map.getText(displayString);
 	}
 
 	/**
 	 * Overriden by children classes, for adding entries in an easier way
+	 *
 	 * @return parent's map + own values
 	 */
-	protected Map<String,IData> getDataInternal(Map<String, IData> map)
+	protected Map<String, IData> getDataInternal(Map<String, IData> map)
 	{
-		map.put("x",new DataInt(x));
-		map.put("y",new DataInt(y));
+		map.put("x", new DataInt(x));
+		map.put("y", new DataInt(y));
 
-		map.put("w",new DataInt(width));
-		map.put("h",new DataInt(height));
+		map.put("w", new DataInt(width));
+		map.put("h", new DataInt(height));
 
-		map.put("text",new DataString(displayString));
+		map.put("text", new DataString(displayString));
 
-		map.put("enabled",new DataBool(enabled));
-		map.put("visible",new DataBool(visible));
-		map.put("hovered",new DataBool(hovered));
-		map.put("activated",new DataBool(state));
+		map.put("enabled", new DataBool(enabled));
+		map.put("visible", new DataBool(visible));
+		map.put("hovered", new DataBool(hovered));
+		map.put("activated", new DataBool(state));
 
 		return map;
 	}

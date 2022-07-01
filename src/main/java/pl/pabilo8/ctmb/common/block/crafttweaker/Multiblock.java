@@ -16,10 +16,10 @@ import pl.pabilo8.ctmb.common.block.BlockCTMBMultiblock;
 import pl.pabilo8.ctmb.common.block.MultiblockStuctureBase;
 import pl.pabilo8.ctmb.common.block.TileEntityMultiblock;
 import pl.pabilo8.ctmb.common.block.crafttweaker.MultiblockTileCTWrapper.*;
-import pl.pabilo8.ctmb.common.gui.MultiblockGuiLayout;
 import pl.pabilo8.ctmb.common.block.crafttweaker.storage.MultiblockEnergyInfo;
 import pl.pabilo8.ctmb.common.block.crafttweaker.storage.MultiblockFluidTankInfo;
 import pl.pabilo8.ctmb.common.block.crafttweaker.storage.MultiblockInventoryInfo;
+import pl.pabilo8.ctmb.common.gui.MultiblockGuiLayout;
 import stanhebben.zenscript.annotations.Optional;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
@@ -37,7 +37,6 @@ import java.util.LinkedHashMap;
  */
 @ZenClass(value = "mods.ctmb.multiblock.Multiblock")
 @ZenRegister
-@SuppressWarnings("unused")
 public class Multiblock extends MultiblockStuctureBase<TileEntityMultiblock>
 {
 	public static final Multiblock DEFAULT_MULTIBLOCK = new Multiblock("", new ResourceLocation("missingno"), Material.AIR);
@@ -136,7 +135,7 @@ public class Multiblock extends MultiblockStuctureBase<TileEntityMultiblock>
 	@Override
 	protected void addBlockEvent(World world, BlockPos pos)
 	{
-
+		world.addBlockEvent(pos, getBlock(), 255, 0);
 	}
 
 	@ZenMethod

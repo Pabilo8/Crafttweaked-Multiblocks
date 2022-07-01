@@ -9,14 +9,13 @@ import net.minecraft.inventory.Slot;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import pl.pabilo8.ctmb.client.gui.MultiblockGui;
-import pl.pabilo8.ctmb.common.CommonUtils;
-import pl.pabilo8.ctmb.common.gui.MultiblockContainer;
 import pl.pabilo8.ctmb.common.gui.CTMBSlot;
+import pl.pabilo8.ctmb.common.gui.MultiblockContainer;
+import pl.pabilo8.ctmb.common.util.GuiNBTData;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
 import javax.annotation.Nullable;
-import java.util.Map;
 
 /**
  * @author Pabilo8
@@ -43,25 +42,14 @@ public class GuiComponentItemSlot extends GuiComponent
 	@ZenDoc("Creates a new Gui Component instance")
 	public static GuiComponentItemSlot create(int x, int y, String name, IData data)
 	{
-		int styleID = 0, id = 0, inventoryID = 0;
+		GuiNBTData map = new GuiNBTData(data);
 
-		if(CommonUtils.dataCheck(data))
-		{
-			Map<String, IData> map = data.asMap();
-
-			if(map.containsKey("id"))
-				id = map.get("id").asInt();
-			if(map.containsKey("id"))
-				id = map.get("id").asInt();
-
-			if(map.containsKey("style_id"))
-				styleID = map.get("style_id").asInt();
-			if(map.containsKey("inv_id"))
-				inventoryID = map.get("inv_id").asInt();
-
-		}
-
-		return new GuiComponentItemSlot(x, y, name, inventoryID, id, styleID);
+		return new GuiComponentItemSlot(x, y,
+				name,
+				map.getInt("inv_id", 0),
+				map.getID(),
+				map.getStyle()
+		);
 	}
 
 	@SideOnly(Side.CLIENT)

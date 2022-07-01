@@ -1,6 +1,7 @@
 package pl.pabilo8.ctmb.client;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
@@ -23,7 +24,7 @@ import pl.pabilo8.ctmb.common.CommonUtils;
 public class ClientUtils
 {
 	@SideOnly(Side.CLIENT)
-	public static Minecraft mc = Minecraft.getMinecraft();
+	public static final Minecraft mc = Minecraft.getMinecraft();
 	public static float zLevel = 0;
 
 	public static void drawRectangle(int x, int y, int w, int h, int color)
@@ -190,5 +191,16 @@ public class ClientUtils
 	public static void setzLevel(float zLevel)
 	{
 		ClientUtils.zLevel = zLevel;
+	}
+
+	public static void scissor(int x, int y, int xSize, int ySize)
+	{
+		GL11.glEnable(GL11.GL_SCISSOR_TEST);
+		ScaledResolution res = new ScaledResolution(blusunrize.immersiveengineering.client.ClientUtils.mc());
+		x = x*res.getScaleFactor();
+		ySize = ySize*res.getScaleFactor();
+		y = blusunrize.immersiveengineering.client.ClientUtils.mc().displayHeight-(y*res.getScaleFactor())-ySize;
+		xSize = xSize*res.getScaleFactor();
+		GL11.glScissor(x, y, xSize, ySize);
 	}
 }

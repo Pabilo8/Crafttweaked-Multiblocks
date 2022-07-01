@@ -13,7 +13,6 @@ import stanhebben.zenscript.annotations.ZenMethod;
  */
 @ZenClass(value = "mods.ctmb.manual.ManualTweaker")
 @ZenRegister
-@SuppressWarnings("unused")
 public class ManualTweaker
 {
 	public static final HashMultimap<String, CTMBManualEntry> PAGES = HashMultimap.create();

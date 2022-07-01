@@ -8,12 +8,11 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import pl.pabilo8.ctmb.client.gui.MultiblockGui;
 import pl.pabilo8.ctmb.client.gui.elements.GuiFluidTankCTMB;
-import pl.pabilo8.ctmb.common.CommonUtils;
+import pl.pabilo8.ctmb.common.util.GuiNBTData;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
 import javax.annotation.Nullable;
-import java.util.Map;
 
 /**
  * @author Pabilo8
@@ -37,29 +36,14 @@ public class GuiComponentFluidTank extends GuiComponent
 	@ZenDoc("Creates a new Gui Component instance")
 	public static GuiComponentFluidTank create(int x, int y, String name, IData data)
 	{
-		int styleID = 0, id = 0;
-		int w = 24, h = 51;
+		GuiNBTData map = new GuiNBTData(data);
 
-		if(CommonUtils.dataCheck(data))
-		{
-			Map<String, IData> map = data.asMap();
-
-			if(map.containsKey("id"))
-				id = map.get("id").asInt();
-			if(map.containsKey("id"))
-				id = map.get("id").asInt();
-
-			if(map.containsKey("w"))
-				w = map.get("w").asInt();
-			if(map.containsKey("h"))
-				h = map.get("h").asInt();
-
-			if(map.containsKey("style_id"))
-				styleID = map.get("style_id").asInt();
-
-		}
-
-		return new GuiComponentFluidTank(x, y, w, h, name, id, styleID);
+		return new GuiComponentFluidTank(x, y,
+				map.getWidth(12), map.getHeight(48),
+				name,
+				map.getID(),
+				map.getStyle()
+		);
 	}
 
 	@SideOnly(Side.CLIENT)

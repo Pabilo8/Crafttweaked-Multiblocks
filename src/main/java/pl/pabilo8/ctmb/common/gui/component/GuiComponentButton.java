@@ -4,18 +4,15 @@ import crafttweaker.annotations.ZenDoc;
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.data.IData;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.resources.I18n;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import pl.pabilo8.ctmb.client.gui.MultiblockGui;
-import pl.pabilo8.ctmb.client.gui.StyledGuiUtils;
 import pl.pabilo8.ctmb.client.gui.elements.buttons.GuiButtonCTMBRegular;
-import pl.pabilo8.ctmb.common.CommonUtils;
+import pl.pabilo8.ctmb.common.util.GuiNBTData;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
 import javax.annotation.Nullable;
-import java.util.Map;
 
 /**
  * @author Pabilo8
@@ -42,30 +39,15 @@ public class GuiComponentButton extends GuiComponent
 	@ZenDoc("Creates a new Gui Component instance")
 	public static GuiComponentButton create(int x, int y, String name, IData data)
 	{
-		int styleID = 0;
-		boolean translated = false;
-		String text = name;
-		int w = 60, h = 20;
+		GuiNBTData map = new GuiNBTData(data);
 
-		if(CommonUtils.dataCheck(data))
-		{
-			Map<String, IData> map = data.asMap();
-
-			if(map.containsKey("w"))
-				w = map.get("w").asInt();
-			if(map.containsKey("h"))
-				h = map.get("h").asInt();
-
-			if(map.containsKey("text"))
-				text = map.get("text").asString();
-
-			if(map.containsKey("translated"))
-				translated = map.get("translated").asBool();
-			if(map.containsKey("style_id"))
-				styleID = map.get("style_id").asInt();
-		}
-
-		return new GuiComponentButton(x, y, w, h, name, text, translated, styleID);
+		return new GuiComponentButton(x, y,
+				map.getWidth(60), map.getHeight(20),
+				name,
+				map.getText(name),
+				map.getTranslated(),
+				map.getStyle()
+		);
 	}
 
 	@SideOnly(Side.CLIENT)
@@ -73,8 +55,8 @@ public class GuiComponentButton extends GuiComponent
 	@Nullable
 	public Gui provide(int id, int x, int y, MultiblockGui gui)
 	{
-		String t = translated?I18n.format(StyledGuiUtils.processText(gui, this.text)): StyledGuiUtils.processText(gui, this.text);
+		String text = getTranslation(translated, gui, this.text);
 
-		return new GuiButtonCTMBRegular(this, id, this.x+x, this.y+y, w, h, styleID, t, gui.getStyle());
+		return new GuiButtonCTMBRegular(this, id, this.x+x, this.y+y, w, h, styleID, text, gui.getStyle());
 	}
 }

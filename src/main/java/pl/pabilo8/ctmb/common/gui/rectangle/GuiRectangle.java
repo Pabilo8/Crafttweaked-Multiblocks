@@ -3,10 +3,7 @@ package pl.pabilo8.ctmb.common.gui.rectangle;
 import crafttweaker.annotations.ZenDoc;
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.data.IData;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import pl.pabilo8.ctmb.common.CommonUtils;
-import pl.pabilo8.ctmb.common.gui.MultiblockGuiLayout;
 import stanhebben.zenscript.annotations.Optional;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
@@ -85,16 +82,4 @@ public abstract class GuiRectangle
 	{
 		return new GuiRectangleCustom(x, y, w, h, data);
 	}
-
-	/**
-	 * Called when the GUI is initialised, used to update draw call lists
-	 */
-	@SideOnly(Side.CLIENT)
-	public abstract void validate(MultiblockGuiLayout layout);
-
-	/**
-	 * Called when the GUI is closed, used to remove draw call lists
-	 */
-	@SideOnly(Side.CLIENT)
-	public abstract void invalidate(MultiblockGuiLayout layout);
 }

@@ -23,6 +23,8 @@ public class MultiblockInventoryInfo extends MultiblockStorageInfo<NonNullList<I
 		super(id, capacity);
 		this.offset = offset;
 	}
+
+	// TODO: 01.07.2022 finish
 	public void setFilter(Predicate<ItemStack> filter)
 	{
 		this.filter = filter;

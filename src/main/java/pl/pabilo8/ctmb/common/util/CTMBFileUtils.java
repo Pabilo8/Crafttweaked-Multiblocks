@@ -177,16 +177,15 @@ public class CTMBFileUtils
 			CTMBLogger.error("Couldn't create File: "+file.getName());
 	}
 
-	public static boolean createFile(File file)
+	public static void createFile(File file)
 	{
 		createFolder(file.getParentFile());
 		try
 		{
-			return file.createNewFile();
+			file.createNewFile();
 		} catch(IOException e)
 		{
 			CTMBLogger.error("Couldn't create File "+file.getName());
 		}
-		return false;
 	}
 }
