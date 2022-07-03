@@ -3,8 +3,12 @@ package pl.pabilo8.ctmb.client.gui.elements.buttons;
 import crafttweaker.api.data.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.math.MathHelper;
+import org.lwjgl.opengl.GL11;
 import pl.pabilo8.ctmb.client.ClientUtils;
 import pl.pabilo8.ctmb.client.gui.elements.IGuiTweakable;
 import pl.pabilo8.ctmb.common.gui.MultiblockGuiStyle;
@@ -66,22 +70,19 @@ public class GuiButtonCTMB extends GuiButton implements IGuiTweakable
 			GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
 			GlStateManager.blendFunc(770, 771);
 
-			drawWithOffset(this.enabled?(state?3: (this.hovered?2: 1)): 0);
+			drawWithOffset(this.enabled?((this.hovered?2: (state?3:1))): 0);
 		}
 	}
 
 	protected void drawWithOffset(int offset)
 	{
-		int wwCorner = MathHelper.clamp((width/2), 0, 20); //first/last part width
-		int ww = width-(2*wwCorner); //remaining width
-		int texY = 112+(offset*20); //offset by index
+		int texY = 112+(offset*24); //offset by index
 
-		drawTexturedModalRect(x, y, texX, texY, wwCorner, 20); //draw beginning
-		for(int xx = 0; xx < ww; xx += 20)
-		{
-			drawTexturedModalRect(x+wwCorner+xx, y, texX+20, texY, Math.min(ww-xx, 20), 20); //draw middle
-		}
-		drawTexturedModalRect(x+ww+wwCorner, y, texX+40+(20-wwCorner), texY, wwCorner, 20); //draw end
+		Tessellator tes = Tessellator.getInstance();
+		BufferBuilder buffer = tes.getBuffer();
+		buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+		ClientUtils.drawFrame(buffer, x,y, width, height, 20, 8, texX, texY);
+		tes.draw();
 
 		if(displayString!=null&&!displayString.isEmpty()) //draw text
 		{

@@ -45,31 +45,31 @@ public class StyledGuiUtils
 						hasBR = outline[x+1][y+1]==1;
 
 						if(hasTL&&hasTR&&hasBL&&hasBR)
-							ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 8, 200, 8, 8);
+							ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 8, 216, 8, 8);
 						else if(hasBL&&hasBR)
-							ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, hasTR?24: 32, 192, 8, 8);
+							ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, hasTR?24: 32, 208, 8, 8);
 						else if(hasTL&&hasTR)
-							ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, hasBR?24: 32, 200, 8, 8);
+							ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, hasBR?24: 32, 216, 8, 8);
 					}
 
 					else if(hasRight&&hasBottom&&hasTop)
-						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 0, 200, 8, 8);
+						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 0, 216, 8, 8);
 					else if(hasLeft&&hasBottom&&hasTop)
-						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 16, 200, 8, 8);
+						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 16, 216, 8, 8);
 					else if(hasBottom&&hasLeft&&hasRight)
-						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 8, 192, 8, 8);
-					else if(hasTop&&hasLeft&&hasRight)
 						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 8, 208, 8, 8);
+					else if(hasTop&&hasLeft&&hasRight)
+						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 8, 224, 8, 8);
 
 
 					else if(hasRight&&hasBottom)
-						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 0, 192, 8, 8);
-					else if(hasLeft&&hasBottom)
-						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 16, 192, 8, 8);
-					else if(hasRight&&hasTop)
 						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 0, 208, 8, 8);
-					else if(hasLeft&&hasTop)
+					else if(hasLeft&&hasBottom)
 						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 16, 208, 8, 8);
+					else if(hasRight&&hasTop)
+						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 0, 224, 8, 8);
+					else if(hasLeft&&hasTop)
+						ClientUtils.drawTexturedRect(buffer, minXOffset+x*8, minYOffset+y*8, 16, 224, 8, 8);
 				}
 			}
 	}
@@ -188,7 +188,7 @@ public class StyledGuiUtils
 	{
 		ClientUtils.drawTexturedRect(buffer,
 				x-1, y-1,
-				40, 192,
+				40, 208,
 				18, 18);
 	}
 
