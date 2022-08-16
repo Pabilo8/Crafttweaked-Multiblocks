@@ -30,7 +30,7 @@ jobs:
        uses: actions/upload-artifact@v3
        with:
         name: test-build
-        path: 
+        path: |
           build/libs/
           !build/libs/*-core.jar
           !build/libs/*-deobf.jar
@@ -40,6 +40,8 @@ jobs:
        uses: actions/upload-artifact@v3
        with:
         name: sources
-        path: 
-          build/libs/
+        path: |
+          build/libs/*-core.jar
+          build/libs/*-deobf.jar
+          build/libs/*-sources.jar
       
