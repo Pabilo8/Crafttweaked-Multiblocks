@@ -26,9 +26,22 @@ jobs:
      - name: Execute Gradle build
        run: chmod +x gradlew ; ./gradlew build --scan
      
-     - name: Upload build reports
+     - name: Upload test build
        uses: actions/upload-artifact@v3
        with:
-        name: current-build
-        path: build/libs/
+        name: test-build
+        path: 
+          build/libs/*.jar
+          !build/libs/*-core.jar
+          !build/libs/*-deobf.jar
+          !build/libs/*-sources.jar
+          
+     - name: Upload sources
+       uses: actions/upload-artifact@v3
+       with:
+        name: sources
+        path: 
+          build/libs/*-core.jar
+          build/libs/*-deobf.jar
+          build/libs/*-sources.jar
       
