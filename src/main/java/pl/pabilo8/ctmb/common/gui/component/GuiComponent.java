@@ -7,8 +7,9 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import pl.pabilo8.ctmb.client.gui.MultiblockGui;
+import pl.pabilo8.ctmb.client.gui.IComponentGui;
 import pl.pabilo8.ctmb.client.gui.StyledGuiUtils;
+import pl.pabilo8.ctmb.common.gui.IEditablePart;
 import pl.pabilo8.ctmb.common.gui.MultiblockContainer;
 import stanhebben.zenscript.annotations.ZenClass;
 
@@ -20,7 +21,7 @@ import javax.annotation.Nullable;
  */
 @ZenClass("mods.ctmb.gui.Component")
 @ZenRegister
-public abstract class GuiComponent
+public abstract class GuiComponent implements IEditablePart
 {
 	public final int x, y;
 	public final int w, h;
@@ -44,7 +45,7 @@ public abstract class GuiComponent
 	 */
 	@SideOnly(Side.CLIENT)
 	@Nullable
-	public abstract Gui provide(int id, int x, int y, MultiblockGui gui);
+	public abstract Gui provide(int id, int x, int y, IComponentGui gui);
 
 	@Nullable
 	public Slot[] provideSlots(MultiblockContainer gui, InventoryPlayer inventoryPlayer)
@@ -53,8 +54,32 @@ public abstract class GuiComponent
 	}
 
 	@SideOnly(Side.CLIENT)
-	protected final String getTranslation(boolean translated, MultiblockGui gui, String text)
+	protected final String getTranslation(boolean translated, IComponentGui gui, String text)
 	{
 		return translated?I18n.format(StyledGuiUtils.processText(gui, text)): StyledGuiUtils.processText(gui, text);
+	}
+
+	@Override
+	public int getX()
+	{
+		return x;
+	}
+
+	@Override
+	public int getY()
+	{
+		return y;
+	}
+
+	@Override
+	public int getW()
+	{
+		return w;
+	}
+
+	@Override
+	public int getH()
+	{
+		return h;
 	}
 }

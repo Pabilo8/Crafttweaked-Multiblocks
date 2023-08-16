@@ -47,6 +47,22 @@ public class GuiLabelCTMB extends GuiLabel implements IGuiTweakable
 		fontRendererIn.drawString(text, x, y, color, dropShadow);
 	}
 
+	/**
+	 * For more streamlined label creation
+	 */
+	public GuiLabelCTMB withLine(String line)
+	{
+		addLine(line);
+		return this;
+	}
+
+	@Nonnull
+	@Override
+	public GuiLabelCTMB setCentered()
+	{
+		return (GuiLabelCTMB)super.setCentered();
+	}
+
 	@Override
 	@Nullable
 	public GuiComponent getBlueprint()

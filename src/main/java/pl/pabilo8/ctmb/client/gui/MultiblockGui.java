@@ -31,6 +31,7 @@ import pl.pabilo8.ctmb.common.gui.rectangle.GuiRectangleStyled;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.function.Function;
 
 import static pl.pabilo8.ctmb.client.gui.StyledGuiUtils.drawItemSlot;
 
@@ -38,8 +39,10 @@ import static pl.pabilo8.ctmb.client.gui.StyledGuiUtils.drawItemSlot;
  * @author Pabilo8
  * @since 27.02.2022
  */
-public class MultiblockGui extends GuiIEContainerBase
+public class MultiblockGui extends GuiIEContainerBase implements IComponentGui
 {
+	public static final HashMap<String, Function<MultiblockGui, String>> VARIABLES = new HashMap<>();
+
 	private final TileEntityMultiblock tile;
 	private final MultiblockContainer container;
 	private final Multiblock mb;
@@ -59,10 +62,10 @@ public class MultiblockGui extends GuiIEContainerBase
 
 	static
 	{
-		StyledGuiUtils.VARIABLES.put("player_name", gui -> ClientUtils.mc.player.getName());
-		StyledGuiUtils.VARIABLES.put("player_slots", gui -> String.valueOf(ClientUtils.mc.player.inventory.getSizeInventory()));
-		StyledGuiUtils.VARIABLES.put("mb_name", gui -> I18n.format(Lib.DESC_INFO+"multiblock."+gui.mb.getUniqueName()));
-		StyledGuiUtils.VARIABLES.put("mb_slots", gui -> String.valueOf(gui.container.inventorySlots.size()));
+		VARIABLES.put("player_name", gui -> ClientUtils.mc.player.getName());
+		VARIABLES.put("player_slots", gui -> String.valueOf(ClientUtils.mc.player.inventory.getSizeInventory()));
+		VARIABLES.put("mb_name", gui -> I18n.format(Lib.DESC_INFO+"multiblock."+gui.mb.getUniqueName()));
+		VARIABLES.put("mb_slots", gui -> String.valueOf(gui.container.inventorySlots.size()));
 	}
 
 	public MultiblockGui(InventoryPlayer inventoryPlayer, TileEntityMultiblock tile, int page)
@@ -79,14 +82,10 @@ public class MultiblockGui extends GuiIEContainerBase
 		int firstX = 0, firstY = 0, lastX = 0, lastY = 0;
 		for(GuiRectangle rectangle : this.layout.rectangles)
 		{
-			if(rectangle.x-rectangle.margin[0] < firstX)
-				firstX = rectangle.x;
-			if(rectangle.y-rectangle.margin[1] < firstY)
-				firstY = rectangle.y;
-			if(rectangle.x+rectangle.margin[2]+rectangle.w > lastX)
-				lastX = rectangle.x+rectangle.w;
-			if(rectangle.y+rectangle.margin[3]+rectangle.h > lastY)
-				lastY = rectangle.y+rectangle.h;
+			if(rectangle.x-rectangle.margin[0] < firstX) firstX = rectangle.x;
+			if(rectangle.y-rectangle.margin[1] < firstY) firstY = rectangle.y;
+			if(rectangle.x+rectangle.margin[2]+rectangle.w > lastX) lastX = rectangle.x+rectangle.w;
+			if(rectangle.y+rectangle.margin[3]+rectangle.h > lastY) lastY = rectangle.y+rectangle.h;
 		}
 
 		this.xSize = Math.abs(lastX-firstX);
@@ -114,13 +113,10 @@ public class MultiblockGui extends GuiIEContainerBase
 			Gui gui = component.provide(i++, guiLeft, guiTop, this);
 			if(gui!=null)
 			{
-				if(gui instanceof IGuiTweakable)
-					ctComponents.put(component.name, ((IGuiTweakable)gui));
+				if(gui instanceof IGuiTweakable) ctComponents.put(component.name, ((IGuiTweakable)gui));
 
-				if(gui instanceof GuiButton)
-					buttonList.add(((GuiButton)gui));
-				else if(gui instanceof GuiLabel)
-					labelList.add(((GuiLabel)gui));
+				if(gui instanceof GuiButton) addButton(((GuiButton)gui));
+				else if(gui instanceof GuiLabel) addLabel(((GuiLabel)gui));
 			}
 
 		}
@@ -133,8 +129,7 @@ public class MultiblockGui extends GuiIEContainerBase
 	public void onGuiClosed()
 	{
 		super.onGuiClosed();
-		if(built)
-			GLAllocation.deleteDisplayLists(displayList);
+		if(built) GLAllocation.deleteDisplayLists(displayList);
 		if(layout.onClose!=null)
 			layout.onClose.execute(ctWrapper, tile.getMbWrapper(), CraftTweakerMC.getIPlayer(ClientUtils.mc.player));
 	}
@@ -171,22 +166,20 @@ public class MultiblockGui extends GuiIEContainerBase
 		for(GuiRectangleCustom rect : customRects)
 		{
 			int gL = guiLeft+rect.x, gT = guiTop+rect.y;
-			if(rect.texture==null)
-				drawRect(gL, gT, gL+rect.w, gT+rect.h, 0xff000000+rect.bgColor);
+			if(rect.texture==null) drawRect(gL, gT, gL+rect.w, gT+rect.h, 0xff000000+rect.bgColor);
 		}
 
 		GlStateManager.popMatrix();
 
-		if(layout.onHover!=null)
-			for(GuiButton b : buttonList)
+		if(layout.onHover!=null) for(GuiButton b : buttonList)
+		{
+			if(b.isMouseOver()&&b instanceof IGuiTweakable)
 			{
-				if(b.isMouseOver()&&b instanceof IGuiTweakable)
-				{
-					GuiComponent blueprint = ((IGuiTweakable)b).getBlueprint();
-					if(blueprint!=null)
-						layout.onHover.execute(blueprint.name, ctWrapper, tile.getMbWrapper(), mouseX, mouseY, CraftTweakerMC.getIPlayer(ClientUtils.mc.player));
-				}
+				GuiComponent blueprint = ((IGuiTweakable)b).getBlueprint();
+				if(blueprint!=null)
+					layout.onHover.execute(blueprint.name, ctWrapper, tile.getMbWrapper(), mouseX, mouseY, CraftTweakerMC.getIPlayer(ClientUtils.mc.player));
 			}
+		}
 
 	}
 
@@ -210,6 +203,7 @@ public class MultiblockGui extends GuiIEContainerBase
 
 			//Mask
 			GL11.glEnable(GL11.GL_STENCIL_TEST);
+			GL11.glClear(GL11.GL_STENCIL_BUFFER_BIT);
 			GL11.glStencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_REPLACE);
 			GL11.glStencilFunc(GL11.GL_ALWAYS, 1, 0xFF);
 			buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
@@ -292,13 +286,44 @@ public class MultiblockGui extends GuiIEContainerBase
 
 	}
 
+	//--- IComponentGui ---//
+
+	@Override
 	public MultiblockGuiStyle getStyle()
 	{
 		return layout.style;
 	}
 
+	@Override
+	public boolean hasTile()
+	{
+		return true;
+	}
+
+	@Override
 	public TileEntityMultiblock getTile()
 	{
 		return tile;
+	}
+
+	@Override
+	public String parseVariable(String text)
+	{
+		return VARIABLES.containsKey(text)?VARIABLES.get(text).apply(this): text;
+	}
+
+	@Nonnull
+	@Override
+	public <T extends GuiLabel> T addLabel(@Nonnull T label)
+	{
+		labelList.add(label);
+		return label;
+	}
+
+	@Nonnull
+	@Override
+	public <T extends GuiButton> T addButton(@Nonnull T button)
+	{
+		return super.addButton(button);
 	}
 }

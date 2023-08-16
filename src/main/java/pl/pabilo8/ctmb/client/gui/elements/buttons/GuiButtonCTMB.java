@@ -11,6 +11,7 @@ import net.minecraft.util.math.MathHelper;
 import org.lwjgl.opengl.GL11;
 import pl.pabilo8.ctmb.client.ClientUtils;
 import pl.pabilo8.ctmb.client.gui.elements.IGuiTweakable;
+import pl.pabilo8.ctmb.common.CommonUtils;
 import pl.pabilo8.ctmb.common.gui.MultiblockGuiStyle;
 import pl.pabilo8.ctmb.common.gui.component.GuiComponent;
 import pl.pabilo8.ctmb.common.util.GuiNBTData;
@@ -71,6 +72,7 @@ public class GuiButtonCTMB extends GuiButton implements IGuiTweakable
 			GlStateManager.blendFunc(770, 771);
 
 			drawWithOffset(this.enabled?((this.hovered?2: (state?3:1))): 0);
+
 		}
 	}
 
@@ -104,6 +106,11 @@ public class GuiButtonCTMB extends GuiButton implements IGuiTweakable
 	public GuiComponent getBlueprint()
 	{
 		return parent;
+	}
+
+	public void setState(boolean state)
+	{
+		this.state = state;
 	}
 
 	@Override

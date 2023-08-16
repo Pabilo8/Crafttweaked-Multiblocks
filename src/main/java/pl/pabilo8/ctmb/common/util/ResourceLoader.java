@@ -2,12 +2,8 @@ package pl.pabilo8.ctmb.common.util;
 
 import blusunrize.lib.manual.IManualPage;
 import com.google.gson.*;
-import crafttweaker.mc1120.util.CraftTweakerHacks;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.util.EnumFacing;
-import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import pl.pabilo8.ctmb.CTMB;
@@ -21,7 +17,6 @@ import pl.pabilo8.ctmb.common.manual.ManualTweaker;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -45,17 +40,11 @@ public class ResourceLoader
 
 	public void setup()
 	{
-		Object minecraftDirObject = CraftTweakerHacks.getPrivateStaticObject(Loader.class, "minecraftDir");
+		this.resourceFolder = new File(".", "resources");
+		CTMBFileUtils.createFolder(this.resourceFolder);
 
-		if(minecraftDirObject instanceof File)
-		{
-			File minecraftDir = (File)minecraftDirObject;
-			this.resourceFolder = new File(minecraftDir, "resources");
-			CTMBFileUtils.createFolder(this.resourceFolder);
-
-			if(CTMB.proxy.getClass()==ClientProxy.class)
-				loadAsResourcePack();
-		}
+		if(CTMB.proxy.getClass()==ClientProxy.class)
+			loadAsResourcePack();
 
 		createPackMcMeta();
 		prepareResources();
@@ -70,8 +59,7 @@ public class ResourceLoader
 	@SuppressWarnings("deprecation")
 	private void loadAsResourcePack()
 	{
-		List<IResourcePack> defaultResourcePacks = ReflectionHelper.getPrivateValue(Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "field_110449_ao", "ap");
-		defaultResourcePacks.add(new DirectoryResourcePack(this.resourceFolder));
+		Minecraft.getMinecraft().defaultResourcePacks.add(new DirectoryResourcePack(this.resourceFolder));
 		Minecraft.getMinecraft().refreshResources();
 	}
 

@@ -6,7 +6,7 @@ import crafttweaker.api.data.IData;
 import net.minecraft.client.gui.Gui;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import pl.pabilo8.ctmb.client.gui.MultiblockGui;
+import pl.pabilo8.ctmb.client.gui.IComponentGui;
 import pl.pabilo8.ctmb.client.gui.elements.buttons.GuiButtonCTMBCheckbox;
 import pl.pabilo8.ctmb.common.util.GuiNBTData;
 import stanhebben.zenscript.annotations.ZenClass;
@@ -59,7 +59,7 @@ public class GuiComponentCheckbox extends GuiComponent
 	@SideOnly(Side.CLIENT)
 	@Override
 	@Nullable
-	public Gui provide(int id, int x, int y, MultiblockGui gui)
+	public Gui provide(int id, int x, int y, IComponentGui gui)
 	{
 		String on = getTranslation(translated,gui,textOn);
 		String off = getTranslation(translated,gui,textOff);

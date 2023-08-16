@@ -1,6 +1,10 @@
 package pl.pabilo8.ctmb.common;
 
 import crafttweaker.api.data.*;
+import crafttweaker.api.minecraft.CraftTweakerMC;
+import net.minecraft.nbt.JsonToNBT;
+import net.minecraft.nbt.NBTException;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
@@ -154,5 +158,16 @@ public class CommonUtils
 	public static boolean dataCheck(IData data)
 	{
 		return data instanceof DataMap&&data.length() > 0;
+	}
+
+	public static IData getDataFromString(String s)
+	{
+		try
+		{
+			return CraftTweakerMC.getIData(JsonToNBT.getTagFromJson(s));
+		} catch(NBTException e)
+		{
+			return CraftTweakerMC.getIData(new NBTTagCompound());
+		}
 	}
 }

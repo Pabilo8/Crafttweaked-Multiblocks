@@ -5,7 +5,9 @@ import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.models.obj.IEOBJLoader;
 import blusunrize.lib.manual.IManualPage;
 import blusunrize.lib.manual.ManualInstance.ManualEntry;
+import com.blamejared.ctgui.api.events.CTGUIEvent;
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.resources.IReloadableResourceManager;
@@ -30,6 +32,7 @@ import pl.pabilo8.ctmb.common.CommonProxy;
 import pl.pabilo8.ctmb.common.block.ItemBlockCTMBMultiblock;
 import pl.pabilo8.ctmb.common.block.TileEntityMultiblock;
 import pl.pabilo8.ctmb.common.block.crafttweaker.Multiblock;
+import pl.pabilo8.ctmb.client.gui.MultiblockGuiEditorGui;
 import pl.pabilo8.ctmb.common.manual.CTMBManualPage;
 import pl.pabilo8.ctmb.common.manual.ManualTweaker;
 import pl.pabilo8.ctmb.common.util.CTMBLogger;
@@ -86,13 +89,17 @@ public class ClientProxy extends CommonProxy implements ISelectiveResourceReload
 		}
 	}
 
-	// TODO: 29.01.2022 multiblock GUIs
+	@SubscribeEvent
+	public static void onCTGUI(CTGUIEvent event)
+	{
+		if(event.getGuiName().equals(MULTIBLOCK_GUI))
+			Minecraft.getMinecraft().displayGuiScreen(new MultiblockGuiEditorGui());
+	}
+
 	@Nullable
 	@Override
 	public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z)
 	{
-		//ID is used as a page identifier
-
 		TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
 		if(te instanceof TileEntityMultiblock)
 		{

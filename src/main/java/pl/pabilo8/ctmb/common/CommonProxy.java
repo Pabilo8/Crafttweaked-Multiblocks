@@ -1,6 +1,8 @@
 package pl.pabilo8.ctmb.common;
 
 import blusunrize.immersiveengineering.api.MultiblockHandler;
+import com.blamejared.ctgui.api.GuiRegistry;
+import com.blamejared.ctgui.api.events.CTGUIEvent;
 import crafttweaker.CraftTweakerAPI;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
@@ -36,10 +38,13 @@ public class CommonProxy implements IGuiHandler
 
 	public static final ResourceLoader RESOURCE_LOADER = new ResourceLoader();
 
+	public static final String MULTIBLOCK_GUI = "multiblock_gui";
+
 	public void preInit()
 	{
 		RESOURCE_LOADER.setup();
 		RESOURCE_LOADER.createFolders();
+		GuiRegistry.registerGui(MULTIBLOCK_GUI);
 	}
 
 	public void init()
@@ -50,6 +55,9 @@ public class CommonProxy implements IGuiHandler
 			MultiblockHandler.registerMultiblock(mb);
 
 		RESOURCE_LOADER.autoGenerateFiles();
+
+		for(Multiblock mb : MULTIBLOCKS)
+			mb.updateStructure();
 	}
 
 	@SubscribeEvent
@@ -72,8 +80,7 @@ public class CommonProxy implements IGuiHandler
 
 	public void postInit()
 	{
-		for(Multiblock mb : MULTIBLOCKS)
-			mb.updateStructure();
+
 	}
 
 	@Nullable

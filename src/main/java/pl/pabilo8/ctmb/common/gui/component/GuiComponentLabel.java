@@ -9,7 +9,7 @@ import net.minecraft.client.resources.I18n;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import pl.pabilo8.ctmb.client.ClientUtils;
-import pl.pabilo8.ctmb.client.gui.MultiblockGui;
+import pl.pabilo8.ctmb.client.gui.IComponentGui;
 import pl.pabilo8.ctmb.client.gui.StyledGuiUtils;
 import pl.pabilo8.ctmb.client.gui.elements.GuiLabelCTMB;
 import pl.pabilo8.ctmb.common.util.GuiNBTData;
@@ -61,7 +61,7 @@ public class GuiComponentLabel extends GuiComponent
 	@SideOnly(Side.CLIENT)
 	@Override
 	@Nullable
-	public Gui provide(int id, int x, int y, MultiblockGui gui)
+	public Gui provide(int id, int x, int y, IComponentGui gui)
 	{
 		GuiLabel label = new GuiLabelCTMB(this, ClientUtils.mc.fontRenderer, id, this.x+x, this.y+y, w, h, textColor==-1?gui.getStyle().getMainColor(): textColor, dropShadow);
 

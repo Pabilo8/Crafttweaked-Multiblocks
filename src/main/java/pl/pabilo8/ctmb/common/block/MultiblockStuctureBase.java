@@ -31,7 +31,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.template.Template;
 import net.minecraft.world.gen.structure.template.Template.BlockInfo;
 import net.minecraft.world.gen.structure.template.TemplateManager;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
@@ -95,6 +94,7 @@ public abstract class MultiblockStuctureBase<T extends TileEntityMultiblockPart<
 	public void updateStructure()
 	{
 		//the .nbt file
+		CTMBLogger.warn("Attempting to load structure for "+res);
 		Template template = RES_LOC_TEMPLATE_MANAGER.getTemplate(null, res);
 		if(template.blocks.isEmpty())
 			template = readTemplateFromResources(res);
@@ -135,6 +135,10 @@ public abstract class MultiblockStuctureBase<T extends TileEntityMultiblockPart<
 			}
 		}
 		materials = matsSet.toArray(new IngredientStack[0]);
+		CTMBLogger.info(this.name+" @ "+this.res);
+		CTMBLogger.info(this.structure);
+		CTMBLogger.info(this.materials);
+		CTMBLogger.info(this.offset);
 	}
 
 	@Override
@@ -399,9 +403,9 @@ public abstract class MultiblockStuctureBase<T extends TileEntityMultiblockPart<
 
 			//add to template manager
 			template.read(FIXER.process(FixTypes.STRUCTURE, nbttagcompound));
-			Map<String, Template> list = ReflectionHelper.getPrivateValue(TemplateManager.class, RES_LOC_TEMPLATE_MANAGER, "templates");
-			list.remove(res.toString());
-			list.put(res.toString(), template);
+			Map<String, Template> templates = RES_LOC_TEMPLATE_MANAGER.templates;
+			templates.remove(res.toString());
+			templates.put(res.toString(), template);
 
 			//ah, yes, is  t e m p l a t e
 			return template;

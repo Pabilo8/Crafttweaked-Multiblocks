@@ -253,6 +253,8 @@ public class GuiButtonCTMBDropdownList extends GuiButtonCTMB
 	@Override
 	protected Map<String, IData> getDataInternal(Map<String, IData> map)
 	{
+		super.getDataInternal(map);
+
 		map.put("selected_entry", new DataString(getEntry(selectedEntry)));
 		map.put("hovered_entry", new DataString(getEntry(hoveredEntry)));
 		map.put("hover_timer", new DataInt(hoverTimer));

@@ -22,7 +22,7 @@ public class MultiblockGuiStyle
 	static
 	{
 		DEFAULT_SKIN = new MultiblockGuiStyle(
-				"royale", new int[]{0xf78034, 0x0a0a0a, 0x1a1a1a},
+				"royale", new int[]{0xffbc53, 0xd99747, 0x0a0a0a},
 				0xE0E0E0,
 				0xf78034,
 				0

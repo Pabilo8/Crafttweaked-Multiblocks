@@ -170,7 +170,7 @@ public class ClientUtils
 		{
 			int aH = Math.min(hh-i, frameH); //actual height
 
-			ClientUtils.drawTexturedRect(buffer, x, y+eY+i, u, v+frameW, eX, aH);
+			ClientUtils.drawTexturedRect(buffer, x, y+eY+i, u, v+frameH, eX, aH);
 			ClientUtils.drawTexturedRect(buffer, x+ww+eX, y+eY+i, u+(2*frameW), v+frameH, eX, aH);
 
 			for(int j = 0; j < ww; j += frameW)

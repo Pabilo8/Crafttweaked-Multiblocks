@@ -102,7 +102,6 @@ def libPrefix = 'META-INF/libraries'
 
 jar {
     manifest {
-        attributes 'ContainedDeps': libPrefix + '/' + archivePath.name
         attributes "FMLAT": "ctmb_at.cfg"
         attributes 'Maven-Artifact': group + ':' + archivesBaseName + ':' + version
     }

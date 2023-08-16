@@ -7,8 +7,6 @@ import pl.pabilo8.ctmb.client.ClientUtils;
 import pl.pabilo8.ctmb.common.gui.rectangle.GuiRectangleStyled;
 
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,8 +17,6 @@ import java.util.regex.Pattern;
 @SideOnly(Side.CLIENT)
 public class StyledGuiUtils
 {
-	public static final HashMap<String, Function<MultiblockGui, String>> VARIABLES = new HashMap<>();
-
 	public static void drawBackgroundRoundedMask(GuiRectangleStyled[] rects, BufferBuilder buffer, int minXOffset, int minYOffset)
 	{
 		byte[][] outline = getBoxesOutline(rects, 8, minXOffset, minYOffset);
@@ -132,7 +128,7 @@ public class StyledGuiUtils
 		for(GuiRectangleStyled rect : rects)
 			for(int yy = 0; yy < rect.h; yy += 32)
 				for(int xx = 0; xx < rect.w; xx += 32)
-					ClientUtils.drawTexturedRect(buffer, rect.x+xx, rect.y+yy, rect.styleID*32, 32, Math.min(rect.w-xx, 32), Math.min(rect.h-yy, 32));
+					ClientUtils.drawTexturedRect(buffer, ((int)Math.floor(rect.x/8f)*8)+xx, ((int)Math.floor(rect.y/8f)*8)+yy, rect.styleID*32, 32, Math.min(rect.w-xx, 32), Math.min(rect.h-yy, 32));
 	}
 
 	public static void drawBorderAround(GuiRectangleStyled[] rects, BufferBuilder buffer)
@@ -141,8 +137,8 @@ public class StyledGuiUtils
 		{
 			if(rect.borderID!=-1)
 			{
-				int x = rect.x-rect.margin[3];
-				int y = rect.y-rect.margin[0];
+				int x = ((int)Math.floor(rect.x/8f)*8)-rect.margin[3];
+				int y = ((int)Math.floor(rect.y/8f)*8)-rect.margin[0];
 				int w = rect.w+rect.margin[3]+rect.margin[1];
 				int h = rect.h+rect.margin[0]+rect.margin[2];
 				int texBegin = rect.borderID*48;
@@ -192,7 +188,7 @@ public class StyledGuiUtils
 				18, 18);
 	}
 
-	public static String processText(MultiblockGui gui, String text)
+	public static String processText(IComponentGui gui, String text)
 	{
 		Pattern pattern = Pattern.compile("\\$\\{(.+?)}");
 		Matcher matcher = pattern.matcher(text);
@@ -202,7 +198,7 @@ public class StyledGuiUtils
 		int i = 0;
 		while(matcher.find())
 		{
-			String replacement = VARIABLES.get(matcher.group(1)).apply(gui);
+			String replacement = gui.parseVariable(matcher.group(1));
 			builder.append(text, i, matcher.start());
 			if(replacement==null)
 				builder.append(matcher.group(0));

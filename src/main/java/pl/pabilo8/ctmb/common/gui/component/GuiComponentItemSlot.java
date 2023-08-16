@@ -8,7 +8,7 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import pl.pabilo8.ctmb.client.gui.MultiblockGui;
+import pl.pabilo8.ctmb.client.gui.IComponentGui;
 import pl.pabilo8.ctmb.common.gui.CTMBSlot;
 import pl.pabilo8.ctmb.common.gui.MultiblockContainer;
 import pl.pabilo8.ctmb.common.util.GuiNBTData;
@@ -55,7 +55,7 @@ public class GuiComponentItemSlot extends GuiComponent
 	@SideOnly(Side.CLIENT)
 	@Override
 	@Nullable
-	public Gui provide(int id, int x, int y, MultiblockGui gui)
+	public Gui provide(int id, int x, int y, IComponentGui gui)
 	{
 		return null;
 	}
@@ -65,6 +65,7 @@ public class GuiComponentItemSlot extends GuiComponent
 	public Slot[] provideSlots(MultiblockContainer gui, InventoryPlayer inventoryPlayer)
 	{
 		assert gui.inv!=null;
+		// TODO: 08.07.2022 fix crash on inventory-less GUIs
 
 		return new Slot[]{
 				new CTMBSlot(inventoryID==-1?inventoryPlayer: gui.inv,

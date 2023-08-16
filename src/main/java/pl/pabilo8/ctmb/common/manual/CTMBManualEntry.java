@@ -3,11 +3,9 @@ package pl.pabilo8.ctmb.common.manual;
 import blusunrize.lib.manual.ManualInstance.ManualEntry;
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.data.IData;
-import crafttweaker.mc1120.util.CraftTweakerHacks;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.resources.Language;
 import net.minecraft.client.resources.Locale;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import pl.pabilo8.ctmb.CTMB;
@@ -19,7 +17,6 @@ import stanhebben.zenscript.annotations.ZenClass;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author Pabilo8
@@ -71,12 +68,14 @@ public class CTMBManualEntry extends ManualEntry
 				{
 					//you wish you know how much I struggled to get this to work... xD
 
-					Locale locale = CraftTweakerHacks.getPrivateStaticObject(I18n.class, "i18nLocale");
-					Map<String, String> properties = ReflectionHelper.getPrivateValue(Locale.class, locale, "properties");
+					Locale locale = I18n.i18nLocale;
+					if(I18n.i18nLocale!=null)
+					{
+						locale.properties.put("ie.manual.entry."+getName()+".name", lines[1]); //title
+						if(lines.length > 2)
+							locale.properties.put("ie.manual.entry."+getName()+".subtext", lines[2]); //subtitle
+					}
 
-					properties.put("ie.manual.entry."+getName()+".name", lines[1]); //title
-					if(lines.length > 2)
-						properties.put("ie.manual.entry."+getName()+".subtext", lines[2]); //subtitle
 				}
 				else //process section
 				{
