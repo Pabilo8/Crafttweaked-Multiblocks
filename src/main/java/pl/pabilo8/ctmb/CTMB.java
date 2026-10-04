@@ -16,14 +16,15 @@ import static pl.pabilo8.ctmb.CTMB.VERSION;
 @SuppressWarnings("unused")
 @Mod(
 		modid = MODID,
-		name = "Crafttweaked Multiblocks",
+		name = Tags.MOD_NAME,
 		version = VERSION,
-		dependencies = "required-after:forge@[14.23.5.2820,);required-after:crafttweaker@[4.1.8,);required:crafttweaker@[4.1.8,);required-after:immersiveengineering@[0.12,);after:immersiveengineering@[0.12,)"
+		dependencies = "required-after:forge@[14.23.5.2847,);required-after:immersiveengineering@[0.12-92,);required-after:immersiveintelligence@[0.3.1,);required-after:crafttweaker@[4.1.20,)",
+		acceptedMinecraftVersions = "[1.12.2]"
 )
 public class CTMB
 {
-	public static final String MODID = "ctmb";
-	public static final String VERSION = "@VERSION@";
+	public static final String MODID = Tags.MOD_ID;
+	public static final String VERSION = Tags.VERSION;
 
 	@Instance(MODID)
 	public static CTMB INSTANCE;

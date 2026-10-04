@@ -1,0 +1,27 @@
+Team II Mk. X Build System
+-------------------------
+
+Common tasks:
+  ./gradlew runClient
+  ./gradlew runServer
+  ./gradlew runObfClient
+  ./gradlew runObfServer
+  ./gradlew build
+  ./gradlew test
+  ./gradlew spotlessApply
+
+Project identity lives in gradle.properties:
+  mod_id, mod_name, mod_group, mod_package, mod_version
+
+Important build switches:
+  ii_script_repositories   enable Team II / GTNH / Cleanroom / mod Maven repositories
+  ii_script_ide            generate IntelliJ IDEA settings and Gradle run configurations
+  ii_script_lombok         enable Lombok compileOnly and annotationProcessor dependencies
+  ii_script_modworks       enable Team II Modworks processor and generated folders
+  ii_script_junit          enable JUnit 5, MinecraftJUnit and JMeasure
+  ii_script_spotless       enable Spotless formatting tasks
+  ii_script_dependencies   enable CTMB compile and development-runtime dependencies
+
+Modern Java syntax:
+  ii_use_modern_java_syntax=true enables Jabel and compiles modern Java syntax to Java 8 bytecode.
+  CTMB uses a Java 25 toolchain and emits Java 8-compatible bytecode.

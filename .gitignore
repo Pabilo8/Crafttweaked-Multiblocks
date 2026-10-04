@@ -102,6 +102,7 @@ $RECYCLE.BIN/
 
 .gradle
 build/
+custom.gradle
 
 # Ignore Gradle GUI config
 gradle-app.setting
@@ -113,6 +114,10 @@ gradle-app.setting
 
 # Common working directory
 run/
+run_tests/
+
+# ModWorks generated sources and resources
+src/main/generated/*
 
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
 !gradle-wrapper.jar

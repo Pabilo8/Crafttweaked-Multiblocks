@@ -1,0 +1,15 @@
+dependencies {
+	// CTMB is an Immersive Intelligence addon. Its optional integrations are declared explicitly below.
+	implementation(rfg.deobf("pl.pabilo8:ImmersiveIntelligence:${mkxString('immersive_intelligence_version')}")) {
+		transitive = false
+	}
+
+	// Required compile and development-runtime dependencies.
+	implementation rfg.deobf("blusunrize:ImmersiveEngineering:${mkxString('immersive_engineering_version')}")
+	implementation rfg.deobf("CraftTweaker2:CraftTweaker2-MC1120-Main:${mkxString('crafttweaker_version')}")
+
+	// CTMB currently references the Immersive Petroleum API. Keep both its API and mod available in development.
+	compileOnly rfg.deobf("curse.maven:immersive-petroleum-268250:${mkxString('immersive_petroleum_version')}")
+	runtimeOnlyNonPublishable rfg.deobf("curse.maven:immersive-petroleum-268250:${mkxString('immersive_petroleum_version')}")
+	runtimeOnlyNonPublishable rfg.deobf("mezz.jei:jei_1.12.2:${mkxString('jei_version')}")
+}
