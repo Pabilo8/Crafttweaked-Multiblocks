@@ -1,36 +1,56 @@
 package pl.pabilo8.ctmb.common.manual;
 
-import com.google.common.collect.HashMultimap;
-import crafttweaker.annotations.ZenDoc;
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.data.IData;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
- * @author Pabilo8
+ * Registers side-neutral definitions for the II manual.
+ *
+ * @author Pabilo8 (pabilo@iiteam.net)
  * @since 20.03.2022
+ * @updated 05.10.2026
  */
-@ZenClass(value = "mods.ctmb.manual.ManualTweaker")
 @ZenRegister
-public class ManualTweaker
+@ZenClass("mods.ctmb.manual.ManualTweaker")
+public final class ManualTweaker
 {
-	public static final HashMultimap<String, CTMBManualEntry> PAGES = HashMultimap.create();
+	public static final Map<String, CTMBManualCategory> CATEGORIES = new LinkedHashMap<>();
+	public static final Map<String, CTMBManualEntry> ENTRIES = new LinkedHashMap<>();
+
+	private ManualTweaker() {}
 
 	@ZenMethod
-	@ZenDoc("Adds entries to IE Manual")
+	public static CTMBManualCategory addCategory(String name)
+	{
+		validatePath(name);
+		if(name.contains("/")) throw new IllegalArgumentException("Category names must not contain slashes");
+		return CATEGORIES.computeIfAbsent(name, CTMBManualCategory::new);
+	}
+
+	/** Registers an entry and creates folders from its path. */
+	@ZenMethod
 	public static CTMBManualEntry addEntry(String name, String category, CTMBManualPage... pages)
 	{
+		validatePath(name);
+		addCategory(category);
+		String key = category+"/"+name;
+		if(ENTRIES.containsKey(key)) throw new IllegalArgumentException("Duplicate manual entry: "+key);
 		CTMBManualEntry entry = new CTMBManualEntry(name, category, pages);
-		PAGES.put(name, entry);
+		ENTRIES.put(key, entry);
 		return entry;
 	}
 
 	@ZenMethod
-	@ZenDoc("Adds data sources to Manual entries")
-	public static void addDataSource(CTMBManualEntry entry, String sourceName, IData value)
-	{
-		entry.addSource(sourceName, value);
-	}
+	public static void addDataSource(CTMBManualEntry entry, String name, IData value) { entry.addSource(name, value); }
 
+	private static void validatePath(String path)
+	{
+		if(path==null||!path.matches("[a-z0-9_]+(/[a-z0-9_]+)*"))
+			throw new IllegalArgumentException("Invalid manual path: "+path);
+	}
 }

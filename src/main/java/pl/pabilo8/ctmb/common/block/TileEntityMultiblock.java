@@ -33,10 +33,10 @@ import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 import pl.pabilo8.ctmb.common.CommonProxy;
-import pl.pabilo8.ctmb.common.CommonUtils;
+import pl.pabilo8.immersiveintelligence.common.network.IIPacketHandler;
 import pl.pabilo8.ctmb.common.block.crafttweaker.Multiblock;
 import pl.pabilo8.ctmb.common.block.crafttweaker.MultiblockTileCTWrapper;
-import pl.pabilo8.ctmb.common.util.NBTTagCollector;
+import pl.pabilo8.immersiveintelligence.common.util.lambda.NBTTagCollector;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -76,6 +76,7 @@ public class TileEntityMultiblock extends TileEntityMultiblockMetal<TileEntityMu
 	{
 		super(mb, mb.getSize(), 0, mb.redstonePositions.length > 0);
 		this.multiblock = mb;
+		initStorage();
 	}
 
 	@SuppressWarnings("deprecation")
@@ -111,6 +112,14 @@ public class TileEntityMultiblock extends TileEntityMultiblockMetal<TileEntityMu
 	@Override
 	public void receiveMessageFromServer(@Nonnull NBTTagCompound message)
 	{
+		if(message.hasKey("ctmbGuiStorage", NBT.TAG_COMPOUND))
+		{
+			NBTTagCompound storage = message.getCompoundTag("ctmbGuiStorage");
+			initStorage();
+			readArrayedProperty(storage, "tanks", tanks, FluidTank::readFromNBT);
+			readArrayedProperty(storage, "energy", energy, FluxStorage::readFromNBT);
+			return;
+		}
 		super.receiveMessageFromServer(message);
 
 		if(multiblock.onReceiveMessage!=null)
@@ -133,7 +142,17 @@ public class TileEntityMultiblock extends TileEntityMultiblockMetal<TileEntityMu
 		if(multiblock.onSendMessage!=null)
 			multiblock.onSendMessage.execute(getMbWrapper(), CraftTweakerMC.getIData(message), world.isRemote);
 
-		ImmersiveEngineering.packetHandler.sendToAllAround(new MessageTileSync(this, message), CommonUtils.targetPointFromTile(this, range));
+		ImmersiveEngineering.packetHandler.sendToAllAround(new MessageTileSync(this, message), IIPacketHandler.targetPointFromTile(this, range));
+	}
+
+	/** Returns the storage state for open GUI listeners. */
+	public NBTTagCompound getGuiStorageData()
+	{
+		initStorage();
+		NBTTagCompound data = new NBTTagCompound();
+		data.setTag("tanks", Arrays.stream(tanks).map(t -> t.writeToNBT(new NBTTagCompound())).collect(NBTTagCollector.collect()));
+		data.setTag("energy", Arrays.stream(energy).map(t -> t.writeToNBT(new NBTTagCompound())).collect(NBTTagCollector.collect()));
+		return data;
 	}
 
 	//--- NBT ---//
@@ -160,9 +179,9 @@ public class TileEntityMultiblock extends TileEntityMultiblockMetal<TileEntityMu
 		if(inventory.size() > 0)
 			nbt.setTag("inventory", Utils.writeInventory(inventory));
 		if(tanks!=null&&tanks.length > 0)
-			nbt.setTag("tanks", Arrays.stream(tanks).map(t -> t.writeToNBT(new NBTTagCompound())).collect(new NBTTagCollector()));
+			nbt.setTag("tanks", Arrays.stream(tanks).map(t -> t.writeToNBT(new NBTTagCompound())).collect(NBTTagCollector.collect()));
 		if(energy!=null&&energy.length > 0)
-			nbt.setTag("energy", Arrays.stream(energy).map(t -> t.writeToNBT(new NBTTagCompound())).collect(new NBTTagCollector()));
+			nbt.setTag("energy", Arrays.stream(energy).map(t -> t.writeToNBT(new NBTTagCompound())).collect(NBTTagCollector.collect()));
 
 		if(mbWrapper!=null)
 		{
@@ -254,17 +273,12 @@ public class TileEntityMultiblock extends TileEntityMultiblockMetal<TileEntityMu
 
 	private void initStorage()
 	{
-		inventory = NonNullList.withSize(
-				multiblock.inventory.stream().mapToInt(i -> i.capacity).sum(),
-				ItemStack.EMPTY);
-
-		tanks = multiblock.tanks.stream()
-				.map(i -> new FluidTank(i.capacity))
-				.toArray(FluidTank[]::new);
-
-		energy = multiblock.energy.stream()
-				.map(i -> new FluxStorageAdvanced(i.capacity))
-				.toArray(FluxStorageAdvanced[]::new);
+		int slots = multiblock.inventory.stream().mapToInt(info -> info.capacity).sum();
+		if(inventory.size()!=slots) inventory = NonNullList.withSize(slots, ItemStack.EMPTY);
+		if(tanks==null||tanks.length!=multiblock.tanks.size())
+			tanks = multiblock.tanks.stream().map(info -> new FluidTank(info.capacity)).toArray(FluidTank[]::new);
+		if(energy==null||energy.length!=multiblock.energy.size())
+			energy = multiblock.energy.stream().map(info -> new FluxStorageAdvanced(info.capacity)).toArray(FluxStorage[]::new);
 	}
 
 	//--- IE Methods ---//
@@ -403,19 +417,22 @@ public class TileEntityMultiblock extends TileEntityMultiblockMetal<TileEntityMu
 	@Override
 	public boolean isStackValid(int slot, ItemStack stack)
 	{
+		if(slot < 0||slot >= inventory.size()) return false;
+		for(pl.pabilo8.ctmb.common.block.crafttweaker.storage.MultiblockInventoryInfo info : multiblock.inventory)
+			if(slot >= info.getOffset()&&slot < info.getOffset()+info.capacity) return info.filter.test(stack);
 		return false;
 	}
 
 	@Override
 	public int getSlotLimit(int slot)
 	{
-		return 0;
+		return slot >= 0&&slot < inventory.size()?64:0;
 	}
 
 	@Override
 	public void doGraphicalUpdates(int slot)
 	{
-
+		forceUpdate();
 	}
 
 	// TODO: 20.02.2022 redstone

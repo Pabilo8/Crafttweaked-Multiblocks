@@ -1,132 +1,107 @@
 package pl.pabilo8.ctmb.common.gui;
 
-import crafttweaker.annotations.ZenDoc;
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.player.IPlayer;
+import lombok.Getter;
 import pl.pabilo8.ctmb.common.block.crafttweaker.MultiblockTileCTWrapper;
 import pl.pabilo8.ctmb.common.gui.component.GuiComponent;
-import pl.pabilo8.ctmb.common.gui.rectangle.GuiRectangle;
-import pl.pabilo8.ctmb.common.gui.rectangle.GuiRectangleStyled;
-import stanhebben.zenscript.annotations.Optional;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
-import javax.annotation.Nullable;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
- * @author Pabilo8
+ * Defines the components and server slots of a Deco multiblock GUI.
+ *
+ * @author Pabilo8 (pabilo@iiteam.net)
  * @since 25.02.2022
+ * @updated 05.10.2026
  */
-@ZenClass("mods.ctmb.gui.Layout")
-@ZenDoc("A Layout used when displaying a GUI for a CTMB multiblock")
 @ZenRegister
+@ZenClass("mods.ctmb.gui.Layout")
+@Getter
 public class MultiblockGuiLayout
 {
-	public final MultiblockGuiStyle style;
+	private final int width, height;
+	private final Map<String, GuiComponent> components = new LinkedHashMap<>();
+	private int inventoryX, inventoryY;
+	private boolean playerInventory;
+	private IMultiblockGuiEventOnComponent onPress, onHover;
+	private IMultiblockGuiEventGeneral onOpen, onClose;
 
-	public final List<GuiRectangle> rectangles = new ArrayList<>();
-	public final Map<String, GuiComponent> components = new HashMap<>();
-
-	public IMultiblockGuiEventOnComponent onPress, onHover;
-
-	public IMultiblockGuiEventGeneral onOpen, onClose;
-
-	public MultiblockGuiLayout(MultiblockGuiStyle style)
+	private MultiblockGuiLayout(int width, int height)
 	{
-		this.style = style;
+		if(width < 1||height < 1)
+			throw new IllegalArgumentException("GUI dimensions must be positive");
+		this.width = width;
+		this.height = height;
+	}
+
+	/** Creates a Deco layout with the specified dimensions. */
+	@ZenMethod
+	public static MultiblockGuiLayout create(int width, int height)
+	{
+		return new MultiblockGuiLayout(width, height);
 	}
 
 	@ZenMethod
-	@ZenDoc("Creates a simple Gui Layout using the default generated style")
-	public static MultiblockGuiLayout create(int w, int h)
+	public MultiblockGuiLayout addComponent(GuiComponent component)
 	{
-		MultiblockGuiLayout layout = new MultiblockGuiLayout(MultiblockGuiStyle.DEFAULT_SKIN);
-		layout.rectangles.add(new GuiRectangleStyled(0, 0, w, h, null));
-		return layout;
+		if(components.putIfAbsent(component.getName(), component)!=null)
+			throw new IllegalArgumentException("Duplicate component: "+component.getName());
+		return this;
 	}
 
 	@ZenMethod
-	@ZenDoc("Creates a new Gui Layout")
-	public static MultiblockGuiLayout create(GuiRectangle[] rectangles, @Optional String styleName)
-	{
-		MultiblockGuiLayout layout = new MultiblockGuiLayout((styleName!=null&&MultiblockGuiStyle.STYLES.containsKey(styleName))?
-				MultiblockGuiStyle.STYLES.get(styleName):
-				MultiblockGuiStyle.DEFAULT_SKIN);
-		layout.rectangles.addAll(Arrays.asList(rectangles));
-		return layout;
-	}
-
-	@ZenMethod
-	@ZenDoc("Adds a component to the Gui Layout")
-	public void addComponent(GuiComponent component)
-	{
-		components.put(component.name, component);
-	}
-
-	@ZenMethod
-	@ZenDoc("Adds a component to the Gui Layout")
-	public void addComponents(GuiComponent... components)
+	public MultiblockGuiLayout addComponents(GuiComponent... components)
 	{
 		for(GuiComponent component : components)
 			addComponent(component);
-	}
-
-	@Nullable
-	@ZenMethod
-	@ZenDoc("Gets a component with given id from the Gui Layout")
-	public GuiComponent getComponent(String id)
-	{
-		return components.get(id);
+		return this;
 	}
 
 	@ZenMethod
-	@ZenDoc("Removes a component from the Gui Layout")
-	public boolean removeComponent(String id)
+	public GuiComponent getComponent(String name)
 	{
-		return components.remove(id)!=null;
+		return components.get(name);
 	}
 
 	@ZenMethod
-	@ZenDoc("Sets the function called by a MB gui when a component was activated.")
-	public void setOnPress(IMultiblockGuiEventOnComponent event)
+	public boolean removeComponent(String name)
 	{
-		this.onPress = event;
+		return components.remove(name)!=null;
 	}
 
 	@ZenMethod
-	@ZenDoc("Sets the function called by a MB gui when a component was hovered over.")
-	public void setOnHover(IMultiblockGuiEventOnComponent event)
+	public MultiblockGuiLayout withPlayerInventory(int x, int y)
 	{
-		this.onHover = event;
+		playerInventory = true;
+		inventoryX = x;
+		inventoryY = y;
+		return this;
 	}
 
 	@ZenMethod
-	@ZenDoc("Sets the function called by a MB gui after it is initialized.")
-	public void setOnOpen(IMultiblockGuiEventGeneral onOpen)
-	{
-		this.onOpen = onOpen;
-	}
-
+	public void setOnPress(IMultiblockGuiEventOnComponent event) { onPress = event; }
 	@ZenMethod
-	@ZenDoc("Sets the function called by a MB gui before closing it.")
-	public void setOnClose(IMultiblockGuiEventGeneral event)
-	{
-		this.onClose = event;
-	}
+	public void setOnHover(IMultiblockGuiEventOnComponent event) { onHover = event; }
+	@ZenMethod
+	public void setOnOpen(IMultiblockGuiEventGeneral event) { onOpen = event; }
+	@ZenMethod
+	public void setOnClose(IMultiblockGuiEventGeneral event) { onClose = event; }
 
 	@ZenRegister
-	@ZenClass(value = "mods.ctmb.gui.IMultiblockGuiEventOnComponent")
+	@ZenClass("mods.ctmb.gui.IMultiblockGuiEventOnComponent")
 	public interface IMultiblockGuiEventOnComponent
 	{
 		void execute(String component, MultiblockGuiCTWrapper gui, MultiblockTileCTWrapper mb, int mx, int my, IPlayer player);
 	}
 
 	@ZenRegister
-	@ZenClass(value = "mods.ctmb.gui.IMultiblockGuiEventGeneral")
+	@ZenClass("mods.ctmb.gui.IMultiblockGuiEventGeneral")
 	public interface IMultiblockGuiEventGeneral
 	{
 		void execute(MultiblockGuiCTWrapper gui, MultiblockTileCTWrapper mb, IPlayer player);
 	}
-
 }

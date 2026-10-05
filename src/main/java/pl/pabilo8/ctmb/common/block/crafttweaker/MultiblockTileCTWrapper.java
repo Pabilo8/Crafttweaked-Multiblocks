@@ -12,6 +12,7 @@ import crafttweaker.api.world.IWorld;
 import crafttweaker.mc1120.liquid.MCLiquidStack;
 import crafttweaker.mc1120.world.MCVector3d;
 import net.minecraft.item.ItemStack;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -20,6 +21,8 @@ import pl.pabilo8.ctmb.CTMB;
 import pl.pabilo8.ctmb.common.block.TileEntityMultiblock;
 import pl.pabilo8.ctmb.common.block.crafttweaker.storage.MultiblockInventoryInfo;
 import pl.pabilo8.ctmb.common.util.ICTWrapper;
+import pl.pabilo8.ctmb.common.gui.MultiblockContainer;
+import pl.pabilo8.ctmb.common.network.MessageCTMBGuiChange;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
@@ -300,23 +303,27 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 	//--- GUI Opening ---//
 
 	@ZenMethod
-	@ZenDoc("Opens a GUI")
+	@ZenDoc("Opens a GUI on the server; client callbacks request a transition for the current container.")
 	public void openGUI(String guiName, IPlayer player)
 	{
-		te.forceUpdate();
-		if(te.getMultiblock().assignedGuis.containsKey(guiName))
+		TileEntityMultiblock master = te.master();
+		if(master==null||!master.getMultiblock().assignedGuis.containsKey(guiName)) return;
+		EntityPlayer nativePlayer = CraftTweakerMC.getPlayer(player);
+		if(master.getWorld().isRemote)
 		{
-			int i = 0;
-			for(String s : te.getMultiblock().assignedGuis.keySet())
-				if(!s.equals(guiName))
-					i++;
-				else
-					break;
-
-			BlockPos pos = te.getPos();
-			CraftTweakerMC.getPlayer(player).openGui(CTMB.INSTANCE, i, te.getWorld(), pos.getX(),
-					pos.getY(), pos.getZ());
+			if(nativePlayer.openContainer instanceof MultiblockContainer
+					&&((MultiblockContainer)nativePlayer.openContainer).tile==master)
+				CTMB.GUI_NETWORK.sendToServer(new MessageCTMBGuiChange(master.getPos(), guiName, nativePlayer.openContainer.windowId));
+			return;
 		}
+		if(nativePlayer.getEntityWorld()!=master.getWorld()) return;
+		int page = 1;
+		for(String name : master.getMultiblock().assignedGuis.keySet())
+			if(name.equals(guiName)) break;
+			else page++;
+		master.forceUpdate();
+		BlockPos pos = master.getPos();
+		nativePlayer.openGui(CTMB.INSTANCE, page, master.getWorld(), pos.getX(), pos.getY(), pos.getZ());
 	}
 
 	//--- CT Function Interfaces ---//

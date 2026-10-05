@@ -37,7 +37,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
 import org.apache.commons.io.IOUtils;
 import pl.pabilo8.ctmb.common.CommonProxy;
-import pl.pabilo8.ctmb.common.CommonUtils;
+import pl.pabilo8.immersiveintelligence.common.util.IIStringUtil;
 import pl.pabilo8.ctmb.common.util.CTMBLogger;
 
 import javax.annotation.Nullable;
@@ -89,7 +89,7 @@ public abstract class MultiblockStuctureBase<T extends TileEntityMultiblockPart<
 	private static String nameFromResLoc(ResourceLocation loc)
 	{
 		String[] split = loc.getResourcePath().split("/");
-		return loc.getResourceDomain()+":"+CommonUtils.toCamelCase(split[split.length-1], false);
+		return loc.getResourceDomain()+":"+IIStringUtil.toCamelCase(split[split.length-1], false);
 	}
 
 	public void updateStructure()

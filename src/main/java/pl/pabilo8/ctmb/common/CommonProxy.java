@@ -12,6 +12,9 @@ import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.IGuiHandler;
+import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraft.util.ResourceLocation;
+import java.io.File;
 import pl.pabilo8.ctmb.CTMB;
 import pl.pabilo8.ctmb.common.block.BlockCTMBMultiblock;
 import pl.pabilo8.ctmb.common.block.ItemBlockCTMBMultiblock;
@@ -40,11 +43,14 @@ public class CommonProxy implements IGuiHandler
 	{
 		RESOURCE_LOADER.setup();
 		RESOURCE_LOADER.createFolders();
+		registerResourcePacks(RESOURCE_LOADER.getResourceFolder());
 	}
+
+	public void registerResourcePacks(File folder) {}
 
 	public void init()
 	{
-		CommonUtils.registerTile(TileEntityMultiblock.class);
+		GameRegistry.registerTileEntity(TileEntityMultiblock.class, new ResourceLocation(CTMB.MODID+":Multiblock"));
 
 		for(Multiblock mb : MULTIBLOCKS)
 			MultiblockHandler.registerMultiblock(mb);
@@ -85,9 +91,11 @@ public class CommonProxy implements IGuiHandler
 		TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
 		if(te instanceof TileEntityMultiblock)
 		{
-			Multiblock mb = ((TileEntityMultiblock)te).getMultiblock();
-			if((ID==0&&mb.mainGui!=null)||(mb.assignedGuis.size() >= ID))
-				return new MultiblockContainer(player.inventory, ((TileEntityMultiblock)te), ID);
+			TileEntityMultiblock master = ((TileEntityMultiblock)te).master();
+			if(master==null) return null;
+			Multiblock mb = master.getMultiblock();
+			if(mb.getGuiLayout(ID)!=null)
+				return new MultiblockContainer(player.inventory, master, ID);
 		}
 		return null;
 	}

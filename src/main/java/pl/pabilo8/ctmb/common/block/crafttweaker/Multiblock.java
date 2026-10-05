@@ -204,6 +204,17 @@ public class Multiblock extends MultiblockStuctureBase<TileEntityMultiblock>
 		return "multiblock_"+getUniqueName().replace(':', '_');
 	}
 
+	@Nullable
+	public MultiblockGuiLayout getGuiLayout(int page)
+	{
+		if(page==0) return mainGui;
+		if(page < 1||page > assignedGuis.size()) return null;
+		int index = 1;
+		for(MultiblockGuiLayout layout : assignedGuis.values())
+			if(index++==page) return layout;
+		return null;
+	}
+
 	//--- AABB ---//
 
 	@ZenMethod
@@ -246,7 +257,7 @@ public class Multiblock extends MultiblockStuctureBase<TileEntityMultiblock>
 	@ZenDoc("Creates an item inventory of given capacity. It can be accessed later using the ID.")
 	public MultiblockInventoryInfo setInventory(int id, int capacity)
 	{
-		int offset = inventory.stream().mapToInt(MultiblockInventoryInfo::getOffset).sum();
+		int offset = inventory.stream().mapToInt(info -> info.capacity).sum();
 
 		MultiblockInventoryInfo info = new MultiblockInventoryInfo(id, capacity, offset);
 		inventory.add(info);

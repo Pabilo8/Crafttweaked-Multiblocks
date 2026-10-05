@@ -1,24 +1,24 @@
 package pl.pabilo8.ctmb.common.gui;
 
+import lombok.Getter;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 
 /**
- * @author Pabilo8
+ * Stores a Deco slot style without loading client classes.
+ *
+ * @author Pabilo8 (pabilo@iiteam.net)
  * @since 08.06.2022
+ * @updated 05.10.2026
  */
+@Getter
 public class CTMBSlot extends Slot
 {
-	private final int style;
+	private final String style;
 
-	public CTMBSlot(IInventory inventoryIn, int index, int xPosition, int yPosition, int style)
+	public CTMBSlot(IInventory inventory, int index, int x, int y, String style)
 	{
-		super(inventoryIn, index, xPosition, yPosition);
+		super(inventory, index, x, y);
 		this.style = style;
-	}
-
-	public int getStyle()
-	{
-		return style;
 	}
 }

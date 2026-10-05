@@ -1,6 +1,7 @@
 package pl.pabilo8.ctmb.common.util;
 
 import net.minecraft.client.resources.AbstractResourcePack;
+import pl.pabilo8.ctmb.CTMB;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -47,15 +48,10 @@ public class DirectoryResourcePack extends AbstractResourcePack
 	@Nonnull
 	public Set<String> getResourceDomains()
 	{
-		if(domains==null)
-		{
-			this.domains = new HashSet<>();
-			String[] folderNames = this.resourcePackFile.list();
-			if(folderNames!=null)
-			{
-				domains.addAll(Arrays.asList(folderNames));
-			}
-		}
+		domains = new HashSet<>();
+		domains.add(CTMB.MODID);
+		String[] folderNames = resourcePackFile.list();
+		if(folderNames!=null) domains.addAll(Arrays.asList(folderNames));
 		return domains;
 	}
 }

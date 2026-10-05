@@ -1,17 +1,10 @@
 package pl.pabilo8.ctmb.common.util;
 
-import blusunrize.lib.manual.IManualPage;
 import com.google.gson.*;
 import crafttweaker.mc1120.util.CraftTweakerHacks;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import pl.pabilo8.ctmb.CTMB;
-import pl.pabilo8.ctmb.client.ClientProxy;
 import pl.pabilo8.ctmb.common.CommonProxy;
 import pl.pabilo8.ctmb.common.block.crafttweaker.Multiblock;
 import pl.pabilo8.ctmb.common.manual.CTMBManualEntry;
@@ -22,7 +15,6 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -53,8 +45,6 @@ public class ResourceLoader
 			this.resourceFolder = new File(minecraftDir, "resources");
 			CTMBFileUtils.createFolder(this.resourceFolder);
 
-			if(CTMB.proxy.getClass()==ClientProxy.class)
-				loadAsResourcePack();
 		}
 
 		createPackMcMeta();
@@ -64,15 +54,6 @@ public class ResourceLoader
 	public File getResourceFolder()
 	{
 		return resourceFolder;
-	}
-
-	@SideOnly(Side.CLIENT)
-	@SuppressWarnings("deprecation")
-	private void loadAsResourcePack()
-	{
-		List<IResourcePack> defaultResourcePacks = ReflectionHelper.getPrivateValue(Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "field_110449_ao", "ap");
-		defaultResourcePacks.add(new DirectoryResourcePack(this.resourceFolder));
-		Minecraft.getMinecraft().refreshResources();
 	}
 
 	private void prepareResources()
@@ -124,7 +105,7 @@ public class ResourceLoader
 		{
 			CTMBFileUtils.writeStringToFile("", enUsLang);
 		}
-		new File(modFolder, "ie_manual");
+		CTMBFileUtils.createFolder(new File(modFolder, "ie_manual"));
 
 		File textures = new File(modFolder, "textures");
 		CTMBFileUtils.createFolder(textures);
@@ -216,34 +197,19 @@ public class ResourceLoader
 			}
 		}
 
-		for(Entry<String, CTMBManualEntry> entry : ManualTweaker.PAGES.entries())
+		for(CTMBManualEntry entry : ManualTweaker.ENTRIES.values())
 		{
-			File entryFile = new File(manualEntries, entry.getKey()+".md");
-			if(!entryFile.exists())
-			{
-				StringBuilder text = new StringBuilder();
-				text.append("#meta\n"+"Title\n"+"Subtitle\n");
-
-				for(IManualPage page : entry.getValue().getPages())
-				{
-					assert page instanceof CTMBManualPage;
-					text
-							.append("\n")
-							.append("#")
-							.append(((CTMBManualPage)page).getPageName())
-							.append("\n")
-							.append("[Ingeniator] est qui **difficultates** solvit, *dolorem et laborem* __aliorum__ hominum levans.  "+"\n"+
-									"[Engineer] is a person who solves **problems**, relieving __others__ around of *the hardships*.  "+"\n"+
-									"[Inżynier] jest to człowiek, który rozwiązując **problemy**, łagodzi *ciężar pracy* __innych__.  "+"\n"+
-									"[Ein Ingenieur] ist wer durch **Problemlösung**, die *Schwierigkeiten* von __Anderes__ abnimmt.  "+"\n"
-							);
-				}
-
-				CTMBFileUtils.writeStringToFile(text.toString(), entryFile);
-			}
-
+			String defaultResource = CTMB.MODID+":ie_manual/{lang}/"+entry.getCategory()+"/"+entry.getName()+".md";
+			if(!entry.getResource().equals(defaultResource)) continue;
+			File entryFile = new File(manualEntries, entry.getCategory()+"/"+entry.getName()+".md");
+			if(entryFile.exists()) continue;
+			StringBuilder text = new StringBuilder("#meta\nTitle\nSubtitle\n");
+			CTMBManualPage[] pages = entry.getPages();
+			if(pages.length==0) pages = new CTMBManualPage[]{CTMBManualPage.create("overview")};
+			for(CTMBManualPage page : pages)
+				text.append("\n#").append(page.getName()).append("\nAdd manual text here.\n");
+			CTMBFileUtils.writeStringToFile(text.toString(), entryFile);
 		}
-
 	}
 
 	private JsonObject getIntProperty(String name, int value)

@@ -1,304 +1,170 @@
 package pl.pabilo8.ctmb.client.gui;
 
-import blusunrize.immersiveengineering.api.Lib;
-import blusunrize.immersiveengineering.client.gui.GuiIEContainerBase;
 import crafttweaker.api.minecraft.CraftTweakerMC;
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiLabel;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GLAllocation;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.GlStateManager.DestFactor;
-import net.minecraft.client.renderer.GlStateManager.SourceFactor;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.resources.I18n;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
-import org.lwjgl.opengl.GL11;
-import pl.pabilo8.ctmb.client.ClientUtils;
-import pl.pabilo8.ctmb.client.gui.elements.IGuiTweakable;
-import pl.pabilo8.ctmb.common.CommonUtils;
+import org.lwjgl.input.Mouse;
+import pl.pabilo8.ctmb.client.gui.deco.*;
 import pl.pabilo8.ctmb.common.block.TileEntityMultiblock;
-import pl.pabilo8.ctmb.common.block.crafttweaker.Multiblock;
 import pl.pabilo8.ctmb.common.gui.*;
 import pl.pabilo8.ctmb.common.gui.component.GuiComponent;
-import pl.pabilo8.ctmb.common.gui.rectangle.GuiRectangle;
-import pl.pabilo8.ctmb.common.gui.rectangle.GuiRectangleCustom;
-import pl.pabilo8.ctmb.common.gui.rectangle.GuiRectangleStyled;
+import pl.pabilo8.immersiveintelligence.client.gui.deco.DecoGui;
+import pl.pabilo8.immersiveintelligence.client.gui.deco.component.DecoComponent;
+import pl.pabilo8.immersiveintelligence.client.gui.deco.util.DecoBackgroundBuilder;
+import pl.pabilo8.immersiveintelligence.client.gui.deco.util.SlotStyle;
+import pl.pabilo8.immersiveintelligence.common.util.easynbt.EasyNBT;
 
-import javax.annotation.Nonnull;
-import java.io.IOException;
-import java.util.HashMap;
-
-import static pl.pabilo8.ctmb.client.gui.StyledGuiUtils.drawItemSlot;
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
 
 /**
- * @author Pabilo8
+ * Builds a fresh native Deco GUI from a CTMB layout.
+ *
+ * @author Pabilo8 (pabilo@iiteam.net)
  * @since 27.02.2022
+ * @updated 05.10.2026
  */
-public class MultiblockGui extends GuiIEContainerBase
+public class MultiblockGui extends DecoGui<TileEntityMultiblock, MultiblockContainer>
 {
-	private final TileEntityMultiblock tile;
-	private final MultiblockContainer container;
-	private final Multiblock mb;
 	private final MultiblockGuiLayout layout;
-	private final MultiblockGuiCTWrapper ctWrapper;
+	private final Map<String, DecoComponentAccess> components = new LinkedHashMap<>();
+	private final MultiblockGuiCTWrapper wrapper = new MultiblockGuiCTWrapper(components);
+	private EasyNBT localData = EasyNBT.newNBT();
+	private final java.util.Queue<String> selectionEvents = new java.util.ArrayDeque<>();
 
-	private final GuiRectangleCustom[] customRects;
-	private final GuiRectangleStyled[] styledRects;
-	public final HashMap<String, IGuiTweakable> ctComponents = new HashMap<>();
-
-	private final int firstX, firstY;
-
-	private int lastMX, lastMY;
-
-	public boolean built = false;
-	int displayList = -1;
-
-	static
+	public MultiblockGui(InventoryPlayer player, TileEntityMultiblock tile, int page)
 	{
-		StyledGuiUtils.VARIABLES.put("player_name", gui -> ClientUtils.mc.player.getName());
-		StyledGuiUtils.VARIABLES.put("player_slots", gui -> String.valueOf(ClientUtils.mc.player.inventory.getSizeInventory()));
-		StyledGuiUtils.VARIABLES.put("mb_name", gui -> I18n.format(Lib.DESC_INFO+"multiblock."+gui.mb.getUniqueName()));
-		StyledGuiUtils.VARIABLES.put("mb_slots", gui -> String.valueOf(gui.container.inventorySlots.size()));
-	}
-
-	public MultiblockGui(InventoryPlayer inventoryPlayer, TileEntityMultiblock tile, int page)
-	{
-		super(new MultiblockContainer(inventoryPlayer, tile, page));
-		this.tile = tile;
-		this.container = ((MultiblockContainer)inventorySlots);
-		this.mb = tile.getMultiblock();
-		this.layout = page==0?mb.mainGui: CommonUtils.getMapElement(mb.assignedGuis, page);
-		this.ctWrapper = new MultiblockGuiCTWrapper(this);
-
-		assert this.layout!=null;
-
-		int firstX = 0, firstY = 0, lastX = 0, lastY = 0;
-		for(GuiRectangle rectangle : this.layout.rectangles)
-		{
-			if(rectangle.x-rectangle.margin[0] < firstX)
-				firstX = rectangle.x;
-			if(rectangle.y-rectangle.margin[1] < firstY)
-				firstY = rectangle.y;
-			if(rectangle.x+rectangle.margin[2]+rectangle.w > lastX)
-				lastX = rectangle.x+rectangle.w;
-			if(rectangle.y+rectangle.margin[3]+rectangle.h > lastY)
-				lastY = rectangle.y+rectangle.h;
-		}
-
-		this.xSize = Math.abs(lastX-firstX);
-		this.ySize = Math.abs(lastY-firstY);
-		this.firstX = firstX;
-		this.firstY = firstY;
-
-		customRects = layout.rectangles.stream().filter(r -> r instanceof GuiRectangleCustom).toArray(GuiRectangleCustom[]::new);
-		styledRects = layout.rectangles.stream().filter(r -> r instanceof GuiRectangleStyled).toArray(GuiRectangleStyled[]::new);
-
+		super(player.player, new MultiblockContainer(player, tile, page), tile, null);
+		layout = tile.getMultiblock().getGuiLayout(page);
 	}
 
 	@Override
-	public void initGui()
+	public void onInit()
 	{
-		super.initGui();
-
-		buttonList.clear();
-		labelList.clear();
-		ctComponents.clear();
-
-		int i = 0;
-		for(GuiComponent component : layout.components.values())
-		{
-			Gui gui = component.provide(i++, guiLeft, guiTop, this);
-			if(gui!=null)
-			{
-				if(gui instanceof IGuiTweakable)
-					ctComponents.put(component.name, ((IGuiTweakable)gui));
-
-				if(gui instanceof GuiButton)
-					buttonList.add(((GuiButton)gui));
-				else if(gui instanceof GuiLabel)
-					labelList.add(((GuiLabel)gui));
-			}
-
-		}
-
-		if(layout.onOpen!=null)
-			layout.onOpen.execute(ctWrapper, tile.getMbWrapper(), CraftTweakerMC.getIPlayer(ClientUtils.mc.player));
+		components.clear();
+		selectionEvents.clear();
+		xSize = layout.getWidth();
+		ySize = layout.getHeight();
+		DecoBackgroundBuilder<TileEntityMultiblock, MultiblockContainer> background = startBackground().withBox(0, 0, xSize, ySize);
+		for(Slot slot : container.inventorySlots)
+			background.withInventorySlots(slot instanceof CTMBSlot?
+					SlotStyle.valueOf(((CTMBSlot)slot).getStyle().toUpperCase(Locale.ROOT)):SlotStyle.IE, slot);
+		for(GuiComponent definition : layout.getComponents().values())
+			buildComponent(definition);
+		if(layout.getOnOpen()!=null)
+			layout.getOnOpen().execute(wrapper, context.getMbWrapper(), CraftTweakerMC.getIPlayer(playerContainer.player));
 	}
 
 	@Override
-	public void onGuiClosed()
+	protected void onInitStandardAddons()
 	{
-		super.onGuiClosed();
-		if(built)
-			GLAllocation.deleteDisplayLists(displayList);
-		if(layout.onClose!=null)
-			layout.onClose.execute(ctWrapper, tile.getMbWrapper(), CraftTweakerMC.getIPlayer(ClientUtils.mc.player));
+		super.onInitStandardAddons();
+		addWidget(new pl.pabilo8.immersiveintelligence.client.gui.deco.component.widget.DecoManualWidget());
+	}
+
+	private void buildComponent(GuiComponent definition)
+	{
+		String name = definition.getName();
+		EasyNBT data = definition.getOptions();
+		int x = definition.getX(), y = definition.getY();
+		DecoComponent<?> component;
+		switch(definition.getType())
+		{
+			case "slot": return;
+			case "label":
+				CTMBDecoLabel label = new CTMBDecoLabel(x, y);
+				label.setData(CraftTweakerMC.getIData(data.unwrap()));
+				if(data.hasKey("w")) label.withWidth(data.getInt("w"));
+				if(data.hasKey("h")) label.withHeight(data.getInt("h"));
+				addLabel(label);
+				components.put(name, label);
+				return;
+			case "checkbox":
+				component = new CTMBDecoCheckbox(x, y).withOnToggle(value -> activated(name));
+				break;
+			case "switch":
+				component = new CTMBDecoSwitch(x, y).withOnToggle(value -> activated(name));
+				break;
+			case "slider":
+				float min = data.hasKey("min")?data.getFloat("min"):0;
+				float max = data.hasKey("max")?data.getFloat("max"):1;
+				if(max <= min) throw new IllegalArgumentException("Slider maximum must exceed minimum: "+name);
+				component = new CTMBDecoSlider(x, y).withRange(min, max)
+						.withIntegersOnly(data.getBoolean("integer")).withOnValueChanged(value -> activated(name));
+				break;
+			case "dropdown":
+				CTMBDecoDropdown dropdown = new CTMBDecoDropdown(x, y);
+				dropdown.withEntries(data.streamList(net.minecraft.nbt.NBTTagString.class, "entries").map(net.minecraft.nbt.NBTTagString::getString).toArray(String[]::new));
+				dropdown.withOnSelectedEntry((oldValue, newValue) -> selectionEvents.add(name));
+				component = dropdown;
+				break;
+			case "text":
+				component = new CTMBDecoTextField(x, y).withOnTextChanged(value -> activated(name));
+				break;
+			case "bar": case "energy":
+				component = new CTMBDecoBar(x, y);
+				break;
+			case "fluid":
+				int tank = data.getInt("id");
+				if(context.tanks==null||tank < 0||tank >= context.tanks.length)
+					throw new IllegalArgumentException("Invalid fluid tank: "+name);
+				component = new CTMBDecoFluidTank(x, y).withFluidTank(context.tanks[tank]);
+				break;
+			default:
+				component = new CTMBDecoButton(x, y).withOnLMBPressed(() -> activated(name));
+		}
+		component.withSize(data.hasKey("w")?data.getInt("w"):component.width,
+				data.hasKey("h")?data.getInt("h"):component.height);
+		DecoComponentAccess access = (DecoComponentAccess)component;
+		access.setData(CraftTweakerMC.getIData(data.unwrap()));
+		if(definition.getType().equals("energy"))
+		{
+			int energy = data.getInt("id");
+			if(context.energy==null||energy < 0||energy >= context.energy.length)
+				throw new IllegalArgumentException("Invalid energy storage: "+name);
+			((CTMBDecoBar)component).withLimits(0, Math.max(1, context.energy[energy].getMaxEnergyStored()),
+					() -> context.energy[energy].getEnergyStored());
+		}
+		component.withOnHovered((widget, button, mx, my) -> {
+			if(layout.getOnHover()!=null)
+				layout.getOnHover().execute(name, wrapper, context.getMbWrapper(), mx-getScreenLeft(), my-getScreenTop(),
+						CraftTweakerMC.getIPlayer(playerContainer.player));
+			return false;
+		});
+		components.put(name, access);
+		addComponents(component);
 	}
 
 	@Override
-	protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException
+	public void drawScreen(int mouseX, int mouseY, float partialTicks)
 	{
-		lastMX = mouseX;
-		lastMY = mouseY;
+		//II reports dropdown changes before it stores the selected index.
+		while(!selectionEvents.isEmpty()) activated(selectionEvents.remove());
+		super.drawScreen(mouseX, mouseY, partialTicks);
+	}
 
-		super.mouseClicked(mouseX, mouseY, mouseButton);
+	private void activated(String name)
+	{
+		if(layout.getOnPress()!=null)
+		{
+			Minecraft minecraft = Minecraft.getMinecraft();
+			int mx = Mouse.getX()*width/minecraft.displayWidth-getScreenLeft();
+			int my = height-Mouse.getY()*height/minecraft.displayHeight-1-getScreenTop();
+			layout.getOnPress().execute(name, wrapper, context.getMbWrapper(), mx, my,
+					CraftTweakerMC.getIPlayer(playerContainer.player));
+		}
 	}
 
 	@Override
-	protected void actionPerformed(@Nonnull GuiButton button) throws IOException
-	{
-		super.actionPerformed(button);
-		if(button instanceof IGuiTweakable)
-		{
-			GuiComponent blueprint = ((IGuiTweakable)button).getBlueprint();
-			if(layout.onPress!=null&&blueprint!=null)
-				layout.onPress.execute(blueprint.name, ctWrapper, tile.getMbWrapper(), lastMX, lastMY, CraftTweakerMC.getIPlayer(ClientUtils.mc.player));
-		}
-
-	}
-
+	protected EasyNBT loadGuiData() { return localData; }
 	@Override
-	protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY)
-	{
-		GlStateManager.pushMatrix();
-		//layout.rectangles.forEach(rect -> rect.draw(layout));
-
-		drawStyledRects();
-		for(GuiRectangleCustom rect : customRects)
-		{
-			int gL = guiLeft+rect.x, gT = guiTop+rect.y;
-			if(rect.texture==null)
-				drawRect(gL, gT, gL+rect.w, gT+rect.h, 0xff000000+rect.bgColor);
-		}
-
-		GlStateManager.popMatrix();
-
-		if(layout.onHover!=null)
-			for(GuiButton b : buttonList)
-			{
-				if(b.isMouseOver()&&b instanceof IGuiTweakable)
-				{
-					GuiComponent blueprint = ((IGuiTweakable)b).getBlueprint();
-					if(blueprint!=null)
-						layout.onHover.execute(blueprint.name, ctWrapper, tile.getMbWrapper(), mouseX, mouseY, CraftTweakerMC.getIPlayer(ClientUtils.mc.player));
-				}
-			}
-
-	}
-
+	protected EasyNBT createGuiDataTag() { return localData = EasyNBT.newNBT(); }
 	@Override
-	protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY)
+	protected void onGuiClosedWithoutTransition()
 	{
-
-	}
-
-	public void drawStyledRects()
-	{
-		GlStateManager.pushMatrix();
-
-		Tessellator tess = Tessellator.getInstance();
-		BufferBuilder buffer = tess.getBuffer();
-		ClientUtils.bindTexture(layout.style.getStylePath());
-
-		if(!built)
-		{
-			GlStateManager.glNewList(displayList = GLAllocation.generateDisplayLists(1), GL11.GL_COMPILE);
-
-			//Mask
-			GL11.glEnable(GL11.GL_STENCIL_TEST);
-			GL11.glStencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_REPLACE);
-			GL11.glStencilFunc(GL11.GL_ALWAYS, 1, 0xFF);
-			buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-			StyledGuiUtils.drawBackgroundRoundedMask(styledRects, buffer, firstX, firstY);
-			tess.draw();
-
-			//Background
-			GL11.glStencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_KEEP);
-			GL11.glStencilFunc(GL11.GL_EQUAL, 1, 0xFF);
-			buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-			StyledGuiUtils.drawBackgroundBlock(styledRects, buffer);
-			tess.draw();
-
-			GL11.glDisable(GL11.GL_STENCIL_TEST);
-
-			GlStateManager.enableBlend();
-			GlStateManager.blendFunc(SourceFactor.DST_COLOR, DestFactor.SRC_COLOR);
-			buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-			StyledGuiUtils.drawBackgroundRoundedMask(styledRects, buffer, firstX, firstY);
-
-			for(Slot slot : container.inventorySlots)
-				if(!(slot instanceof CTMBSlot)||((CTMBSlot)slot).getStyle()==0)
-					drawItemSlot(slot.xPos, slot.yPos, buffer);
-
-			tess.draw();
-
-			GlStateManager.color(1f, 1f, 1f, 1f);
-
-			GlStateManager.blendFunc(SourceFactor.SRC_COLOR, DestFactor.DST_COLOR);
-			GlStateManager.disableBlend();
-
-			buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-			StyledGuiUtils.drawBorderAround(styledRects, buffer);
-			tess.draw();
-
-			buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-			for(Slot slot : container.inventorySlots)
-				if(slot instanceof CTMBSlot)
-				{
-					CTMBSlot s = (CTMBSlot)slot;
-					switch(s.getStyle())
-					{
-						default:
-						case 0:
-							break;
-						case 1:
-						{
-							ClientUtils.drawTexturedRect(buffer, slot.xPos-1, slot.yPos-1, 238, 122, 18, 18);
-						}
-						break;
-						case 2:
-						{
-							ClientUtils.drawTexturedRect(buffer, slot.xPos-1, slot.yPos-1, 238, 122, 18, 18);
-							ClientUtils.drawTexturedRect(buffer, slot.xPos-2, slot.yPos-2, 208, 3, 20, 20);
-							ClientUtils.drawTexturedRect(buffer, slot.xPos-2+8, slot.yPos-2-3, 220, 0, 4, 3);
-						}
-						break;
-						case 3:
-						{
-							ClientUtils.drawTexturedRect(buffer, slot.xPos-1, slot.yPos-1, 238, 122, 18, 18);
-							ClientUtils.drawTexturedRect(buffer, slot.xPos-2, slot.yPos-2, 208, 3, 20, 20);
-							ClientUtils.drawTexturedRect(buffer, slot.xPos-2+8, slot.yPos-2-3, 224, 0, 4, 3);
-						}
-						break;
-					}
-				}
-			tess.draw();
-
-			GlStateManager.glEndList();
-			built = true;
-		}
-		else
-		{
-			GlStateManager.translate(guiLeft, guiTop, 0);
-			GlStateManager.callList(displayList);
-		}
-
-		GlStateManager.blendFunc(SourceFactor.SRC_COLOR, DestFactor.DST_COLOR);
-		GlStateManager.popMatrix();
-
-	}
-
-	public MultiblockGuiStyle getStyle()
-	{
-		return layout.style;
-	}
-
-	public TileEntityMultiblock getTile()
-	{
-		return tile;
+		if(layout.getOnClose()!=null)
+			layout.getOnClose().execute(wrapper, context.getMbWrapper(), CraftTweakerMC.getIPlayer(playerContainer.player));
 	}
 }

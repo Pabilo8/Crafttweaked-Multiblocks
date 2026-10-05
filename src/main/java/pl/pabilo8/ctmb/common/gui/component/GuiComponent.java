@@ -1,60 +1,70 @@
 package pl.pabilo8.ctmb.common.gui.component;
 
 import crafttweaker.annotations.ZenRegister;
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.inventory.Slot;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
-import pl.pabilo8.ctmb.client.gui.MultiblockGui;
-import pl.pabilo8.ctmb.client.gui.StyledGuiUtils;
-import pl.pabilo8.ctmb.common.gui.MultiblockContainer;
+import crafttweaker.api.data.IData;
+import crafttweaker.api.minecraft.CraftTweakerMC;
+import lombok.Getter;
+import pl.pabilo8.immersiveintelligence.common.util.easynbt.EasyNBT;
 import stanhebben.zenscript.annotations.ZenClass;
+import stanhebben.zenscript.annotations.ZenMethod;
 
-import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * @author Pabilo8
+ * Stores a side-neutral definition for a Deco component.
+ *
+ * @author Pabilo8 (pabilo@iiteam.net)
  * @since 25.02.2022
+ * @updated 05.10.2026
  */
-@ZenClass("mods.ctmb.gui.Component")
 @ZenRegister
-public abstract class GuiComponent
+@ZenClass("mods.ctmb.gui.Component")
+@Getter
+public class GuiComponent
 {
-	public final int x, y;
-	public final int w, h;
-	public final String name;
+	private static final Set<String> TYPES = new HashSet<>(Arrays.asList(
+			"button", "checkbox", "switch", "slider", "dropdown", "text", "label", "bar", "energy", "fluid", "slot"));
+	private final String name, type;
+	private final int x, y;
+	private final EasyNBT options;
 
-	public GuiComponent(int x, int y, String name, int w, int h)
+	private GuiComponent(String type, String name, int x, int y, IData data)
 	{
+		if(!TYPES.contains(type))
+			throw new IllegalArgumentException("Unknown Deco component type: "+type);
+		if(name==null||name.isEmpty())
+			throw new IllegalArgumentException("A component needs a name");
+		this.type = type;
+		this.name = name;
 		this.x = x;
 		this.y = y;
-		this.w = w;
-		this.h = h;
-		this.name = name;
+		this.options = EasyNBT.wrapNBT(CraftTweakerMC.getNBTCompound(data).copy());
+		if((options.hasKey("w")&&options.getInt("w") < 1)||(options.hasKey("h")&&options.getInt("h") < 1))
+			throw new IllegalArgumentException("Component dimensions must be positive");
 	}
 
-	/**
-	 * @param id  id of the component to be created
-	 * @param x   the horizontal position of the component
-	 * @param y   the vertical position of the component
-	 * @param gui the gui containing this component
-	 * @return a new gui element instance to be added into a GUI
-	 */
-	@SideOnly(Side.CLIENT)
-	@Nullable
-	public abstract Gui provide(int id, int x, int y, MultiblockGui gui);
-
-	@Nullable
-	public Slot[] provideSlots(MultiblockContainer gui, InventoryPlayer inventoryPlayer)
+	/** Creates a component definition from NBT options. */
+	@ZenMethod
+	public static GuiComponent create(String type, String name, int x, int y, IData data)
 	{
-		return null;
+		return new GuiComponent(type, name, x, y, data);
 	}
 
-	@SideOnly(Side.CLIENT)
-	protected final String getTranslation(boolean translated, MultiblockGui gui, String text)
+	@ZenMethod
+	public GuiComponent withSize(int width, int height)
 	{
-		return translated?I18n.format(StyledGuiUtils.processText(gui, text)): StyledGuiUtils.processText(gui, text);
+		if(width < 1||height < 1)
+			throw new IllegalArgumentException("Component dimensions must be positive");
+		options.withInt("w", width).withInt("h", height);
+		return this;
+	}
+
+	@ZenMethod
+	public GuiComponent withText(String text)
+	{
+		options.withString("text", text);
+		return this;
 	}
 }
