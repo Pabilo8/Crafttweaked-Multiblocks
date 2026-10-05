@@ -14,8 +14,8 @@ import java.util.Map;
  * Provides side-neutral script access to an open multiblock GUI.
  *
  * @author Pabilo8 (pabilo@iiteam.net)
- * @since 03.06.2022
  * @updated 05.10.2026
+ * @since 03.06.2022
  */
 @ZenRegister
 @ZenClass("mods.ctmb.gui.MultiblockGui")
@@ -30,7 +30,10 @@ public class MultiblockGuiCTWrapper implements ICTWrapper
 	}
 
 	@ZenMethod
-	public DecoComponentAccess getComponent(String name) { return components.get(name); }
+	public DecoComponentAccess getComponent(String name)
+	{
+		return components.get(name);
+	}
 
 	@ZenMethod
 	public IData getComponentData(String name)
@@ -49,18 +52,41 @@ public class MultiblockGuiCTWrapper implements ICTWrapper
 
 	@ZenMethod
 	@Override
-	public boolean hasVar(String name) { return data.hasKey(name); }
+	public boolean hasVar(String name)
+	{
+		return data.hasKey(name);
+	}
+
 	@ZenMethod
 	@Override
-	public IData getVar(String name) { return data.hasKey(name)?CraftTweakerMC.getIData(data.getTag(name)):null; }
+	public IData getVar(String name)
+	{
+		return data.hasKey(name)?CraftTweakerMC.getIData(data.getTag(name)): null;
+	}
+
 	@ZenMethod
 	@Override
-	public IData getVarOr(String name, IData def) { return hasVar(name)?getVar(name):def; }
+	public IData getVarOr(String name, IData def)
+	{
+		return hasVar(name)?getVar(name): def;
+	}
+
 	@ZenMethod
 	@Override
-	public void setVar(String name, IData value) { data.setTag(name, CraftTweakerMC.getNBT(value)); }
+	public void setVar(String name, IData value)
+	{
+		data.setTag(name, CraftTweakerMC.getNBT(value));
+	}
+
 	@Override
-	public NBTTagCompound saveData() { return data.copy(); }
+	public NBTTagCompound saveData()
+	{
+		return data.copy();
+	}
+
 	@Override
-	public void loadData(NBTTagCompound nbt) { data = nbt.copy(); }
+	public void loadData(NBTTagCompound nbt)
+	{
+		data = nbt.copy();
+	}
 }

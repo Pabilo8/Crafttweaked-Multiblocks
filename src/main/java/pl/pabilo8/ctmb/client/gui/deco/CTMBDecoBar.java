@@ -13,13 +13,33 @@ import stanhebben.zenscript.annotations.ZenMethod;
  */
 public class CTMBDecoBar extends DecoBar implements DecoComponentAccess
 {
-	public CTMBDecoBar(int x, int y) { super(x, y); }
+	private pl.pabilo8.ctmb.common.storage.StorageAccess source;
+
+	public void bindEnergy(pl.pabilo8.ctmb.common.storage.StorageAccess source)
+	{
+		this.source = source;
+		withLimits(0, source.getSize(), source::getEnergy);
+	}
+
+	public CTMBDecoBar(int x, int y)
+	{
+		super(x, y);
+	}
 
 	@ZenMethod
 	@Override
-	public IData getData() { return CTMBDecoData.read(this); }
+	public IData getData()
+	{
+		return CTMBDecoData.read(this);
+	}
 
 	@ZenMethod
 	@Override
-	public void setData(IData data) { CTMBDecoData.apply(this, data); }
+	public void setData(IData data)
+	{
+		pl.pabilo8.immersiveintelligence.common.util.easynbt.EasyNBT options = pl.pabilo8.immersiveintelligence.common.util.easynbt.EasyNBT.wrapNBT(crafttweaker.api.minecraft.CraftTweakerMC.getNBTCompound(data));
+		if(source!=null&&(options.hasKey("value")||options.hasKey("min")||options.hasKey("max")))
+			throw new IllegalArgumentException("Energy displays are read-only; modify the server storage");
+		CTMBDecoData.apply(this, data);
+	}
 }

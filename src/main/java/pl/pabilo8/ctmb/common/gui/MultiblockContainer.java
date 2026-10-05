@@ -1,56 +1,35 @@
 package pl.pabilo8.ctmb.common.gui;
 
-import pl.pabilo8.immersiveintelligence.common.util.gui.ContainerIITileBase;
 import blusunrize.immersiveengineering.ImmersiveEngineering;
 import blusunrize.immersiveengineering.common.util.network.MessageTileSync;
+import crafttweaker.api.minecraft.CraftTweakerMC;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IContainerListener;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.inventory.Slot;
 import pl.pabilo8.ctmb.common.block.TileEntityMultiblock;
-import pl.pabilo8.ctmb.common.gui.component.GuiComponent;
-import pl.pabilo8.immersiveintelligence.common.util.easynbt.EasyNBT;
-
-import java.util.HashSet;
-import java.util.Set;
+import pl.pabilo8.immersiveintelligence.common.util.gui.ContainerIITileBase;
 
 /**
- * Creates the server inventory slots for a scripted Deco layout.
- *
- * @author Pabilo8 (pabilo@iiteam.net)
- * @since 25.02.2022
- * @updated 05.10.2026
+ * The common initializer supplies the exact slots used by both server and native Deco GUI.
  */
 public class MultiblockContainer extends ContainerIITileBase<TileEntityMultiblock>
 {
+	public final MultiblockGuiLayout layout;
+	private NBTTagCompound lastStorage;
+	private int syncTicks;
+
 	public MultiblockContainer(InventoryPlayer player, TileEntityMultiblock tile, int page)
 	{
 		super(player.player, tile);
-		MultiblockGuiLayout layout = tile.getMultiblock().getGuiLayout(page);
-		if(layout==null)
-			throw new IllegalArgumentException("Unknown GUI page: "+page);
-		Set<Integer> usedSlots = new HashSet<>();
-		for(GuiComponent component : layout.getComponents().values())
-			if(component.getType().equals("slot"))
-			{
-				EasyNBT data = component.getOptions();
-				int inventory = data.getInt("inv_id"), index = data.getInt("id");
-				if(inventory < 0||inventory >= tile.getMultiblock().inventory.size()
-						||index < 0||index >= tile.getMultiblock().inventory.get(inventory).capacity)
-					throw new IllegalArgumentException("Invalid inventory slot: "+component.getName());
-				index = tile.getInvOffset(inventory, index);
-				if(!usedSlots.add(index))
-					throw new IllegalArgumentException("Duplicate inventory slot: "+index);
-				addSlotToContainer(new CTMBSlot(inv, index, component.getX(), component.getY(),
-						data.hasKey("style")?data.getString("style"):"IE"));
-			}
+		GuiDefinition definition = tile.getMultiblock().getGuiLayout(page);
+		if(definition==null) throw new IllegalArgumentException("Unknown CTMB GUI page "+page);
+		layout = definition.build(tile, CraftTweakerMC.getIPlayer(player.player));
+		for(MultiblockGuiLayout.SlotDefinition slot : layout.slots)
+			addSlotToContainer(new CTMBSlot(inv, tile.getStorageSystem().flatSlot(slot.storage, slot.slot), slot.x, slot.y, slot.style));
 		slotCount = inventorySlots.size();
-		if(layout.isPlayerInventory()) addPlayerInventory(player, layout.getInventoryX(), layout.getInventoryY());
+		if(layout.playerInventory) addPlayerInventory(player, layout.inventoryX, layout.inventoryY);
 	}
-
-	private NBTTagCompound lastStorage;
-	private int syncTicks;
 
 	@Override
 	public void addListener(IContainerListener listener)
@@ -63,11 +42,13 @@ public class MultiblockContainer extends ContainerIITileBase<TileEntityMultibloc
 	public void detectAndSendChanges()
 	{
 		super.detectAndSendChanges();
-		if(tile.getWorld().isRemote||syncTicks++%5!=0) return;
-		NBTTagCompound storage = tile.getGuiStorageData();
-		if(storage.equals(lastStorage)) return;
-		lastStorage = storage;
-		for(IContainerListener listener : listeners) sendStorage(listener, storage);
+		int tick = syncTicks++;
+		if(tile.getWorld().isRemote||tick%5!=0) return;
+		NBTTagCompound data = tile.getGuiStorageData();
+		// Repeat the signature periodically: the first tile packet may precede the open-screen packet.
+		if(data.equals(lastStorage)&&tick%20!=0) return;
+		lastStorage = data;
+		for(IContainerListener listener : listeners) sendStorage(listener, data);
 	}
 
 	private void sendStorage(IContainerListener listener, NBTTagCompound storage)
@@ -76,6 +57,8 @@ public class MultiblockContainer extends ContainerIITileBase<TileEntityMultibloc
 		{
 			NBTTagCompound message = new NBTTagCompound();
 			message.setTag("ctmbGuiStorage", storage);
+			message.setString("ctmbGuiLayout", layout.signature());
+			message.setInteger("ctmbWindow", windowId);
 			ImmersiveEngineering.packetHandler.sendTo(new MessageTileSync(tile, message), (EntityPlayerMP)listener);
 		}
 	}

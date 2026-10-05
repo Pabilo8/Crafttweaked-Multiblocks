@@ -39,9 +39,9 @@ public class MultiblockBracketHandler implements IBracketHandler
 	public IZenSymbol resolve(IEnvironmentGlobal environment, List<Token> tokens)
 	{
 		//<multiblock:id:name>
-		if(tokens.size() >= 4&&"multiblock".equalsIgnoreCase(tokens.get(0).getValue()))
+		if(tokens.size() >= 3&&"multiblock".equalsIgnoreCase(tokens.get(0).getValue()))
 		{
-			String name = tokens.get(2).getValue()+":"+tokens.get(4).getValue();
+			String name = tokens.subList(2, tokens.size()).stream().map(Token::getValue).collect(java.util.stream.Collectors.joining());
 			return new BlockReferenceSymbol(environment, name);
 		}
 
@@ -61,7 +61,7 @@ public class MultiblockBracketHandler implements IBracketHandler
 		return CommonProxy.MULTIBLOCKS.stream()
 				.filter(mb -> mb.getUniqueName().equals(name))
 				.findFirst()
-				.orElse(null);
+				.orElseThrow(() -> new IllegalArgumentException("Unknown multiblock: "+name));
 	}
 
 	private class BlockReferenceSymbol implements IZenSymbol

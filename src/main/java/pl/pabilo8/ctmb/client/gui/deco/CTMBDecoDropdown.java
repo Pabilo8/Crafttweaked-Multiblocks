@@ -13,7 +13,10 @@ import stanhebben.zenscript.annotations.ZenMethod;
  */
 public class CTMBDecoDropdown extends DecoDropdown<String> implements DecoComponentAccess
 {
-	public CTMBDecoDropdown(int x, int y) { super(x, y); }
+	public CTMBDecoDropdown(int x, int y)
+	{
+		super(x, y);
+	}
 
 	public void setScriptSelection(int index)
 	{
@@ -22,9 +25,15 @@ public class CTMBDecoDropdown extends DecoDropdown<String> implements DecoCompon
 
 	@ZenMethod
 	@Override
-	public IData getData() { return CTMBDecoData.read(this); }
+	public IData getData()
+	{
+		return CTMBDecoData.read(this);
+	}
 
 	@ZenMethod
 	@Override
-	public void setData(IData data) { CTMBDecoData.apply(this, data); }
+	public void setData(IData data)
+	{
+		CTMBDecoData.apply(this, data);
+	}
 }

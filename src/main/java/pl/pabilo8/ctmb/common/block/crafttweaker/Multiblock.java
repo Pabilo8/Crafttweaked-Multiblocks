@@ -2,34 +2,28 @@ package pl.pabilo8.ctmb.common.block.crafttweaker;
 
 import crafttweaker.annotations.ZenDoc;
 import crafttweaker.annotations.ZenRegister;
-import crafttweaker.api.block.IMaterial;
-import crafttweaker.api.minecraft.CraftTweakerMC;
-import crafttweaker.api.world.IBlockPos;
 import net.minecraft.block.material.Material;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 import pl.pabilo8.ctmb.common.CommonProxy;
 import pl.pabilo8.ctmb.common.block.BlockCTMBMultiblock;
+import pl.pabilo8.ctmb.common.block.MultiblockDefinition;
 import pl.pabilo8.ctmb.common.block.MultiblockStuctureBase;
 import pl.pabilo8.ctmb.common.block.TileEntityMultiblock;
 import pl.pabilo8.ctmb.common.block.crafttweaker.MultiblockTileCTWrapper.*;
-import pl.pabilo8.ctmb.common.block.crafttweaker.storage.MultiblockEnergyInfo;
-import pl.pabilo8.ctmb.common.block.crafttweaker.storage.MultiblockFluidTankInfo;
-import pl.pabilo8.ctmb.common.block.crafttweaker.storage.MultiblockInventoryInfo;
-import pl.pabilo8.ctmb.common.gui.MultiblockGuiLayout;
+import pl.pabilo8.ctmb.common.gui.GuiDefinition;
+import pl.pabilo8.ctmb.common.storage.StorageDefinition;
 import stanhebben.zenscript.annotations.Optional;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * @author Pabilo8
@@ -39,7 +33,7 @@ import java.util.LinkedHashMap;
 @ZenRegister
 public class Multiblock extends MultiblockStuctureBase<TileEntityMultiblock>
 {
-	public static final Multiblock DEFAULT_MULTIBLOCK = new Multiblock("", new ResourceLocation("missingno"), Material.AIR);
+	public static final Multiblock DEFAULT_MULTIBLOCK = new Multiblock("", new ResourceLocation("missingno"), Material.AIR, null);
 	private static final AxisAlignedBB[] AABB_CUBE = new AxisAlignedBB[]{new AxisAlignedBB(0, 0, 0, 1, 1, 1)};
 
 	/**
@@ -48,13 +42,9 @@ public class Multiblock extends MultiblockStuctureBase<TileEntityMultiblock>
 	@Nonnull
 	private final BlockCTMBMultiblock block;
 
-	private final HashMap<Integer, AxisAlignedBB[]> AABBs = new HashMap<>();
-
-	public final ArrayList<MultiblockFluidTankInfo> tanks = new ArrayList<>();
-	public final ArrayList<MultiblockInventoryInfo> inventory = new ArrayList<>();
-	public final ArrayList<MultiblockEnergyInfo> energy = new ArrayList<>();
-
-	public int[] redstonePositions = {}, dataPositions = {};
+	public final MultiblockDefinition definition;
+	public final Map<String, StorageDefinition> storages = new LinkedHashMap<>();
+	private boolean frozen;
 
 	public IMultiblockFunction onUpdate = null;
 	public IMultiblockMessageOutFunction onSendMessage = null;
@@ -66,42 +56,68 @@ public class Multiblock extends MultiblockStuctureBase<TileEntityMultiblock>
 	//Is set only once
 	public final Material material;
 
-	public MultiblockGuiLayout mainGui;
-	public final LinkedHashMap<String, MultiblockGuiLayout> assignedGuis = new LinkedHashMap<>();
+	public GuiDefinition mainGui;
 
-	public Multiblock(String name, ResourceLocation res, Material material)
+
+	protected Multiblock(String name, ResourceLocation res, Material material, MultiblockDefinition definition)
 	{
 		super(name, res);
 		this.material = material;
+		this.definition = definition;
+		if(definition!=null) this.offset = definition.master;
 		this.block = new BlockCTMBMultiblock(this);
 	}
 
 	//--- Init Method ---//
 
 	@ZenMethod
-	public static Multiblock create(String name, String res, IMaterial material)
+	public static Multiblock create(String resource)
 	{
-		Material mat = CraftTweakerMC.getMaterial(material);
-		Multiblock mb = new Multiblock(name, new ResourceLocation(res), mat);
+		MultiblockDefinition definition = MultiblockDefinition.load(resource);
+		if(CommonProxy.MULTIBLOCKS.stream().anyMatch(m -> m.getUniqueName().equals(definition.name)))
+			throw new IllegalArgumentException("Duplicate multiblock: "+definition.name);
+		String flattened = "multiblock_"+definition.name.replace(':', '_').replace('/', '_').toLowerCase(Locale.ROOT);
+		if(CommonProxy.MULTIBLOCKS.stream().anyMatch(m -> m.getFlattenedName().equals(flattened)))
+			throw new IllegalArgumentException("Multiblock names produce the same block registry ID: "+definition.name);
+		Multiblock mb = new Multiblock(definition.name, definition.structure, definition.material, definition);
 		CommonProxy.MULTIBLOCKS.add(mb);
 		CommonProxy.BLOCKS.add(mb.getBlock());
-
 		return mb;
 	}
 
-	//--- Crafttweaker Methods ---//
-	@ZenMethod
-	@ZenDoc("Sets offset of the main multiblock tile used to form it with a hammer")
-	public void setOffset(int x, int y, int z)
+	public void freeze()
 	{
-		this.offset = new Vec3i(x, y, z);
+		storages.values().forEach(storage -> storage.freeze(definition));
+		frozen = true;
 	}
 
-	@ZenMethod
-	@ZenDoc("Sets offset of the main multiblock tile used to form it with a hammer")
-	public void setOffset(IBlockPos pos)
+	@Override
+	public void updateStructure()
 	{
-		setOffset(pos.getX(), pos.getY(), pos.getZ());
+		super.updateStructure();
+		if(definition!=null)
+		{
+			definition.validate(getSize());
+			if(getStructureManual()[offset.getY()][offset.getZ()][offset.getX()].isEmpty())
+				throw new IllegalArgumentException(getUniqueName()+": JSON master must be an occupied structure block");
+			for(StorageDefinition provider : storages.values())
+				for(StorageDefinition.Port port : provider.ports())
+					for(int position : definition.getPOI(port.poi))
+					{
+						int[] dimensions = getSize();
+						int h = position/(dimensions[1]*dimensions[2]), l = position/dimensions[2]%dimensions[1], w = position%dimensions[2];
+						if(getStructureManual()[h][l][w].isEmpty())
+							throw new IllegalArgumentException(getUniqueName()+": Port "+port.poi+" refers to an empty structure block "+position);
+					}
+			onDefinitionLoaded(definition);
+		}
+	}
+
+	/**
+	 * Extension seam for Tactile/animation modules; raw JSON remains available on the definition.
+	 */
+	protected void onDefinitionLoaded(MultiblockDefinition definition)
+	{
 	}
 
 	@ZenMethod
@@ -119,17 +135,17 @@ public class Multiblock extends MultiblockStuctureBase<TileEntityMultiblock>
 	}
 
 	@ZenMethod
-	@ZenDoc("Adds a gui to the multiblock GUI list")
-	public void addGui(String name, MultiblockGuiLayout layout)
+	public void addGui(GuiDefinition gui)
 	{
-		this.assignedGuis.put(name, layout);
+		gui.bind(this);
 	}
 
 	@ZenMethod
-	@ZenDoc("Sets the GUI displayed on multiblock interaction")
-	public void setMainGui(String name)
+	public void setMainGui(GuiDefinition gui)
 	{
-		this.mainGui = this.assignedGuis.get(name);
+		if(gui==null) throw new IllegalArgumentException("A main GUI definition is required");
+		gui.bind(this);
+		this.mainGui = gui;
 	}
 
 	@Override
@@ -201,80 +217,70 @@ public class Multiblock extends MultiblockStuctureBase<TileEntityMultiblock>
 	 */
 	public String getFlattenedName()
 	{
-		return "multiblock_"+getUniqueName().replace(':', '_');
+		return "multiblock_"+getUniqueName().replace(':', '_').replace('/', '_').toLowerCase(Locale.ROOT);
 	}
 
 	@Nullable
-	public MultiblockGuiLayout getGuiLayout(int page)
+	public GuiDefinition getGuiLayout(int page)
 	{
 		if(page==0) return mainGui;
-		if(page < 1||page > assignedGuis.size()) return null;
-		int index = 1;
-		for(MultiblockGuiLayout layout : assignedGuis.values())
-			if(index++==page) return layout;
-		return null;
+		GuiDefinition gui = GuiDefinition.forPage(page);
+		return gui!=null&&gui.isBoundTo(this)?gui: null;
 	}
 
-	//--- AABB ---//
-
-	@ZenMethod
-	@ZenDoc("Adds an AABB to the multiblock block of given id")
-	public void addAABB(int[] pos, double[]... vectors)
+	public int getGuiPage(String name)
 	{
-		AxisAlignedBB[] array = Arrays.stream(vectors)
-				.map(vector -> new AxisAlignedBB(vector[0], vector[1], vector[2], vector[3], vector[4], vector[5]))
-				.toArray(AxisAlignedBB[]::new);
-		for(int p : pos)
-			AABBs.put(p, array);
+		GuiDefinition gui = GuiDefinition.find(name);
+		return gui!=null&&gui.isBoundTo(this)?gui.page(): -1;
 	}
 
-	public AxisAlignedBB[] getAABB(int pos)
+	public java.util.List<AxisAlignedBB> getAABB(int position, net.minecraft.util.EnumFacing facing, boolean mirrored)
 	{
-		return AABBs.getOrDefault(pos, AABB_CUBE);
+		return definition==null?java.util.Collections.emptyList(): definition.bounds(position, facing, mirrored);
 	}
 
-	//--- Storage ---//
-
-	@ZenMethod
-	@ZenDoc("Creates a fluid storage of given capacity. It can be accessed later using the ID.")
-	public MultiblockFluidTankInfo setTank(int id, int capacity)
+	private StorageDefinition storage(String name, StorageDefinition.Kind kind)
 	{
-		MultiblockFluidTankInfo info = new MultiblockFluidTankInfo(id, capacity);
-		tanks.add(info);
-		return info;
+		if(frozen) throw new IllegalStateException("Multiblock storage definitions are frozen");
+		if(storages.containsKey(name)) throw new IllegalArgumentException("Duplicate storage: "+name);
+		StorageDefinition storage = new StorageDefinition(name, kind);
+		storages.put(name, storage);
+		return storage;
 	}
 
 	@ZenMethod
-	@ZenDoc("Creates an energy storage of given capacity. It can be accessed later using the ID.")
-	public MultiblockEnergyInfo setEnergyStorage(int id, int capacity)
+	public StorageDefinition setItemStorage(String name)
 	{
-		MultiblockEnergyInfo info = new MultiblockEnergyInfo(id, capacity);
-		energy.add(info);
-		return info;
+		return storage(name, StorageDefinition.Kind.ITEM);
 	}
 
 	@ZenMethod
-	@ZenDoc("Creates an item inventory of given capacity. It can be accessed later using the ID.")
-	public MultiblockInventoryInfo setInventory(int id, int capacity)
+	public StorageDefinition setFluidStorage(String name)
 	{
-		int offset = inventory.stream().mapToInt(info -> info.capacity).sum();
-
-		MultiblockInventoryInfo info = new MultiblockInventoryInfo(id, capacity, offset);
-		inventory.add(info);
-		return info;
+		return storage(name, StorageDefinition.Kind.FLUID);
 	}
 
 	@ZenMethod
-	@ZenDoc("Sets the input or output port for redstone signal.")
-	public void setRedstonePort(int id, int[] pos, boolean input)
+	public StorageDefinition setDustStorage(String name)
 	{
-
+		return storage(name, StorageDefinition.Kind.DUST);
 	}
 
 	@ZenMethod
-	@ZenDoc("Sets the input or output port for Immersive Intelligence's Data.")
-	public void setDataPort(int id, int[] pos, boolean input)
+	public StorageDefinition setEnergyStorage(String name)
 	{
+		return storage(name, StorageDefinition.Kind.ENERGY);
+	}
 
+	@ZenMethod
+	public StorageDefinition setDataStorage(String name)
+	{
+		return storage(name, StorageDefinition.Kind.DATA);
+	}
+
+	@ZenMethod
+	public StorageDefinition setRedstoneStorage(String name)
+	{
+		return storage(name, StorageDefinition.Kind.REDSTONE);
 	}
 }

@@ -25,7 +25,10 @@ public class CTMBManualResourcePack extends AbstractResourcePack
 {
 	private static final String PREFIX = "assets/immersiveintelligence/ie_manual/";
 
-	public CTMBManualResourcePack(File folder) { super(folder); }
+	public CTMBManualResourcePack(File folder)
+	{
+		super(folder);
+	}
 
 	private ResourceLocation resolve(String name)
 	{
@@ -34,8 +37,9 @@ public class CTMBManualResourcePack extends AbstractResourcePack
 		int separator = path.indexOf('/');
 		if(separator < 0||!path.endsWith(".md")) return null;
 		String key = path.substring(separator+1, path.length()-3);
-		CTMBManualEntry entry = ManualTweaker.ENTRIES.get(key);
-		return entry==null?null:new ResourceLocation(entry.getResource().replace("{lang}", path.substring(0, separator)));
+		CTMBManualEntry entry = ManualTweaker.ENTRIES.values().stream()
+				.filter(value -> key.equals(value.getCategory()+"/"+value.getName())).findFirst().orElse(null);
+		return entry==null?null: new ResourceLocation(entry.getResource().replace("{lang}", path.substring(0, separator)));
 	}
 
 	@Override
@@ -58,11 +62,13 @@ public class CTMBManualResourcePack extends AbstractResourcePack
 		try(IResource resource = Minecraft.getMinecraft().getResourceManager().getResource(source))
 		{
 			return true;
-		}
-		catch(IOException ignored) { return false; }
+		} catch(IOException ignored) {return false;}
 	}
 
 	@Override
 	@Nonnull
-	public Set<String> getResourceDomains() { return Collections.singleton("immersiveintelligence"); }
+	public Set<String> getResourceDomains()
+	{
+		return Collections.singleton("immersiveintelligence");
+	}
 }

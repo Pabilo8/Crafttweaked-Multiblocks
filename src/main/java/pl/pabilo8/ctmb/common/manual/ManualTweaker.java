@@ -12,8 +12,8 @@ import java.util.Map;
  * Registers side-neutral definitions for the II manual.
  *
  * @author Pabilo8 (pabilo@iiteam.net)
- * @since 20.03.2022
  * @updated 05.10.2026
+ * @since 20.03.2022
  */
 @ZenRegister
 @ZenClass("mods.ctmb.manual.ManualTweaker")
@@ -22,7 +22,9 @@ public final class ManualTweaker
 	public static final Map<String, CTMBManualCategory> CATEGORIES = new LinkedHashMap<>();
 	public static final Map<String, CTMBManualEntry> ENTRIES = new LinkedHashMap<>();
 
-	private ManualTweaker() {}
+	private ManualTweaker()
+	{
+	}
 
 	@ZenMethod
 	public static CTMBManualCategory addCategory(String name)
@@ -32,11 +34,14 @@ public final class ManualTweaker
 		return CATEGORIES.computeIfAbsent(name, CTMBManualCategory::new);
 	}
 
-	/** Registers an entry and creates folders from its path. */
+	/**
+	 * Registers an entry and creates folders from its path.
+	 */
 	@ZenMethod
 	public static CTMBManualEntry addEntry(String name, String category, CTMBManualPage... pages)
 	{
-		validatePath(name);
+		if(name==null||!name.matches("[a-z0-9_.-]+:[a-z0-9_.-]+(/[a-z0-9_.-]+)*"))
+			throw new IllegalArgumentException("Manual entry requires a namespaced resource ID: "+name);
 		addCategory(category);
 		String key = category+"/"+name;
 		if(ENTRIES.containsKey(key)) throw new IllegalArgumentException("Duplicate manual entry: "+key);
@@ -46,7 +51,10 @@ public final class ManualTweaker
 	}
 
 	@ZenMethod
-	public static void addDataSource(CTMBManualEntry entry, String name, IData value) { entry.addSource(name, value); }
+	public static void addDataSource(CTMBManualEntry entry, String name, IData value)
+	{
+		entry.addSource(name, value);
+	}
 
 	private static void validatePath(String path)
 	{

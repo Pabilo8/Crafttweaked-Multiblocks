@@ -14,7 +14,6 @@ import pl.pabilo8.ctmb.common.manual.ManualTweaker;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -199,9 +198,10 @@ public class ResourceLoader
 
 		for(CTMBManualEntry entry : ManualTweaker.ENTRIES.values())
 		{
-			String defaultResource = CTMB.MODID+":ie_manual/{lang}/"+entry.getCategory()+"/"+entry.getName()+".md";
+			net.minecraft.util.ResourceLocation id = new net.minecraft.util.ResourceLocation(entry.getResourceId());
+			String defaultResource = id.getResourceDomain()+":ie_manual/{lang}/"+id.getResourcePath()+".md";
 			if(!entry.getResource().equals(defaultResource)) continue;
-			File entryFile = new File(manualEntries, entry.getCategory()+"/"+entry.getName()+".md");
+			File entryFile = new File(resourceFolder, id.getResourceDomain()+"/ie_manual/en_us/"+id.getResourcePath()+".md");
 			if(entryFile.exists()) continue;
 			StringBuilder text = new StringBuilder("#meta\nTitle\nSubtitle\n");
 			CTMBManualPage[] pages = entry.getPages();

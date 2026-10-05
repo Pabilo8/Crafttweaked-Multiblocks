@@ -8,8 +8,8 @@ import net.minecraft.inventory.Slot;
  * Stores a Deco slot style without loading client classes.
  *
  * @author Pabilo8 (pabilo@iiteam.net)
- * @since 08.06.2022
  * @updated 05.10.2026
+ * @since 08.06.2022
  */
 @Getter
 public class CTMBSlot extends Slot

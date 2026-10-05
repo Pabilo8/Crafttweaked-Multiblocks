@@ -227,7 +227,7 @@ public class BlockCTMBMultiblock extends Block
 		DimensionBlockPos dpos = new DimensionBlockPos(pos, world instanceof World?((World)world).provider.getDimension(): 0);
 		if(tile==null&&TEMP_TILES.containsKey(dpos))
 			tile = TEMP_TILES.get(dpos);
-		if(tile!=null&&(!(tile instanceof ITileDrop)||!((ITileDrop)tile).preventInventoryDrop()))
+		if(tile!=null&&!(tile instanceof TileEntityMultiblock)&&(!(tile instanceof ITileDrop)||!((ITileDrop)tile).preventInventoryDrop()))
 		{
 			if(tile instanceof IIEInventory&&((IIEInventory)tile).getDroppedItems()!=null)
 			{
@@ -266,7 +266,7 @@ public class BlockCTMBMultiblock extends Block
 		{
 			TileEntityMultiblock tile = (TileEntityMultiblock)te;
 
-			if(world.getGameRules().getBoolean("doTileDrops"))
+			if(!world.isRemote&&world.getGameRules().getBoolean("doTileDrops"))
 			{
 				if(!tile.formed&&tile.pos==-1&&!tile.getOriginalBlock().isEmpty())
 					world.spawnEntity(new EntityItem(world, pos.getX()+.5, pos.getY()+.5, pos.getZ()+.5, tile.getOriginalBlock().copy()));
@@ -275,9 +275,18 @@ public class BlockCTMBMultiblock extends Block
 				{
 					IIEInventory master = tile.master();
 					if(master!=null&&(!(master instanceof ITileDrop)||!((ITileDrop)master).preventInventoryDrop())&&master.getDroppedItems()!=null)
-						for(ItemStack s : master.getDroppedItems())
-							if(!s.isEmpty())
-								world.spawnEntity(new EntityItem(world, pos.getX()+.5, pos.getY()+.5, pos.getZ()+.5, s.copy()));
+					{
+						NonNullList<ItemStack> inventory = master.getDroppedItems();
+						List<ItemStack> claimed = new ArrayList<>();
+						for(int i = 0; i < inventory.size(); i++)
+						{
+							if(!inventory.get(i).isEmpty()) claimed.add(inventory.get(i).copy());
+							inventory.set(i, ItemStack.EMPTY);
+						}
+						// Clear ownership before disassembly can invoke another part's break hook.
+						for(ItemStack item : claimed)
+							world.spawnEntity(new EntityItem(world, pos.getX()+.5, pos.getY()+.5, pos.getZ()+.5, item));
+					}
 				}
 			}
 			tile.disassemble();
@@ -288,7 +297,6 @@ public class BlockCTMBMultiblock extends Block
 		super.breakBlock(world, pos, state);
 		world.removeTileEntity(pos);
 
-		super.breakBlock(world, pos, state);
 	}
 
 	@Nonnull
@@ -533,6 +541,7 @@ public class BlockCTMBMultiblock extends Block
 				}
 				return min;
 			}
+			if(te instanceof TileEntityMultiblock&&((TileEntityMultiblock)te).formed) return null;
 		}
 		return super.collisionRayTrace(state, world, pos, start, end);
 	}
@@ -612,6 +621,7 @@ public class BlockCTMBMultiblock extends Block
 						list.add(aabb);
 				return;
 			}
+			if(te instanceof TileEntityMultiblock&&((TileEntityMultiblock)te).formed) return;
 		}
 		super.addCollisionBoxToList(state, world, pos, mask, list, ent, isActualState);
 	}

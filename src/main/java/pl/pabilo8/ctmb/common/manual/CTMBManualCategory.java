@@ -18,7 +18,10 @@ public class CTMBManualCategory
 {
 	private final String name;
 
-	CTMBManualCategory(String name) { this.name = name; }
+	CTMBManualCategory(String name)
+	{
+		this.name = name;
+	}
 
 	@ZenMethod
 	public CTMBManualEntry addEntry(String name, CTMBManualPage... pages)

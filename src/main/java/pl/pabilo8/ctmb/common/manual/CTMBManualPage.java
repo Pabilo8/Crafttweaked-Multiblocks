@@ -9,8 +9,8 @@ import stanhebben.zenscript.annotations.ZenMethod;
  * Defines a Markdown section rendered by IIManualPage.
  *
  * @author Pabilo8 (pabilo@iiteam.net)
- * @since 20.03.2022
  * @updated 05.10.2026
+ * @since 20.03.2022
  */
 @ZenRegister
 @ZenClass("mods.ctmb.manual.Page")
@@ -27,5 +27,8 @@ public class CTMBManualPage
 	}
 
 	@ZenMethod
-	public static CTMBManualPage create(String name) { return new CTMBManualPage(name); }
+	public static CTMBManualPage create(String name)
+	{
+		return new CTMBManualPage(name);
+	}
 }

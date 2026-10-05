@@ -13,13 +13,22 @@ import stanhebben.zenscript.annotations.ZenMethod;
  */
 public class CTMBDecoSwitch extends DecoSwitch implements DecoComponentAccess
 {
-	public CTMBDecoSwitch(int x, int y) { super(x, y); }
+	public CTMBDecoSwitch(int x, int y)
+	{
+		super(x, y);
+	}
 
 	@ZenMethod
 	@Override
-	public IData getData() { return CTMBDecoData.read(this); }
+	public IData getData()
+	{
+		return CTMBDecoData.read(this);
+	}
 
 	@ZenMethod
 	@Override
-	public void setData(IData data) { CTMBDecoData.apply(this, data); }
+	public void setData(IData data)
+	{
+		CTMBDecoData.apply(this, data);
+	}
 }

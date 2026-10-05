@@ -16,13 +16,16 @@ import pl.pabilo8.immersiveintelligence.common.util.easynbt.EasyNBT;
  */
 public final class CTMBDecoData
 {
-	private CTMBDecoData() {}
+	private CTMBDecoData()
+	{
+	}
 
 	public static IData read(DecoComponent<?> component)
 	{
 		EasyNBT data = EasyNBT.newNBT().withBoolean("visible", component.visible)
 				.withBoolean("enabled", component.enabled);
-		if(component instanceof CTMBDecoCheckbox) data.withBoolean("checked", ((CTMBDecoCheckbox)component).isChecked());
+		if(component instanceof CTMBDecoCheckbox)
+			data.withBoolean("checked", ((CTMBDecoCheckbox)component).isChecked());
 		if(component instanceof CTMBDecoSwitch) data.withBoolean("state", ((CTMBDecoSwitch)component).getState());
 		if(component instanceof CTMBDecoSlider) data.withFloat("value", ((CTMBDecoSlider)component).getValue());
 		if(component instanceof CTMBDecoDropdown) data.withInt("selected", ((CTMBDecoDropdown)component).selectedEntry);
@@ -40,14 +43,18 @@ public final class CTMBDecoData
 		EasyNBT data = EasyNBT.wrapNBT(CraftTweakerMC.getNBTCompound(value));
 		if(data.hasKey("visible")) component.visible = data.getBoolean("visible");
 		if(data.hasKey("enabled")) component.withDisabled(!data.getBoolean("enabled"));
+		if(data.hasKey("text_item")&&component instanceof DecoTextBasedComponent)
+			((DecoTextBasedComponent<?>)component).withRawText(new net.minecraft.item.ItemStack(data.getCompound("text_item")).getDisplayName());
 		if(data.hasKey("text")&&component instanceof DecoTextBasedComponent)
 		{
 			DecoTextBasedComponent<?> text = (DecoTextBasedComponent<?>)component;
 			if(data.getBoolean("translated")) text.withText(data.getString("text"));
 			else text.withRawText(data.getString("text"));
 		}
-		if(component instanceof CTMBDecoCheckbox&&data.hasKey("checked")) ((CTMBDecoCheckbox)component).withChecked(data.getBoolean("checked"));
-		if(component instanceof CTMBDecoSwitch&&data.hasKey("state")) ((CTMBDecoSwitch)component).withCurrentState(data.getBoolean("state"));
+		if(component instanceof CTMBDecoCheckbox&&data.hasKey("checked"))
+			((CTMBDecoCheckbox)component).withChecked(data.getBoolean("checked"));
+		if(component instanceof CTMBDecoSwitch&&data.hasKey("state"))
+			((CTMBDecoSwitch)component).withCurrentState(data.getBoolean("state"));
 		if(component instanceof CTMBDecoSlider&&data.hasKey("value"))
 			((CTMBDecoSlider)component).setScriptValue(data.getFloat("value"));
 		if(component instanceof CTMBDecoDropdown&&data.hasKey("selected"))
@@ -59,8 +66,8 @@ public final class CTMBDecoData
 			CTMBDecoBar bar = (CTMBDecoBar)component;
 			if(data.hasKey("value"))
 			{
-				int min = data.hasKey("min")?data.getInt("min"):bar.getMinValue();
-				int max = data.hasKey("max")?data.getInt("max"):bar.getMaxValue();
+				int min = data.hasKey("min")?data.getInt("min"): bar.getMinValue();
+				int max = data.hasKey("max")?data.getInt("max"): bar.getMaxValue();
 				if(max <= min) throw new IllegalArgumentException("Bar maximum must exceed minimum");
 				int current = MathHelper.clamp(data.getInt("value"), min, max);
 				bar.withLimits(min, max, () -> current);

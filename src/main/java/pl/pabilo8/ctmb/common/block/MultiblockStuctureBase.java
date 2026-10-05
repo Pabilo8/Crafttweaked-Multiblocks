@@ -38,7 +38,6 @@ import net.minecraftforge.oredict.OreDictionary;
 import org.apache.commons.io.IOUtils;
 import pl.pabilo8.ctmb.common.CommonProxy;
 import pl.pabilo8.immersiveintelligence.common.util.IIStringUtil;
-import pl.pabilo8.ctmb.common.util.CTMBLogger;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -96,13 +95,12 @@ public abstract class MultiblockStuctureBase<T extends TileEntityMultiblockPart<
 	{
 		//the .nbt file
 		Template template = RES_LOC_TEMPLATE_MANAGER.getTemplate(null, res);
-		if(template.blocks.isEmpty())
+		if(template==null||template.blocks.isEmpty())
 			template = readTemplateFromResources(res);
 
-		if(template==null)
+		if(template==null||template.blocks.isEmpty())
 		{
-			CTMBLogger.warn("Couldn't initialize multiblock template for "+res);
-			return;
+			throw new IllegalArgumentException("Missing or empty multiblock NBT template: "+res);
 		}
 
 		size = template.getSize();
@@ -196,7 +194,9 @@ public abstract class MultiblockStuctureBase<T extends TileEntityMultiblockPart<
 
 						//BlockPos oPos = BlockPos.ORIGIN.offset(side, l).offset(side.rotateY(), ww).add(0, h, 0);
 
-						tile.offset = new int[]{(side==EnumFacing.WEST?-l+1: side==EnumFacing.EAST?l-1: side==EnumFacing.NORTH?ww: -ww), h, (side==EnumFacing.NORTH?-l+1: side==EnumFacing.SOUTH?l-1: side==EnumFacing.EAST?ww: -ww)};
+						BlockPos masterPos = startPos; // JSON master/trigger is the structure origin for all parts.
+						BlockPos delta = pos2.subtract(masterPos);
+						tile.offset = new int[]{delta.getX(), delta.getY(), delta.getZ()};
 						tile.markDirty();
 						addBlockEvent(world, pos2);
 					}
@@ -267,7 +267,7 @@ public abstract class MultiblockStuctureBase<T extends TileEntityMultiblockPart<
 		return true;
 	}
 
-	static ItemStack renderStack = ItemStack.EMPTY;
+	private ItemStack renderStack = ItemStack.EMPTY;
 
 	protected abstract Block getBlock();
 

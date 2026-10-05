@@ -13,7 +13,10 @@ import stanhebben.zenscript.annotations.ZenMethod;
  */
 public class CTMBDecoSlider extends DecoSlider implements DecoComponentAccess
 {
-	public CTMBDecoSlider(int x, int y) { super(x, y); }
+	public CTMBDecoSlider(int x, int y)
+	{
+		super(x, y);
+	}
 
 	public void setScriptValue(float value)
 	{
@@ -22,9 +25,15 @@ public class CTMBDecoSlider extends DecoSlider implements DecoComponentAccess
 
 	@ZenMethod
 	@Override
-	public IData getData() { return CTMBDecoData.read(this); }
+	public IData getData()
+	{
+		return CTMBDecoData.read(this);
+	}
 
 	@ZenMethod
 	@Override
-	public void setData(IData data) { CTMBDecoData.apply(this, data); }
+	public void setData(IData data)
+	{
+		CTMBDecoData.apply(this, data);
+	}
 }

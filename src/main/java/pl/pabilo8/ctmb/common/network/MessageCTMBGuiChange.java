@@ -12,14 +12,18 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import pl.pabilo8.ctmb.common.gui.MultiblockContainer;
 import pl.pabilo8.immersiveintelligence.common.network.IIMessage;
 
-/** Requests a named CTMB GUI using the packet sender's current container. */
+/**
+ * Requests a named CTMB GUI using the packet sender's current container.
+ */
 public class MessageCTMBGuiChange extends IIMessage
 {
 	private BlockPos pos;
 	private String guiName;
 	private int windowId;
 
-	public MessageCTMBGuiChange() {}
+	public MessageCTMBGuiChange()
+	{
+	}
 
 	public MessageCTMBGuiChange(BlockPos pos, String guiName, int windowId)
 	{
@@ -40,7 +44,9 @@ public class MessageCTMBGuiChange extends IIMessage
 
 	@Override
 	@SideOnly(Side.CLIENT)
-	protected void onClientReceive(WorldClient world, NetHandlerPlayClient handler) {}
+	protected void onClientReceive(WorldClient world, NetHandlerPlayClient handler)
+	{
+	}
 
 	@Override
 	public void toBytes(ByteBuf buf)

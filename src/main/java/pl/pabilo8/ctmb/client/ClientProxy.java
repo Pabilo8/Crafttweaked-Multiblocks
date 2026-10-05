@@ -3,9 +3,11 @@ package pl.pabilo8.ctmb.client;
 import blusunrize.immersiveengineering.client.ClientUtils;
 import blusunrize.immersiveengineering.client.models.obj.IEOBJLoader;
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.resources.IReloadableResourceManager;
 import net.minecraft.client.resources.IResourceManager;
+import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
@@ -19,27 +21,25 @@ import net.minecraftforge.client.resource.ISelectiveResourceReloadListener;
 import net.minecraftforge.client.resource.VanillaResourceType;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import pl.pabilo8.ctmb.CTMB;
 import pl.pabilo8.ctmb.client.gui.MultiblockGui;
+import pl.pabilo8.ctmb.client.manual.CTMBIIManualCategory;
+import pl.pabilo8.ctmb.client.manual.CTMBManualResourcePack;
 import pl.pabilo8.ctmb.common.CommonProxy;
 import pl.pabilo8.ctmb.common.block.ItemBlockCTMBMultiblock;
 import pl.pabilo8.ctmb.common.block.TileEntityMultiblock;
 import pl.pabilo8.ctmb.common.block.crafttweaker.Multiblock;
 import pl.pabilo8.ctmb.common.manual.ManualTweaker;
+import pl.pabilo8.ctmb.common.util.DirectoryResourcePack;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.function.Predicate;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.io.File;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.IResourcePack;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
-import pl.pabilo8.ctmb.common.util.DirectoryResourcePack;
-import pl.pabilo8.ctmb.client.manual.CTMBManualResourcePack;
-import pl.pabilo8.ctmb.client.manual.CTMBIIManualCategory;
+import java.util.function.Predicate;
 
 /**
  * @author Pabilo8
@@ -68,6 +68,20 @@ public class ClientProxy extends CommonProxy implements ISelectiveResourceReload
 		packs.add(new DirectoryResourcePack(folder));
 		packs.add(new CTMBManualResourcePack(folder));
 		Minecraft.getMinecraft().refreshResources();
+	}
+
+	@SubscribeEvent
+	public static void stitchDecoTextures(net.minecraftforge.client.event.TextureStitchEvent.Pre event)
+	{
+		for(pl.pabilo8.ctmb.common.gui.DecoTexture texture : pl.pabilo8.ctmb.common.gui.DecoTextures.all())
+			if(!texture.location.endsWith("/")) event.getMap().registerSprite(new ResourceLocation(texture.location));
+	}
+
+	@Override
+	public void confirmGuiLayout(TileEntityMultiblock tile, String signature, int window)
+	{
+		if(Minecraft.getMinecraft().currentScreen instanceof MultiblockGui)
+			((MultiblockGui)Minecraft.getMinecraft().currentScreen).confirmLayout(tile, signature, window);
 	}
 
 	@Override

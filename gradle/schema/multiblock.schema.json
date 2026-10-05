@@ -1,0 +1,124 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CTMB multiblock definition",
+  "description": "II-compatible pixel bounds and numbered POIs, with six relative CTMB directions. NBT defines occupied blocks and size.",
+  "type": "object",
+  "required": [
+    "name",
+    "master",
+    "bounds",
+    "positions"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_./-]+$"
+    },
+    "master": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "description": "[width/X, height/Y, length/Z] of the occupied trigger/master block in the NBT template."
+    },
+    "structure": {
+      "type": "string",
+      "description": "Optional namespaced NBT template ID. Defaults to the JSON resource ID; loaded from structures/<path>.nbt."
+    },
+    "material": {
+      "enum": [
+        "iron",
+        "wood",
+        "rock",
+        "glass"
+      ]
+    },
+    "bounds": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "minItems": 6,
+        "maxItems": 6
+      },
+      "description": "[minX,minY,minZ,maxX,maxY,maxZ], in pixels; 16 pixels = one block. Ordered finite values required; a zero-volume bound means empty."
+    },
+    "positions": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[0-9]+(:[0-9]+)?(,[0-9]+(:[0-9]+)?)*$"
+      },
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "description": "Comma-separated positions and inclusive start:end ranges mapped to named bounds; CTMB validates bound references, overlaps and NBT dimensions."
+    },
+    "poi": {
+      "type": "object",
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "integer",
+            "minimum": 0
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          {
+            "type": "string",
+            "pattern": "^[0-9]+(:[0-9]+)?(,[0-9]+(:[0-9]+)?)*$"
+          }
+        ]
+      }
+    },
+    "rotations": {
+      "$ref": "#/definitions/directions"
+    },
+    "directions": {
+      "$ref": "#/definitions/directions"
+    },
+    "tactile": {
+      "type": "object",
+      "description": "Opaque reserved extension. Retained without parsing."
+    },
+    "tactile_transforms": {
+      "description": "Opaque reserved extension. Retained without parsing."
+    }
+  },
+  "definitions": {
+    "directions": {
+      "type": "object",
+      "additionalProperties": {
+        "enum": [
+          "none",
+          "clockwise_90",
+          "clockwise_180",
+          "counterclockwise_90",
+          "up",
+          "down"
+        ]
+      }
+    }
+  },
+  "additionalProperties": true
+}

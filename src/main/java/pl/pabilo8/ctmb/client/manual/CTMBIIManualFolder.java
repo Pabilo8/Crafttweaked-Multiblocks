@@ -36,5 +36,8 @@ public class CTMBIIManualFolder extends IIManualPageFolder
 	}
 
 	@Override
-	public String getName() { return root?referencePath:"folder:"+referencePath; }
+	public String getName()
+	{
+		return root?referencePath: "folder:"+referencePath;
+	}
 }

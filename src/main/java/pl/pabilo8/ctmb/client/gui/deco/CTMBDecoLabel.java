@@ -18,7 +18,10 @@ public class CTMBDecoLabel extends DecoLabel implements DecoComponentAccess
 {
 	private String scriptText = "";
 
-	public CTMBDecoLabel(int x, int y) { super(IIClientUtils.fontRegular, x, y); }
+	public CTMBDecoLabel(int x, int y)
+	{
+		super(IIClientUtils.fontRegular, x, y);
+	}
 
 	@ZenMethod
 	@Override
@@ -32,6 +35,11 @@ public class CTMBDecoLabel extends DecoLabel implements DecoComponentAccess
 	public void setData(IData data)
 	{
 		EasyNBT nbt = EasyNBT.wrapNBT(CraftTweakerMC.getNBTCompound(data));
+		if(nbt.hasKey("text_item"))
+		{
+			scriptText = new net.minecraft.item.ItemStack(nbt.getCompound("text_item")).getDisplayName();
+			withRawText(scriptText);
+		}
 		if(nbt.hasKey("text"))
 		{
 			scriptText = nbt.getString("text");

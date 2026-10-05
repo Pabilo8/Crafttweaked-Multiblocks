@@ -15,6 +15,7 @@ import java.util.Set;
 /**
  * Rightfully stolen from Contenttweaker/B.A.S.E.<br>
  * <a href="https://github.com/The-Acronym-Coders/BASE/blob/develop/1.12.0/src/main/java/com/teamacronymcoders/base/util/files/DirectoryResourcePack.java">https://github.com/The-Acronym-Coders/BASE/blob/develop/1.12.0/src/main/java/com/teamacronymcoders/base/util/files/DirectoryResourcePack.java</a>
+ *
  * @since 19.02.2022
  */
 public class DirectoryResourcePack extends AbstractResourcePack

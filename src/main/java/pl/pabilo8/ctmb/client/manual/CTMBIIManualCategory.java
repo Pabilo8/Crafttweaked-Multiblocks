@@ -27,10 +27,16 @@ public class CTMBIIManualCategory extends IIManualCategory
 	private final Map<String, IIManualEntry> registered = new LinkedHashMap<>();
 	private final Map<String, String> folderTitles = new LinkedHashMap<>();
 
-	public CTMBIIManualCategory(String name) { this.name = name; }
+	public CTMBIIManualCategory(String name)
+	{
+		this.name = name;
+	}
 
 	@Override
-	public String getCategory() { return name; }
+	public String getCategory()
+	{
+		return name;
+	}
 
 	@Override
 	public void addPages()
@@ -41,8 +47,8 @@ public class CTMBIIManualCategory extends IIManualCategory
 		for(CTMBManualEntry definition : ManualTweaker.ENTRIES.values())
 		{
 			if(!definition.getCategory().equals(name)) continue;
-			String[] path = definition.getName().split("/");
-			String leaf = path[path.length-1];
+			String[] path = definition.getPath().split("/");
+			String leaf = definition.getName();
 			for(ManualEntry existing : ManualHelper.getManual().manualContents.values())
 				if(existing.getName().equals(leaf))
 					throw new IllegalArgumentException("Manual entry names must be unique: "+leaf);
@@ -50,13 +56,15 @@ public class CTMBIIManualCategory extends IIManualCategory
 			StringBuilder fullPath = new StringBuilder();
 			for(int i = 0; i < path.length-1; i++)
 			{
-				if(i > 0) fullPath.append('/');
+				if(i==0)
+					fullPath.append(new net.minecraft.util.ResourceLocation(definition.getResourceId()).getResourceDomain()).append(':');
+				else fullPath.append('/');
 				fullPath.append(path[i]);
 				CTMBIIManualFolder next = folders.get(fullPath.toString());
 				if(next==null)
 				{
-					String id = "ctmb_folder."+name+"."+fullPath.toString().replace('/', '.');
-					next = folder==null?new CTMBIIManualFolder(id, name):new CTMBIIManualFolder(id, folder);
+					String id = "ctmb_folder."+name+"."+CTMBManualEntry.referenceFor(fullPath.toString());
+					next = folder==null?new CTMBIIManualFolder(id, name): new CTMBIIManualFolder(id, folder);
 					folderTitles.put(id, path[i]);
 					updateFolderTitle(id, path[i]);
 					folders.put(fullPath.toString(), next);
@@ -67,11 +75,13 @@ public class CTMBIIManualCategory extends IIManualCategory
 			applyDefinition(entry, definition);
 			if(folder==null) ManualHelper.getManual().manualContents.put(name, entry);
 			else folder.addEntry(entry);
-			registered.put(definition.getName(), entry);
+			registered.put(definition.getResourceId(), entry);
 		}
 	}
 
-	/** Restores entries removed by II's manual reload command. */
+	/**
+	 * Restores entries removed by II's manual reload command.
+	 */
 	public void ensureRegistered()
 	{
 		if(ManualHelper.getManual().manualContents.values().containsAll(registered.values())) return;
@@ -96,7 +106,7 @@ public class CTMBIIManualCategory extends IIManualCategory
 	private void updateFolderTitle(String id, String folder)
 	{
 		String key = "ie.manual.folder."+folder;
-		String title = net.minecraft.client.resources.I18n.hasKey(key)?net.minecraft.client.resources.I18n.format(key):folder;
+		String title = net.minecraft.client.resources.I18n.hasKey(key)?net.minecraft.client.resources.I18n.format(key): folder;
 		net.minecraft.client.resources.I18n.i18nLocale.properties.put("ie.manual.entry."+id+".name",
 				pl.pabilo8.immersiveintelligence.common.util.IIReference.CHARICON_FOLDER+" "+title);
 	}

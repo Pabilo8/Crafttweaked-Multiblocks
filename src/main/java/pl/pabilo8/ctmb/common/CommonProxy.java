@@ -6,6 +6,7 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.event.RegistryEvent;
@@ -13,8 +14,6 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraft.util.ResourceLocation;
-import java.io.File;
 import pl.pabilo8.ctmb.CTMB;
 import pl.pabilo8.ctmb.common.block.BlockCTMBMultiblock;
 import pl.pabilo8.ctmb.common.block.ItemBlockCTMBMultiblock;
@@ -24,6 +23,7 @@ import pl.pabilo8.ctmb.common.gui.MultiblockContainer;
 import pl.pabilo8.ctmb.common.util.ResourceLoader;
 
 import javax.annotation.Nullable;
+import java.io.File;
 import java.util.ArrayList;
 
 /**
@@ -46,7 +46,13 @@ public class CommonProxy implements IGuiHandler
 		registerResourcePacks(RESOURCE_LOADER.getResourceFolder());
 	}
 
-	public void registerResourcePacks(File folder) {}
+	public void registerResourcePacks(File folder)
+	{
+	}
+
+	public void confirmGuiLayout(TileEntityMultiblock tile, String signature, int window)
+	{
+	}
 
 	public void init()
 	{
@@ -62,6 +68,7 @@ public class CommonProxy implements IGuiHandler
 	public static void onBlockRegister(RegistryEvent.Register<Block> event)
 	{
 		CraftTweakerAPI.tweaker.loadScript(false, "ctmb");
+		MULTIBLOCKS.forEach(Multiblock::freeze);
 
 		for(BlockCTMBMultiblock block : BLOCKS)
 			event.getRegistry().register(block.setRegistryName(block.registryName));

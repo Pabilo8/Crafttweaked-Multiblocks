@@ -3,58 +3,82 @@ package pl.pabilo8.ctmb.client.gui;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.inventory.ClickType;
 import net.minecraft.inventory.Slot;
+import net.minecraft.util.ResourceLocation;
 import org.lwjgl.input.Mouse;
 import pl.pabilo8.ctmb.client.gui.deco.*;
 import pl.pabilo8.ctmb.common.block.TileEntityMultiblock;
 import pl.pabilo8.ctmb.common.gui.*;
 import pl.pabilo8.ctmb.common.gui.component.GuiComponent;
+import pl.pabilo8.ctmb.common.util.CTMBLogger;
 import pl.pabilo8.immersiveintelligence.client.gui.deco.DecoGui;
 import pl.pabilo8.immersiveintelligence.client.gui.deco.component.DecoComponent;
 import pl.pabilo8.immersiveintelligence.client.gui.deco.util.DecoBackgroundBuilder;
-import pl.pabilo8.immersiveintelligence.client.gui.deco.util.SlotStyle;
+import pl.pabilo8.immersiveintelligence.common.util.ResLoc;
 import pl.pabilo8.immersiveintelligence.common.util.easynbt.EasyNBT;
 
+import java.util.ArrayDeque;
 import java.util.LinkedHashMap;
-import java.util.Locale;
 import java.util.Map;
+import java.util.Queue;
 
 /**
- * Builds a fresh native Deco GUI from a CTMB layout.
- *
- * @author Pabilo8 (pabilo@iiteam.net)
- * @since 27.02.2022
- * @updated 05.10.2026
+ * Native Deco screen built from a common, server-verifiable container plan.
  */
 public class MultiblockGui extends DecoGui<TileEntityMultiblock, MultiblockContainer>
 {
 	private final MultiblockGuiLayout layout;
 	private final Map<String, DecoComponentAccess> components = new LinkedHashMap<>();
 	private final MultiblockGuiCTWrapper wrapper = new MultiblockGuiCTWrapper(components);
+	private final Queue<String> selectionEvents = new ArrayDeque<>();
 	private EasyNBT localData = EasyNBT.newNBT();
-	private final java.util.Queue<String> selectionEvents = new java.util.ArrayDeque<>();
+	private boolean layoutConfirmed;
 
 	public MultiblockGui(InventoryPlayer player, TileEntityMultiblock tile, int page)
 	{
 		super(player.player, new MultiblockContainer(player, tile, page), tile, null);
-		layout = tile.getMultiblock().getGuiLayout(page);
+		layout = container.layout;
 	}
 
 	@Override
 	public void onInit()
 	{
+		Map<String, crafttweaker.api.data.IData> previous = new LinkedHashMap<>();
+		components.forEach((name, component) -> previous.put(name, component.getData()));
 		components.clear();
 		selectionEvents.clear();
-		xSize = layout.getWidth();
-		ySize = layout.getHeight();
-		DecoBackgroundBuilder<TileEntityMultiblock, MultiblockContainer> background = startBackground().withBox(0, 0, xSize, ySize);
+		DecoBackgroundBuilder<TileEntityMultiblock, MultiblockContainer> background = startBackground();
+		for(MultiblockGuiLayout.BackgroundBox box : layout.boxes)
+		{
+			background.withBox(ResLoc.of(box.texture.location), ResLoc.of(box.mask.location), box.x, box.y, box.width, box.height);
+			if("@machine".equals(box.title)) background.withTitleBar(context);
+			else if(box.title!=null) background.withTitleBar(box.title);
+			if(box.inventoryTitle) background.withInventoryTitleBar();
+		}
 		for(Slot slot : container.inventorySlots)
-			background.withInventorySlots(slot instanceof CTMBSlot?
-					SlotStyle.valueOf(((CTMBSlot)slot).getStyle().toUpperCase(Locale.ROOT)):SlotStyle.IE, slot);
-		for(GuiComponent definition : layout.getComponents().values())
-			buildComponent(definition);
-		if(layout.getOnOpen()!=null)
-			layout.getOnOpen().execute(wrapper, context.getMbWrapper(), CraftTweakerMC.getIPlayer(playerContainer.player));
+			background.withInventorySlots(
+					pl.pabilo8.immersiveintelligence.client.gui.deco.util.SlotStyle.valueOf(slot instanceof CTMBSlot?((CTMBSlot)slot).getStyle(): layout.inventoryStyle), slot);
+		background.build();
+		for(Map.Entry<String, GuiComponent> entry : layout.components.entrySet())
+			buildComponent(entry.getKey(), entry.getValue());
+		for(GuiDefinition link : layout.links)
+		{
+			CTMBDecoTab tab = new CTMBDecoTab();
+			tab.withIcon(new ResourceLocation(link.icon().location)).withSelected(link==layout.definition)
+					.withTranslatedTooltip(link.title());
+			tab.withOnLMBPressed(() -> {
+				if(link!=layout.definition)
+					context.getMbWrapper().openGUI(link.name, CraftTweakerMC.getIPlayer(playerContainer.player));
+			});
+			addComponents(tab);
+		}
+		// Preserve user-entered control state on resizing; bound storage views keep native suppliers.
+		previous.forEach((name, data) -> {
+			GuiComponent definition = layout.components.get(name);
+			if(definition!=null&&definition.source()==null&&components.containsKey(name))
+				components.get(name).setData(data);
+		});
 	}
 
 	@Override
@@ -64,20 +88,17 @@ public class MultiblockGui extends DecoGui<TileEntityMultiblock, MultiblockConta
 		addWidget(new pl.pabilo8.immersiveintelligence.client.gui.deco.component.widget.DecoManualWidget());
 	}
 
-	private void buildComponent(GuiComponent definition)
+	private void buildComponent(String name, GuiComponent definition)
 	{
-		String name = definition.getName();
 		EasyNBT data = definition.getOptions();
 		int x = definition.getX(), y = definition.getY();
 		DecoComponent<?> component;
 		switch(definition.getType())
 		{
-			case "slot": return;
 			case "label":
 				CTMBDecoLabel label = new CTMBDecoLabel(x, y);
 				label.setData(CraftTweakerMC.getIData(data.unwrap()));
-				if(data.hasKey("w")) label.withWidth(data.getInt("w"));
-				if(data.hasKey("h")) label.withHeight(data.getInt("h"));
+				label.withSize(definition.width(), definition.height());
 				addLabel(label);
 				components.put(name, label);
 				return;
@@ -86,13 +107,6 @@ public class MultiblockGui extends DecoGui<TileEntityMultiblock, MultiblockConta
 				break;
 			case "switch":
 				component = new CTMBDecoSwitch(x, y).withOnToggle(value -> activated(name));
-				break;
-			case "slider":
-				float min = data.hasKey("min")?data.getFloat("min"):0;
-				float max = data.hasKey("max")?data.getFloat("max"):1;
-				if(max <= min) throw new IllegalArgumentException("Slider maximum must exceed minimum: "+name);
-				component = new CTMBDecoSlider(x, y).withRange(min, max)
-						.withIntegersOnly(data.getBoolean("integer")).withOnValueChanged(value -> activated(name));
 				break;
 			case "dropdown":
 				CTMBDecoDropdown dropdown = new CTMBDecoDropdown(x, y);
@@ -103,68 +117,84 @@ public class MultiblockGui extends DecoGui<TileEntityMultiblock, MultiblockConta
 			case "text":
 				component = new CTMBDecoTextField(x, y).withOnTextChanged(value -> activated(name));
 				break;
-			case "bar": case "energy":
+			case "bar":
+			case "energy":
 				component = new CTMBDecoBar(x, y);
 				break;
 			case "fluid":
-				int tank = data.getInt("id");
-				if(context.tanks==null||tank < 0||tank >= context.tanks.length)
-					throw new IllegalArgumentException("Invalid fluid tank: "+name);
-				component = new CTMBDecoFluidTank(x, y).withFluidTank(context.tanks[tank]);
+				CTMBDecoFluidTank tank = new CTMBDecoFluidTank(x, y);
+				tank.bind(definition.source());
+				component = tank;
+				break;
+			case "dust":
+				CTMBDecoDustTank dust = new CTMBDecoDustTank(x, y);
+				dust.bind(definition.source());
+				component = dust;
+				break;
+			case "tab":
+				component = new CTMBDecoTab().withOnLMBPressed(() -> activated(name));
 				break;
 			default:
 				component = new CTMBDecoButton(x, y).withOnLMBPressed(() -> activated(name));
 		}
-		component.withSize(data.hasKey("w")?data.getInt("w"):component.width,
-				data.hasKey("h")?data.getInt("h"):component.height);
+		component.withSize(definition.width(), definition.height());
 		DecoComponentAccess access = (DecoComponentAccess)component;
 		access.setData(CraftTweakerMC.getIData(data.unwrap()));
-		if(definition.getType().equals("energy"))
-		{
-			int energy = data.getInt("id");
-			if(context.energy==null||energy < 0||energy >= context.energy.length)
-				throw new IllegalArgumentException("Invalid energy storage: "+name);
-			((CTMBDecoBar)component).withLimits(0, Math.max(1, context.energy[energy].getMaxEnergyStored()),
-					() -> context.energy[energy].getEnergyStored());
-		}
+		if(definition.getType().equals("energy")) ((CTMBDecoBar)component).bindEnergy(definition.source());
 		component.withOnHovered((widget, button, mx, my) -> {
-			if(layout.getOnHover()!=null)
-				layout.getOnHover().execute(name, wrapper, context.getMbWrapper(), mx-getScreenLeft(), my-getScreenTop(),
-						CraftTweakerMC.getIPlayer(playerContainer.player));
+			if(definition.hover()!=null)
+				definition.hover().execute(access, wrapper, context.getMbWrapper(), mx-getScreenLeft(), my-getScreenTop(), CraftTweakerMC.getIPlayer(playerContainer.player));
 			return false;
 		});
 		components.put(name, access);
 		addComponents(component);
 	}
 
-	@Override
-	public void drawScreen(int mouseX, int mouseY, float partialTicks)
-	{
-		//II reports dropdown changes before it stores the selected index.
-		while(!selectionEvents.isEmpty()) activated(selectionEvents.remove());
-		super.drawScreen(mouseX, mouseY, partialTicks);
-	}
-
 	private void activated(String name)
 	{
-		if(layout.getOnPress()!=null)
+		GuiComponent definition = layout.components.get(name);
+		if(definition!=null&&definition.press()!=null)
 		{
 			Minecraft minecraft = Minecraft.getMinecraft();
 			int mx = Mouse.getX()*width/minecraft.displayWidth-getScreenLeft();
 			int my = height-Mouse.getY()*height/minecraft.displayHeight-1-getScreenTop();
-			layout.getOnPress().execute(name, wrapper, context.getMbWrapper(), mx, my,
-					CraftTweakerMC.getIPlayer(playerContainer.player));
+			definition.press().execute(components.get(name), wrapper, context.getMbWrapper(), mx, my, CraftTweakerMC.getIPlayer(playerContainer.player));
 		}
 	}
 
 	@Override
-	protected EasyNBT loadGuiData() { return localData; }
-	@Override
-	protected EasyNBT createGuiDataTag() { return localData = EasyNBT.newNBT(); }
-	@Override
-	protected void onGuiClosedWithoutTransition()
+	public void drawScreen(int mouseX, int mouseY, float partialTicks)
 	{
-		if(layout.getOnClose()!=null)
-			layout.getOnClose().execute(wrapper, context.getMbWrapper(), CraftTweakerMC.getIPlayer(playerContainer.player));
+		while(!selectionEvents.isEmpty()) activated(selectionEvents.remove());
+		super.drawScreen(mouseX, mouseY, partialTicks);
+	}
+
+	@Override
+	protected void handleMouseClick(Slot slot, int slotId, int mouseButton, ClickType type)
+	{
+		if(layoutConfirmed) super.handleMouseClick(slot, slotId, mouseButton, type);
+	}
+
+	public void confirmLayout(TileEntityMultiblock tile, String signature, int window)
+	{
+		if(tile!=context||window!=container.windowId) return;
+		layoutConfirmed = layout.signature().equals(signature);
+		if(!layoutConfirmed)
+		{
+			CTMBLogger.error("CTMB GUI initializer built different server/client slots: "+layout.definition.name);
+			Minecraft.getMinecraft().player.closeScreen();
+		}
+	}
+
+	@Override
+	protected EasyNBT loadGuiData()
+	{
+		return localData;
+	}
+
+	@Override
+	protected EasyNBT createGuiDataTag()
+	{
+		return localData = EasyNBT.newNBT();
 	}
 }

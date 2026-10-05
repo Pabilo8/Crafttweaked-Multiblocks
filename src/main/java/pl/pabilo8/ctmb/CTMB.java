@@ -41,7 +41,8 @@ public class CTMB
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event)
 	{
-		GUI_NETWORK.registerMessage(new IIMessageHandler<MessageCTMBGuiChange>(), MessageCTMBGuiChange.class, 0, Side.SERVER);
+		GUI_NETWORK.registerMessage(new IIMessageHandler<>(), MessageCTMBGuiChange.class, 0, Side.SERVER);
+		pl.pabilo8.ctmb.common.storage.DustCapability.register();
 		proxy.preInit();
 	}
 

@@ -14,12 +14,7 @@ import crafttweaker.mc1120.liquid.MCLiquidStack;
 import flaxbeard.immersivepetroleum.api.crafting.PumpjackHandler;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidTank;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fml.common.Optional.Method;
-import net.minecraftforge.oredict.OreDictionary;
-import pl.pabilo8.ctmb.common.block.TileEntityMultiblock;
 import stanhebben.zenscript.annotations.Optional;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
@@ -37,49 +32,28 @@ public class MultiblockTileCTUtils
 	//--- Fluid Interaction ---//
 
 	@ZenMethod
-	@ZenDoc("Tries to fill or drain a bucket from/into a tank. Returns true if action was performed ; false when nothing happened.")
-	public static void bucketIntoTank(MultiblockTileCTWrapper ct, int tank, int inv, int bucketInputSlot, int bucketOutputSlot, boolean fillBucket)
+	@ZenDoc("Transfers one fluid container between named storage providers; returns whether it succeeded.")
+	public static boolean bucketIntoTank(pl.pabilo8.ctmb.common.storage.StorageAccess tank,
+										 pl.pabilo8.ctmb.common.storage.StorageAccess items, int input, int output, boolean fillBucket)
 	{
-		TileEntityMultiblock te = ct.te;
-
-		ItemStack bucket = CraftTweakerMC.getItemStack(ct.getItem(inv, bucketInputSlot));
-		ItemStack out = CraftTweakerMC.getItemStack(ct.getItem(inv, bucketOutputSlot));
-
-		IFluidHandlerItem capBucket = bucket.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
-		FluidTank t = te.tanks[tank];
-		int prev = t.getFluidAmount();
-
-		if(capBucket!=null)
-		{
-			ItemStack emptyContainer;
-			if(fillBucket)
-			{
-				if(t.getCapacity()==0)
-					return;
-				emptyContainer = blusunrize.immersiveengineering.common.util.Utils.fillFluidContainer(t,
-						bucket, out, null);
-			}
-			else
-			{
-				if(capBucket.getTankProperties()[0].getContents()==null)
-					return;
-				emptyContainer = blusunrize.immersiveengineering.common.util.Utils.drainFluidContainer(t,
-						bucket, out, null);
-			}
-
-			if(prev!=t.getFluidAmount())
-			{
-				if(!te.inventory.get(te.getInvOffset(inv, bucketOutputSlot)).isEmpty()&&OreDictionary.itemMatches(te.inventory.get(te.getInvOffset(inv, bucketOutputSlot)), emptyContainer, true))
-					te.inventory.get(te.getInvOffset(inv, bucketOutputSlot)).grow(emptyContainer.getCount());
-				else if(te.inventory.get(te.getInvOffset(inv, bucketOutputSlot)).isEmpty())
-					te.inventory.set(te.getInvOffset(inv, bucketOutputSlot), emptyContainer.copy());
-				te.inventory.get(te.getInvOffset(inv, bucketInputSlot)).shrink(1);
-				if(te.inventory.get(te.getInvOffset(inv, bucketInputSlot)).getCount() <= 0)
-					te.inventory.set(te.getInvOffset(inv, bucketInputSlot), ItemStack.EMPTY);
-
-				te.forceUpdate();
-			}
-		}
+		tank.require(pl.pabilo8.ctmb.common.storage.StorageDefinition.Kind.FLUID);
+		items.require(pl.pabilo8.ctmb.common.storage.StorageDefinition.Kind.ITEM);
+		if(tank.system!=items.system)
+			throw new IllegalArgumentException("Container transfer requires the same machine");
+		if(!tank.system.isServer()||input==output||items.item(input).isEmpty()) return false;
+		ItemStack container = items.item(input).copy();
+		container.setCount(1);
+		net.minecraftforge.fluids.FluidActionResult preview = fillBucket?
+				net.minecraftforge.fluids.FluidUtil.tryFillContainer(container, tank.fluidTank(), Integer.MAX_VALUE, null, false):
+				net.minecraftforge.fluids.FluidUtil.tryEmptyContainer(container, tank.fluidTank(), Integer.MAX_VALUE, null, false);
+		if(!preview.isSuccess()||!items.insert(output, preview.getResult(), true).isEmpty()) return false;
+		net.minecraftforge.fluids.FluidActionResult result = fillBucket?
+				net.minecraftforge.fluids.FluidUtil.tryFillContainer(container, tank.fluidTank(), Integer.MAX_VALUE, null, true):
+				net.minecraftforge.fluids.FluidUtil.tryEmptyContainer(container, tank.fluidTank(), Integer.MAX_VALUE, null, true);
+		if(!result.isSuccess()) return false;
+		items.extract(input, 1, false);
+		items.insert(output, result.getResult(), false);
+		return true;
 	}
 
 	//--- Excavator ---//
@@ -131,7 +105,7 @@ public class MultiblockTileCTUtils
 		PumpjackHandler.OilWorldInfo mineral = PumpjackHandler.getOilWorldInfo(CraftTweakerMC.getWorld(world),
 				pos.getX()>>4, pos.getZ()>>4);
 
-		if(mineral==null||mineral.getType()==null||mineral.current<=0)
+		if(mineral==null||mineral.getType()==null||mineral.current <= 0)
 			return null;
 
 		int cap = Math.min(mineral.current, amount);
