@@ -2,12 +2,15 @@ package pl.pabilo8.ctmb.common.storage;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import pl.pabilo8.ctmb.common.block.TileEntityMultiblock;
 import pl.pabilo8.immersiveintelligence.api.data.DataPacket;
 import pl.pabilo8.immersiveintelligence.api.data.IIDataHandlingUtils;
+import pl.pabilo8.immersiveintelligence.api.rotary.CapabilityRotaryEnergy;
+import pl.pabilo8.immersiveintelligence.api.rotary.IRotaryEnergy;
 
 import java.util.*;
 
@@ -20,6 +23,8 @@ public final class StorageSystem
 	public final NonNullList<ItemStack> inventory;
 	private final Map<String, StorageAccess> providers = new LinkedHashMap<>();
 	private final Map<String, StoragePortView> views = new HashMap<>();
+	private final Map<String, Integer> publishedRedstone = new HashMap<>();
+	private boolean outputting;
 
 	public StorageSystem(TileEntityMultiblock tile)
 	{
@@ -66,6 +71,7 @@ public final class StorageSystem
 
 	public void restore(NBTTagCompound tag)
 	{
+		publishedRedstone.clear();
 		providers.forEach((name, provider) -> {
 			if(tag.hasKey(name, 10)) provider.restore(tag.getCompoundTag(name));
 		});
@@ -134,24 +140,116 @@ public final class StorageSystem
 					}
 				if(input) provider.redstone(signal);
 			}
-			else if(provider.definition.kind==StorageDefinition.Kind.DATA&&provider.firstPacket()!=null)
+			else if(provider.definition.kind==StorageDefinition.Kind.ROTARY) tickRotaryInput(provider);
+		}
+	}
+
+	private EnumFacing direction(StorageDefinition.Port port)
+	{
+		return tile.getMultiblock().definition.direction(port.direction, tile.facing, tile.mirrored);
+	}
+
+	private TileEntity neighbour(int position, EnumFacing side)
+	{
+		BlockPos at = tile.getBlockPosForPos(position).offset(side);
+		if(!tile.getWorld().isBlockLoaded(at)) return null;
+		TileEntity target = tile.getWorld().getTileEntity(at);
+		// Never circulate resources or rotary power into this machine's own parts.
+		return target instanceof TileEntityMultiblock&&((TileEntityMultiblock)target).master()==tile?null: target;
+	}
+
+	private void tickRotaryInput(StorageAccess provider)
+	{
+		boolean input = false;
+		float speed = 0, torque = 0;
+		double bestPower = -1;
+		for(StorageDefinition.Port port : provider.definition.ports())
+			if(port.input)
 			{
-				boolean sent = false;
+				input = true;
+				EnumFacing side = direction(port), otherSide = side.getOpposite();
+				for(int position : tile.getMultiblock().definition.getPOI(port.poi))
+				{
+					TileEntity target = neighbour(position, side);
+					IRotaryEnergy source = target==null?null: target.getCapability(CapabilityRotaryEnergy.ROTARY_ENERGY, otherSide);
+					if(source==null||!source.getSide(otherSide).canOutput()) continue;
+					float s = source.getOutputRotationSpeed(), t = source.getOutputTorque();
+					if(!Float.isFinite(s)||!Float.isFinite(t)||s<0||t<0) continue;
+					double power = (double)s*t;
+					if(power>bestPower) {bestPower = power; speed = s; torque = t;}
+				}
+			}
+		if(!input) return; // Output-only providers can be driven by a generator script.
+		if(speed==0||torque==0)
+		{
+			provider.rotary().setRotationSpeed(0);
+			provider.rotary().setTorque(0);
+		}
+		else provider.rotary().grow(speed, torque, 0.01f);
+	}
+
+	/** Called once by the master after production and script updates. */
+	public void tickOutputs()
+	{
+		if(!isServer()||outputting) return;
+		outputting = true;
+		try
+		{
+			for(StorageAccess provider : providers.values())
+			{
+				if(provider.definition.kind==StorageDefinition.Kind.REDSTONE)
+				{
+					if(!Objects.equals(publishedRedstone.get(provider.definition.name), provider.getRedstone()))
+						redstoneChanged(provider.definition);
+					continue;
+				}
+				if(!provider.definition.autoOutput()) continue;
+				if(provider.definition.kind==StorageDefinition.Kind.DATA)
+				{
+					outputData(provider);
+					continue;
+				}
+				int remaining = provider.definition.outputRate();
+				Set<String> visited = new HashSet<>();
 				for(StorageDefinition.Port port : provider.definition.ports())
 					if(!port.input)
 					{
-						EnumFacing side = tile.getMultiblock().definition.direction(port.direction, tile.facing, tile.mirrored);
+						EnumFacing side = direction(port);
 						for(int position : tile.getMultiblock().definition.getPOI(port.poi))
-							sent |= IIDataHandlingUtils.sendPacketAdjacently(provider.firstPacket().clone(), tile.getWorld(), tile.getBlockPosForPos(position), side);
+						{
+							// Item declarations may select different slots on the same face.
+							String key = position+":"+side;
+							if(remaining==0||(provider.definition.kind!=StorageDefinition.Kind.ITEM&&!visited.add(key))) continue;
+							TileEntity target = neighbour(position, side);
+							if(target!=null) remaining -= StoragePortTransfer.push(provider, port, target, side.getOpposite(), remaining);
+						}
 					}
-				if(sent) provider.removePacket();
 			}
+		}
+		finally {outputting = false;}
+	}
+
+	private void outputData(StorageAccess provider)
+	{
+		if(provider.firstPacket()!=null)
+		{
+			boolean sent = false;
+			for(StorageDefinition.Port port : provider.definition.ports())
+				if(!port.input)
+				{
+					EnumFacing side = direction(port);
+					for(int position : tile.getMultiblock().definition.getPOI(port.poi))
+						if(neighbour(position, side)!=null)
+							sent |= IIDataHandlingUtils.sendPacketAdjacently(provider.firstPacket().clone(), tile.getWorld(), tile.getBlockPosForPos(position), side);
+				}
+			if(sent) provider.removePacket();
 		}
 	}
 
 	public void redstoneChanged(StorageDefinition definition)
 	{
 		if(!isServer()) return;
+		publishedRedstone.put(definition.name, get(definition.name).getRedstone());
 		for(StorageDefinition.Port port : definition.ports())
 			if(!port.input)
 				for(int position : tile.getMultiblock().definition.getPOI(port.poi))

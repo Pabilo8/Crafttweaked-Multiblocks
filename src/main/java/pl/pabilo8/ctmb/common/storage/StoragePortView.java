@@ -9,6 +9,7 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
 import net.minecraftforge.items.IItemHandler;
 import pl.pabilo8.immersiveintelligence.api.crafting.DustStack;
+import pl.pabilo8.immersiveintelligence.api.rotary.IRotaryEnergy;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -18,15 +19,17 @@ import java.util.Map;
 /**
  * A capability view exposes the union of permitted provider slots at one physical face.
  */
-public final class StoragePortView implements IItemHandler, IFluidHandler, IEnergyStorage, IDustHandler
+public final class StoragePortView implements IItemHandler, IFluidHandler, IEnergyStorage, IDustHandler, IRotaryEnergy
 {
 	private final StorageSystem system;
+	private final EnumFacing side;
 	private final List<ItemRef> slots = new ArrayList<>();
 	private final Map<StorageAccess, Access> providers = new LinkedHashMap<>();
 
 	StoragePortView(StorageSystem system, int position, EnumFacing side)
 	{
 		this.system = system;
+		this.side = side;
 		for(StorageAccess storage : system.providers())
 		{
 			Access access = new Access();
@@ -62,6 +65,50 @@ public final class StoragePortView implements IItemHandler, IFluidHandler, IEner
 	public boolean has(StorageDefinition.Kind kind)
 	{
 		return providers.keySet().stream().anyMatch(s -> s.definition.kind==kind);
+	}
+
+	private StorageAccess rotaryProvider()
+	{
+		for(StorageAccess provider : providers.keySet())
+			if(provider.definition.kind==StorageDefinition.Kind.ROTARY) return provider;
+		return null;
+	}
+
+	@Override
+	public float getRotationSpeed()
+	{
+		StorageAccess provider = rotaryProvider();
+		return provider==null?0: provider.getRotationSpeed();
+	}
+
+	@Override
+	public float getTorque()
+	{
+		StorageAccess provider = rotaryProvider();
+		return provider==null?0: provider.getTorque();
+	}
+
+	@Override
+	public void setRotationSpeed(float speed)
+	{
+		StorageAccess provider = rotaryProvider();
+		if(provider!=null&&providers.get(provider).input) provider.rotary().setRotationSpeed(speed);
+	}
+
+	@Override
+	public void setTorque(float torque)
+	{
+		StorageAccess provider = rotaryProvider();
+		if(provider!=null&&providers.get(provider).input) provider.rotary().setTorque(torque);
+	}
+
+	@Override
+	public RotationSide getSide(EnumFacing facing)
+	{
+		StorageAccess provider = rotaryProvider();
+		if(provider==null||facing!=side) return RotationSide.NONE;
+		Access access = providers.get(provider);
+		return access.input?(access.output?RotationSide.BOTH: RotationSide.INPUT): RotationSide.OUTPUT;
 	}
 
 	private ItemRef slot(int index)

@@ -38,6 +38,15 @@ public final class ManualTweaker
 	 * Registers an entry and creates folders from its path.
 	 */
 	@ZenMethod
+	public static CTMBManualEntry addEntry(String name, String category)
+	{
+		return addEntry(name, category, new CTMBManualPage[0]);
+	}
+
+	/**
+	 * Registers an entry and creates folders from its path.
+	 */
+	@ZenMethod
 	public static CTMBManualEntry addEntry(String name, String category, CTMBManualPage... pages)
 	{
 		if(name==null||!name.matches("[a-z0-9_.-]+:[a-z0-9_.-]+(/[a-z0-9_.-]+)*"))

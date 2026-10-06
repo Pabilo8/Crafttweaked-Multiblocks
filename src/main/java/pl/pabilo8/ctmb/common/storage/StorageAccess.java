@@ -36,6 +36,7 @@ public final class StorageAccess
 	private final FluidTank fluid;
 	private final CTMBDustTank dust;
 	private final FluxStorageAdvanced energy;
+	private final CTMBRotaryStorage rotary;
 	private final Deque<DataPacket> packets = new ArrayDeque<>();
 	private int redstone;
 
@@ -54,6 +55,7 @@ public final class StorageAccess
 		}: null;
 		dust = definition.kind==StorageDefinition.Kind.DUST?new CTMBDustTank(definition.size(), system::changed): null;
 		energy = definition.kind==StorageDefinition.Kind.ENERGY?new FluxStorageAdvanced(definition.size()): null;
+		rotary = definition.kind==StorageDefinition.Kind.ROTARY?new CTMBRotaryStorage(system, definition): null;
 	}
 
 	@ZenGetter("name")
@@ -108,6 +110,29 @@ public final class StorageAccess
 	{
 		require(StorageDefinition.Kind.ENERGY);
 		return energy;
+	}
+
+	public CTMBRotaryStorage rotary()
+	{
+		require(StorageDefinition.Kind.ROTARY);
+		return rotary;
+	}
+
+	@ZenMethod
+	public float getRotationSpeed() {return rotary().getRotationSpeed();}
+
+	@ZenMethod
+	public float getTorque() {return rotary().getTorque();}
+
+	/** Speed in degrees/tick and torque in IT; generators update this continuous state. */
+	@ZenMethod
+	public void setRotaryPower(float speed, float torque)
+	{
+		mutable();
+		if(!Float.isFinite(speed)||!Float.isFinite(torque)||speed<0||torque<0)
+			throw new IllegalArgumentException("Rotary power requires finite, non-negative D/t and IT");
+		rotary().setRotationSpeed(speed);
+		rotary().setTorque(torque);
 	}
 
 	public ItemStack item(int slot)
@@ -371,6 +396,9 @@ public final class StorageAccess
 			case ENERGY:
 				tag.setInteger("value", energy.getEnergyStored());
 				break;
+			case ROTARY:
+				tag.setTag("contents", rotary.serializeNBT());
+				break;
 			case REDSTONE:
 				tag.setInteger("value", redstone);
 				break;
@@ -418,6 +446,9 @@ public final class StorageAccess
 				break;
 			case ENERGY:
 				energy.setEnergy(Math.max(0, Math.min(getSize(), tag.getInteger("value"))));
+				break;
+			case ROTARY:
+				rotary.deserializeNBT(tag.getCompoundTag("contents"));
 				break;
 			case REDSTONE:
 				redstone = Math.max(0, Math.min(15, tag.getInteger("value")));

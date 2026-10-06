@@ -156,7 +156,7 @@ public class ResourceLoader
 					JsonObject fac = new JsonObject();
 					JsonObject transform = new JsonObject();
 					JsonObject rotation = new JsonObject();
-					rotation.addProperty("y", (int)f.getHorizontalAngle());
+					rotation.addProperty("y", (int)f.getOpposite().getHorizontalAngle());
 					transform.add("rotation", rotation);
 					fac.add("transform", transform);
 
@@ -186,7 +186,7 @@ public class ResourceLoader
 						null
 				));
 				variants.add("boolean0", getBooleanProperty(
-						getNamedProperty("model", "ctmb:"+modelName+"_mirrored.obj"),
+						getNamedProperty("model", "ctmb:"+modelName+"_flipped.obj"),
 						getNamedProperty("model", "ctmb:"+modelName+".obj")
 				));
 

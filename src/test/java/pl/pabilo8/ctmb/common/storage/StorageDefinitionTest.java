@@ -37,4 +37,19 @@ class StorageDefinitionTest
 		assertThrows(IllegalArgumentException.class, () -> new StorageDefinition("items", StorageDefinition.Kind.ITEM).withInputPort("missing").freeze(definition()));
 		assertThrows(IllegalArgumentException.class, () -> new StorageDefinition("items", StorageDefinition.Kind.ITEM).withInputPort("input", new int[]{1}).freeze(definition()));
 	}
+
+	@Test
+	void rotaryLimitsAndOutputRatesRequireTheirMatchingKindsAndFreeze()
+	{
+		assertThrows(IllegalArgumentException.class, () -> new StorageDefinition("shaft", StorageDefinition.Kind.ROTARY).withSize(2));
+		assertThrows(IllegalArgumentException.class, () -> new StorageDefinition("shaft", StorageDefinition.Kind.ROTARY).withRotaryLimits(Float.NaN, 4));
+		assertThrows(IllegalArgumentException.class, () -> new StorageDefinition("items", StorageDefinition.Kind.ITEM).withRotaryLimits(20, 4));
+		assertThrows(IllegalArgumentException.class, () -> new StorageDefinition("items", StorageDefinition.Kind.ITEM).withOutputRate(0));
+		assertThrows(IllegalArgumentException.class, () -> new StorageDefinition("shaft", StorageDefinition.Kind.ROTARY).withOutputRate(20));
+		StorageDefinition tank = new StorageDefinition("fluid", StorageDefinition.Kind.FLUID).withOutputRate(250).withAutoOutput(false);
+		tank.freeze(definition());
+		assertEquals(250, tank.outputRate());
+		assertFalse(tank.autoOutput());
+		assertThrows(IllegalStateException.class, () -> tank.withAutoOutput(true));
+	}
 }

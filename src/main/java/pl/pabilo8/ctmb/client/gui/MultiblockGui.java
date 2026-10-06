@@ -76,7 +76,7 @@ public class MultiblockGui extends DecoGui<TileEntityMultiblock, MultiblockConta
 		// Preserve user-entered control state on resizing; bound storage views keep native suppliers.
 		previous.forEach((name, data) -> {
 			GuiComponent definition = layout.components.get(name);
-			if(definition!=null&&definition.source()==null&&components.containsKey(name))
+			if(definition!=null&&definition.source()==null&&definition.production()==null&&components.containsKey(name))
 				components.get(name).setData(data);
 		});
 	}
@@ -141,6 +141,7 @@ public class MultiblockGui extends DecoGui<TileEntityMultiblock, MultiblockConta
 		DecoComponentAccess access = (DecoComponentAccess)component;
 		access.setData(CraftTweakerMC.getIData(data.unwrap()));
 		if(definition.getType().equals("energy")) ((CTMBDecoBar)component).bindEnergy(definition.source());
+		if(definition.production()!=null)((CTMBDecoBar)component).bindProduction(definition.production());
 		component.withOnHovered((widget, button, mx, my) -> {
 			if(definition.hover()!=null)
 				definition.hover().execute(access, wrapper, context.getMbWrapper(), mx-getScreenLeft(), my-getScreenTop(), CraftTweakerMC.getIPlayer(playerContainer.player));

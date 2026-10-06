@@ -2,7 +2,6 @@ package pl.pabilo8.ctmb.common.block;
 
 import crafttweaker.annotations.ZenRegister;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.Rotation;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenGetter;
 import stanhebben.zenscript.annotations.ZenMethod;
@@ -11,7 +10,8 @@ import stanhebben.zenscript.annotations.ZenProperty;
 import java.util.Locale;
 
 /**
- * Relative directions in the multiblock's frame; mirroring swaps the quarter turns.
+ * Relative directions exported by IIToolkit. Its quarter turns are opposite
+ * Minecraft's Rotation names; mirroring reverses them once more.
  */
 @ZenRegister
 @ZenClass("mods.ctmb.multiblock.Direction")
@@ -41,14 +41,22 @@ public enum Direction
 
 	public EnumFacing resolve(EnumFacing facing, boolean mirrored)
 	{
-		if(this==UP) return EnumFacing.UP;
-		if(this==DOWN) return EnumFacing.DOWN;
-		Direction direction = this;
-		if(mirrored)
+		switch(this)
 		{
-			if(direction==CLOCKWISE_90) direction = COUNTERCLOCKWISE_90;
-			else if(direction==COUNTERCLOCKWISE_90) direction = CLOCKWISE_90;
+			case NONE:
+				return facing;
+			case CLOCKWISE_90:
+				return mirrored?facing.rotateY(): facing.rotateYCCW();
+			case CLOCKWISE_180:
+				return facing.getOpposite();
+			case COUNTERCLOCKWISE_90:
+				return mirrored?facing.rotateYCCW(): facing.rotateY();
+			case UP:
+				return EnumFacing.UP;
+			case DOWN:
+				return EnumFacing.DOWN;
+			default:
+				throw new AssertionError(this);
 		}
-		return Rotation.valueOf(direction.name()).rotate(facing);
 	}
 }

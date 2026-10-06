@@ -15,8 +15,8 @@ class DirectionTest
 			{
 				assertEquals(facing, Direction.NONE.resolve(facing, mirror));
 				assertEquals(facing.getOpposite(), Direction.CLOCKWISE_180.resolve(facing, mirror));
-				assertEquals(mirror?facing.rotateYCCW(): facing.rotateY(), Direction.CLOCKWISE_90.resolve(facing, mirror));
-				assertEquals(mirror?facing.rotateY(): facing.rotateYCCW(), Direction.COUNTERCLOCKWISE_90.resolve(facing, mirror));
+				assertEquals(mirror?facing.rotateY(): facing.rotateYCCW(), Direction.CLOCKWISE_90.resolve(facing, mirror));
+				assertEquals(mirror?facing.rotateYCCW(): facing.rotateY(), Direction.COUNTERCLOCKWISE_90.resolve(facing, mirror));
 				assertEquals(EnumFacing.UP, Direction.UP.resolve(facing, mirror));
 				assertEquals(EnumFacing.DOWN, Direction.DOWN.resolve(facing, mirror));
 			}

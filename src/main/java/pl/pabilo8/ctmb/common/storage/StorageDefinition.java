@@ -18,11 +18,14 @@ import java.util.List;
 public final class StorageDefinition
 {
 	public enum Kind
-	{ITEM, FLUID, DUST, ENERGY, DATA, REDSTONE}
+	{ITEM, FLUID, DUST, ENERGY, ROTARY, DATA, REDSTONE}
 
 	public final String name;
 	public final Kind kind;
 	private int size = 1;
+	private int outputRate = Integer.MAX_VALUE;
+	private boolean autoOutput = true;
+	private float maxSpeed = Float.MAX_VALUE, maxTorque = Float.MAX_VALUE;
 	private boolean frozen;
 	private final List<Port> ports = new ArrayList<>();
 
@@ -37,11 +40,46 @@ public final class StorageDefinition
 	public StorageDefinition withSize(int size)
 	{
 		mutable();
-		if(size < 1||(kind==Kind.REDSTONE&&size!=1))
+		if(size < 1||((kind==Kind.REDSTONE||kind==Kind.ROTARY)&&size!=1))
 			throw new IllegalArgumentException("Invalid "+kind+" storage size: "+size);
 		this.size = size;
 		return this;
 	}
+
+	/** Maximum items, fluid/dust mB or IF pushed per provider per tick, shared by its ports. */
+	@ZenMethod
+	public StorageDefinition withOutputRate(int amount)
+	{
+		mutable();
+		if(amount<=0||(kind!=Kind.ITEM&&kind!=Kind.FLUID&&kind!=Kind.DUST&&kind!=Kind.ENERGY))
+			throw new IllegalArgumentException("Output rate requires item, fluid, dust or energy storage and a positive amount");
+		outputRate = amount;
+		return this;
+	}
+
+	@ZenMethod
+	public StorageDefinition withAutoOutput(boolean enabled)
+	{
+		mutable();
+		autoOutput = enabled;
+		return this;
+	}
+
+	@ZenMethod
+	public StorageDefinition withRotaryLimits(float speed, float torque)
+	{
+		mutable();
+		if(kind!=Kind.ROTARY||!Float.isFinite(speed)||!Float.isFinite(torque)||speed<=0||torque<=0)
+			throw new IllegalArgumentException("Rotary limits require positive finite D/t and IT values");
+		maxSpeed = speed;
+		maxTorque = torque;
+		return this;
+	}
+
+	public int outputRate() {return outputRate;}
+	public boolean autoOutput() {return autoOutput;}
+	public float maxSpeed() {return maxSpeed;}
+	public float maxTorque() {return maxTorque;}
 
 	@ZenMethod
 	public StorageDefinition withInputPort(String poi)

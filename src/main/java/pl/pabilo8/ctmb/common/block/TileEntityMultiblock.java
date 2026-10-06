@@ -28,6 +28,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.energy.CapabilityEnergy;
+import pl.pabilo8.immersiveintelligence.api.rotary.CapabilityRotaryEnergy;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
@@ -58,6 +59,8 @@ public class TileEntityMultiblock extends TileEntityMultiblockMetal<TileEntityMu
 	private MultiblockTileCTWrapper mbWrapper;
 
 	private StorageSystem storage;
+
+	private pl.pabilo8.ctmb.common.production.ProductionSystem production;
 
 	private boolean shouldSendUpdate = false;
 
@@ -106,7 +109,12 @@ public class TileEntityMultiblock extends TileEntityMultiblockMetal<TileEntityMu
 	{
 		if(message.hasKey("ctmbGuiStorage", NBT.TAG_COMPOUND))
 		{
-			if(!isDummy()) getStorageSystem().restore(message.getCompoundTag("ctmbGuiStorage"));
+			if(!isDummy())
+			{
+				NBTTagCompound snapshot = message.getCompoundTag("ctmbGuiStorage");
+				getStorageSystem().restore(snapshot);
+				getProductionSystem().restore(snapshot.getCompoundTag("@production"));
+			}
 			if(message.hasKey("ctmbGuiLayout"))
 				pl.pabilo8.ctmb.CTMB.proxy.confirmGuiLayout(this, message.getString("ctmbGuiLayout"), message.getInteger("ctmbWindow"));
 			return;
@@ -141,7 +149,22 @@ public class TileEntityMultiblock extends TileEntityMultiblockMetal<TileEntityMu
 	 */
 	public NBTTagCompound getGuiStorageData()
 	{
-		return getStorageSystem().save();
+		NBTTagCompound tag = getStorageSystem().save();
+		tag.setTag("@production", getProductionSystem().save());
+		return tag;
+	}
+
+	public pl.pabilo8.ctmb.common.production.ProductionSystem getProductionSystem()
+	{
+		if(isDummy())
+		{
+			TileEntityMultiblock master = master();
+			if(master==null) throw new IllegalStateException("Missing production master");
+			return master.getProductionSystem();
+		}
+		if(production==null)
+			production = new pl.pabilo8.ctmb.common.production.ProductionSystem(getStorageSystem());
+		return production;
 	}
 
 	public StorageSystem getStorageSystem()
@@ -181,6 +204,7 @@ public class TileEntityMultiblock extends TileEntityMultiblockMetal<TileEntityMu
 		if(capability==CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY)
 			return view!=null&&view.has(StorageDefinition.Kind.FLUID);
 		if(capability==CapabilityEnergy.ENERGY) return view!=null&&view.has(StorageDefinition.Kind.ENERGY);
+		if(capability==CapabilityRotaryEnergy.ROTARY_ENERGY) return view!=null&&view.has(StorageDefinition.Kind.ROTARY);
 		if(capability==DustCapability.CAPABILITY) return view!=null&&view.has(StorageDefinition.Kind.DUST);
 		return super.hasCapability(capability, side);
 	}
@@ -190,7 +214,7 @@ public class TileEntityMultiblock extends TileEntityMultiblockMetal<TileEntityMu
 	public <T> T getCapability(Capability<T> capability, @Nullable EnumFacing side)
 	{
 		if(capability==CapabilityItemHandler.ITEM_HANDLER_CAPABILITY||capability==CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY
-				||capability==CapabilityEnergy.ENERGY||capability==DustCapability.CAPABILITY)
+				||capability==CapabilityEnergy.ENERGY||capability==CapabilityRotaryEnergy.ROTARY_ENERGY||capability==DustCapability.CAPABILITY)
 			return hasCapability(capability, side)?capability.cast((T)portView(side)): null;
 		return super.getCapability(capability, side);
 	}
@@ -289,6 +313,8 @@ public class TileEntityMultiblock extends TileEntityMultiblockMetal<TileEntityMu
 
 		if(!isDummy()&&storage!=null) nbt.setTag("storage", storage.save());
 
+		if(!isDummy()&&production!=null) nbt.setTag("production", production.save());
+
 		if(mbWrapper!=null)
 		{
 			NBTTagCompound custom = mbWrapper.saveData();
@@ -318,6 +344,7 @@ public class TileEntityMultiblock extends TileEntityMultiblockMetal<TileEntityMu
 		if(!isDummy())
 		{
 			if(nbt.hasKey("storage", NBT.TAG_COMPOUND)) getStorageSystem().restore(nbt.getCompoundTag("storage"));
+			getProductionSystem().restore(nbt.getCompoundTag("production"));
 			getMbWrapper().loadData(nbt.getCompoundTag("custom"));
 		}
 
@@ -334,9 +361,12 @@ public class TileEntityMultiblock extends TileEntityMultiblockMetal<TileEntityMu
 			return;
 
 		getStorageSystem().tick();
+		getProductionSystem().tick();
 
 		if(multiblock!=Multiblock.DEFAULT_MULTIBLOCK&&multiblock.onUpdate!=null)
 			multiblock.onUpdate.execute(getMbWrapper());
+
+		getStorageSystem().tickOutputs();
 
 		if(shouldSendUpdate)
 		{

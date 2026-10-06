@@ -42,7 +42,7 @@ public final class GuiBackgroundBuilder
 	}
 
 	@ZenMethod
-	public GuiBackgroundBuilder withSlot(int slot, String style, int x, int y)
+	public GuiBackgroundBuilder withSlot(int slot, SlotStyle style, int x, int y)
 	{
 		List<StorageAccess> items = layout.tile.getStorageSystem().items();
 		if(items.size()!=1)
@@ -51,23 +51,23 @@ public final class GuiBackgroundBuilder
 	}
 
 	@ZenMethod
-	public GuiBackgroundBuilder withSlot(StorageAccess storage, int slot, String style, int x, int y)
+	public GuiBackgroundBuilder withSlot(StorageAccess storage, int slot, SlotStyle style, int x, int y)
 	{
 		MultiblockGuiLayout.BackgroundBox box = box();
 		if(storage.system!=layout.tile.getStorageSystem())
 			throw new IllegalArgumentException("GUI slot storage belongs to a different machine");
 		layout.tile.getStorageSystem().flatSlot(storage.getName(), slot);
-		layout.slots.add(new MultiblockGuiLayout.SlotDefinition(storage.getName(), slot, style, box.x+x, box.y+y));
+		layout.slots.add(new MultiblockGuiLayout.SlotDefinition(storage.getName(), slot, style.nativeName(), box.x+x, box.y+y));
 		return this;
 	}
 
 	@ZenMethod
-	public GuiBackgroundBuilder withPlayerInventory(String style, int x, int y)
+	public GuiBackgroundBuilder withPlayerInventory(SlotStyle style, int x, int y)
 	{
 		MultiblockGuiLayout.BackgroundBox box = box();
 		if(layout.playerInventory) throw new IllegalArgumentException("Player inventory already added");
 		layout.playerInventory = true;
-		layout.inventoryStyle = SlotStyle.validate(style);
+		layout.inventoryStyle = style.nativeName();
 		layout.inventoryX = box.x+x;
 		layout.inventoryY = box.y+y;
 		return this;

@@ -108,6 +108,12 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 	}
 
 	@ZenMethod
+	public pl.pabilo8.ctmb.common.production.ProductionAccess getProduction(String name)
+	{
+		return te.getProductionSystem().get(name);
+	}
+
+	@ZenMethod
 	public boolean isPOI(String name, int position)
 	{
 		return te.getMultiblock().definition.isPOI(name, position);

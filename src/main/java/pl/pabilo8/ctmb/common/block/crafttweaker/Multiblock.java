@@ -44,6 +44,7 @@ public class Multiblock extends MultiblockStuctureBase<TileEntityMultiblock>
 
 	public final MultiblockDefinition definition;
 	public final Map<String, StorageDefinition> storages = new LinkedHashMap<>();
+	public final Map<String, pl.pabilo8.ctmb.common.production.ProductionHandler> productionHandlers = new LinkedHashMap<>();
 	private boolean frozen;
 
 	public IMultiblockFunction onUpdate = null;
@@ -88,6 +89,19 @@ public class Multiblock extends MultiblockStuctureBase<TileEntityMultiblock>
 	public void freeze()
 	{
 		storages.values().forEach(storage -> storage.freeze(definition));
+		// Speed/torque cannot be combined like item slots: one provider per rotary face.
+		java.util.Set<String> rotaryFaces = new java.util.HashSet<>();
+		for(StorageDefinition storage : storages.values())
+			if(storage.kind==StorageDefinition.Kind.ROTARY)
+			{
+				java.util.Set<String> providerFaces = new java.util.HashSet<>();
+				for(StorageDefinition.Port port : storage.ports())
+					for(int position : definition.getPOI(port.poi))
+						providerFaces.add(position+":"+definition.getDirection(port.direction));
+				for(String face : providerFaces)
+					if(!rotaryFaces.add(face)) throw new IllegalArgumentException("Multiple rotary providers on face "+face);
+			}
+		productionHandlers.values().forEach(pl.pabilo8.ctmb.common.production.ProductionHandler::freeze);
 		frozen = true;
 	}
 
@@ -239,6 +253,43 @@ public class Multiblock extends MultiblockStuctureBase<TileEntityMultiblock>
 		return definition==null?java.util.Collections.emptyList(): definition.bounds(position, facing, mirrored);
 	}
 
+	@ZenMethod
+	public pl.pabilo8.ctmb.common.production.ProductionHandler setProductionHandler(String name)
+	{
+		if(frozen) throw new IllegalStateException("Multiblock definitions are frozen");
+		if(productionHandlers.containsKey(name)) throw new IllegalArgumentException("Duplicate production handler: "+name);
+		pl.pabilo8.ctmb.common.production.ProductionHandler handler = new pl.pabilo8.ctmb.common.production.ProductionHandler(this, name);
+		productionHandlers.put(name, handler);
+		return handler;
+	}
+
+	@ZenMethod
+	public pl.pabilo8.ctmb.common.production.ProductionHandler getProductionHandler(String name)
+	{
+		pl.pabilo8.ctmb.common.production.ProductionHandler handler = productionHandlers.get(name);
+		if(handler==null) throw new IllegalArgumentException("Unknown production handler: "+name);
+		return handler;
+	}
+
+	@ZenMethod
+	public pl.pabilo8.ctmb.common.production.ProductionRecipe addProductionRecipe(crafttweaker.api.item.IIngredient input, crafttweaker.api.item.IIngredient output)
+	{
+		return addProductionRecipe(new crafttweaker.api.item.IIngredient[]{input, output});
+	}
+
+	@ZenMethod
+	public pl.pabilo8.ctmb.common.production.ProductionRecipe addProductionRecipe(crafttweaker.api.item.IIngredient... arguments)
+	{
+		if(productionHandlers.size()!=1) throw new IllegalArgumentException("Select a production handler when the machine has more than one");
+		return productionHandlers.values().iterator().next().add(arguments);
+	}
+
+	@ZenMethod
+	public pl.pabilo8.ctmb.common.production.ProductionRecipe addProductionRecipe(String handler, crafttweaker.api.item.IIngredient... arguments)
+	{
+		return getProductionHandler(handler).add(arguments);
+	}
+
 	private StorageDefinition storage(String name, StorageDefinition.Kind kind)
 	{
 		if(frozen) throw new IllegalStateException("Multiblock storage definitions are frozen");
@@ -270,6 +321,12 @@ public class Multiblock extends MultiblockStuctureBase<TileEntityMultiblock>
 	public StorageDefinition setEnergyStorage(String name)
 	{
 		return storage(name, StorageDefinition.Kind.ENERGY);
+	}
+
+	@ZenMethod
+	public StorageDefinition setRotaryStorage(String name)
+	{
+		return storage(name, StorageDefinition.Kind.ROTARY);
 	}
 
 	@ZenMethod

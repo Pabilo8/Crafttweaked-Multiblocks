@@ -24,6 +24,12 @@ public class CTMBManualCategory
 	}
 
 	@ZenMethod
+	public CTMBManualEntry addEntry(String name)
+	{
+		return ManualTweaker.addEntry(name, this.name);
+	}
+
+	@ZenMethod
 	public CTMBManualEntry addEntry(String name, CTMBManualPage... pages)
 	{
 		return ManualTweaker.addEntry(name, this.name, pages);

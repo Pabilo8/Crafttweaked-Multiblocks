@@ -11,5 +11,6 @@ dependencies {
 	// CTMB currently references the Immersive Petroleum API. Keep both its API and mod available in development.
 	compileOnly rfg.deobf("curse.maven:immersive-petroleum-268250:${mkxString('immersive_petroleum_version')}")
 	runtimeOnlyNonPublishable rfg.deobf("curse.maven:immersive-petroleum-268250:${mkxString('immersive_petroleum_version')}")
+	compileOnly rfg.deobf("mezz.jei:jei_1.12.2:${mkxString('jei_version')}:api")
 	runtimeOnlyNonPublishable rfg.deobf("mezz.jei:jei_1.12.2:${mkxString('jei_version')}")
 }

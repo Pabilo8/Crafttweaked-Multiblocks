@@ -28,6 +28,7 @@ public final class GuiComponent
 	private int x, y;
 	private final EasyNBT options = EasyNBT.newNBT();
 	private StorageAccess source;
+	private pl.pabilo8.ctmb.common.production.ProductionAccess production;
 	private Event hover, press;
 	private boolean frozen;
 
@@ -227,6 +228,21 @@ public final class GuiComponent
 	}
 
 	@ZenMethod
+	public GuiComponent withDataSource(pl.pabilo8.ctmb.common.production.ProductionAccess production)
+	{
+		mutable();
+		if(!type.equals("bar")||production==null)
+			throw new IllegalArgumentException("Production sources require a progress bar");
+		this.production = production;
+		return this;
+	}
+
+	public pl.pabilo8.ctmb.common.production.ProductionAccess production()
+	{
+		return production;
+	}
+
+	@ZenMethod
 	public GuiComponent withOnHover(Event event)
 	{
 		mutable();
@@ -248,6 +264,8 @@ public final class GuiComponent
 			throw new IllegalArgumentException(type+" requires withDataSource(storage)");
 		if(source!=null&&source.system!=tile.getStorageSystem())
 			throw new IllegalArgumentException("Component source belongs to another machine");
+		if(production!=null&&production.storage!=tile.getStorageSystem())
+			throw new IllegalArgumentException("Production source belongs to another machine");
 		if(type.equals("bar")&&!options.hasKey("max"))
 		{
 			options.withInt("min", 0).withInt("max", 100);

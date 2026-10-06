@@ -95,15 +95,18 @@ public class BlockCTMBMultiblock extends Block
 
 		setHardness(2f);
 		setResistance(13f);
-
-		// TODO: 16.02.2022 check
-		lightOpacity = 255;
 	}
 
 	public void setBlockParams(float hardness, float resistance)
 	{
 		setHardness(hardness);
 		setResistance(resistance);
+	}
+
+	@Override
+	public boolean canRenderInLayer(IBlockState state, BlockRenderLayer layer)
+	{
+		return layer==BlockRenderLayer.CUTOUT_MIPPED;
 	}
 
 	@Nonnull
@@ -283,6 +286,8 @@ public class BlockCTMBMultiblock extends Block
 							if(!inventory.get(i).isEmpty()) claimed.add(inventory.get(i).copy());
 							inventory.set(i, ItemStack.EMPTY);
 						}
+						if(master instanceof TileEntityMultiblock)
+							claimed.addAll(((TileEntityMultiblock)master).getProductionSystem().claimItems());
 						// Clear ownership before disassembly can invoke another part's break hook.
 						for(ItemStack item : claimed)
 							world.spawnEntity(new EntityItem(world, pos.getX()+.5, pos.getY()+.5, pos.getZ()+.5, item));

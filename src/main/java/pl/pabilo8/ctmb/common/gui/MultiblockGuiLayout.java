@@ -24,7 +24,7 @@ public final class MultiblockGuiLayout
 	public final List<GuiDefinition> links = new ArrayList<>();
 	public boolean playerInventory;
 	public int inventoryX, inventoryY;
-	public String inventoryStyle = SlotStyle.VANILLA;
+	public String inventoryStyle = "VANILLA";
 	private boolean finished;
 	private int width, height;
 
@@ -136,6 +136,10 @@ public final class MultiblockGuiLayout
 		for(SlotDefinition slot : slots)
 			out.append('|').append(slot.storage).append(':').append(slot.slot).append(':').append(slot.x).append(',').append(slot.y);
 		out.append('|').append(playerInventory).append(':').append(inventoryX).append(',').append(inventoryY);
+		components.forEach((name, component) -> {
+			if(component.production()!=null)
+				out.append('|').append(name).append(":production:").append(component.production().handler.uid());
+		});
 		return out.toString();
 	}
 
