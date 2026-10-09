@@ -119,17 +119,25 @@ public final class StorageAccess
 	}
 
 	@ZenMethod
-	public float getRotationSpeed() {return rotary().getRotationSpeed();}
+	public float getRotationSpeed()
+	{
+		return rotary().getRotationSpeed();
+	}
 
 	@ZenMethod
-	public float getTorque() {return rotary().getTorque();}
+	public float getTorque()
+	{
+		return rotary().getTorque();
+	}
 
-	/** Speed in degrees/tick and torque in IT; generators update this continuous state. */
+	/**
+	 * Speed in degrees/tick and torque in IT; generators update this continuous state.
+	 */
 	@ZenMethod
 	public void setRotaryPower(float speed, float torque)
 	{
 		mutable();
-		if(!Float.isFinite(speed)||!Float.isFinite(torque)||speed<0||torque<0)
+		if(!Float.isFinite(speed)||!Float.isFinite(torque)||speed < 0||torque < 0)
 			throw new IllegalArgumentException("Rotary power requires finite, non-negative D/t and IT");
 		rotary().setRotationSpeed(speed);
 		rotary().setTorque(torque);

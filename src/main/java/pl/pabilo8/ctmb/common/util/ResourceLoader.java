@@ -123,7 +123,6 @@ public class ResourceLoader
 	{
 		File modFolder = new File(resourceFolder, CTMB.MODID);
 		File blockstates = new File(modFolder, "blockstates");
-		File manualEntries = new File(new File(modFolder, "ie_manual"), "en_us");
 
 		for(Multiblock mb : CommonProxy.MULTIBLOCKS)
 		{
@@ -188,6 +187,11 @@ public class ResourceLoader
 				variants.add("boolean0", getBooleanProperty(
 						getNamedProperty("model", "ctmb:"+modelName+"_flipped.obj"),
 						getNamedProperty("model", "ctmb:"+modelName+".obj")
+				));
+
+				// No animated model is sourced until an author opts in or edits the blockstate.
+				variants.add("_1dynamicrender", getBooleanProperty(
+						getNamedProperty("model", mb.animatedModel()==null?"immersiveengineering:ie_empty": mb.animatedModel()), null
 				));
 
 				state.add("variants", variants);

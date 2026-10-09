@@ -1,0 +1,10 @@
+{
+  "groups": {
+    "arm": {
+      "rotation": [
+        {"time": 0, "transform": [0, 0, 0]},
+        {"time": 1, "transform": [0, 360, 0]}
+      ]
+    }
+  }
+}

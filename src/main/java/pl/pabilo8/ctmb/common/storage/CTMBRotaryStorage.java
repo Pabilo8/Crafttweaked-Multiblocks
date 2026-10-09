@@ -3,7 +3,9 @@ package pl.pabilo8.ctmb.common.storage;
 import net.minecraft.nbt.NBTTagCompound;
 import pl.pabilo8.immersiveintelligence.api.rotary.RotaryStorage;
 
-/** II's continuous rotary state, bounded and synchronised with its owning provider. */
+/**
+ * II's continuous rotary state, bounded and synchronised with its owning provider.
+ */
 public final class CTMBRotaryStorage extends RotaryStorage
 {
 	private final StorageSystem system;
@@ -25,7 +27,11 @@ public final class CTMBRotaryStorage extends RotaryStorage
 	{
 		if(!system.isServer()) return;
 		value = bounded(value, definition.maxSpeed());
-		if(speed!=value) {speed = value; system.changed();}
+		if(speed!=value)
+		{
+			speed = value;
+			system.changed();
+		}
 	}
 
 	@Override
@@ -33,7 +39,11 @@ public final class CTMBRotaryStorage extends RotaryStorage
 	{
 		if(!system.isServer()) return;
 		value = bounded(value, definition.maxTorque());
-		if(torque!=value) {torque = value; system.changed();}
+		if(torque!=value)
+		{
+			torque = value;
+			system.changed();
+		}
 	}
 
 	@Override

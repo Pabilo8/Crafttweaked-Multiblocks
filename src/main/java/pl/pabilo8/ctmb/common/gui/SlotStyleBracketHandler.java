@@ -10,10 +10,13 @@ import stanhebben.zenscript.expression.ExpressionString;
 import stanhebben.zenscript.parser.Token;
 import stanhebben.zenscript.symbols.IZenSymbol;
 import stanhebben.zenscript.type.natives.IJavaMethod;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
-/** Resolves <slotstyle:vanilla> to a common-side handle without loading native Deco classes. */
+/**
+ * Resolves <slotstyle:vanilla> to a common-side handle without loading native Deco classes.
+ */
 @BracketHandler
 @ZenRegister
 public final class SlotStyleBracketHandler implements IBracketHandler
@@ -23,12 +26,16 @@ public final class SlotStyleBracketHandler implements IBracketHandler
 	@Override
 	public IZenSymbol resolve(IEnvironmentGlobal environment, List<Token> tokens)
 	{
-		if(tokens.size()<3||!"slotstyle".equalsIgnoreCase(tokens.get(0).getValue())||!":".equals(tokens.get(1).getValue())) return null;
+		if(tokens.size() < 3||!"slotstyle".equalsIgnoreCase(tokens.get(0).getValue())||!":".equals(tokens.get(1).getValue()))
+			return null;
 		String name = tokens.subList(2, tokens.size()).stream().map(Token::getValue).collect(Collectors.joining());
 		SlotStyle.find(name);
 		return position -> new ExpressionCallStatic(position, environment, method, new ExpressionString(position, name));
 	}
-	/** Used by the compiled bracket expression. */
+
+	/**
+	 * Used by the compiled bracket expression.
+	 */
 
 	public static SlotStyle getStyle(String name)
 	{

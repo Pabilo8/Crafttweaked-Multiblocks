@@ -2,12 +2,19 @@ package pl.pabilo8.ctmb.common.production;
 
 import crafttweaker.annotations.ZenRegister;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.*;
-import pl.pabilo8.ctmb.common.storage.*;
-import stanhebben.zenscript.annotations.*;
-import java.util.*;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import pl.pabilo8.ctmb.common.storage.StorageAccess;
+import pl.pabilo8.ctmb.common.storage.StorageSystem;
+import stanhebben.zenscript.annotations.ZenClass;
+import stanhebben.zenscript.annotations.ZenMethod;
 
-/** Server-owned lanes. GUI suppliers read this same synchronised state. */
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Server-owned lanes. GUI suppliers read this same synchronised state.
+ */
 @ZenRegister
 @ZenClass("mods.ctmb.production.Production")
 public final class ProductionAccess
@@ -17,12 +24,13 @@ public final class ProductionAccess
 	private final Lane[] lanes;
 	// Retain removed lanes verbatim so edits to scripts do not silently erase reserved items.
 	private final List<NBTTagCompound> retired = new ArrayList<>();
+
 	ProductionAccess(StorageSystem storage, ProductionHandler handler)
 	{
 		this.storage = storage;
 		this.handler = handler;
 		lanes = new Lane[handler.lanes()];
-		for(int i = 0; i<lanes.length; i++) lanes[i] = new Lane();
+		for(int i = 0; i < lanes.length; i++) lanes[i] = new Lane();
 	}
 
 	@ZenMethod
@@ -35,7 +43,7 @@ public final class ProductionAccess
 	public double getLaneProgress(int lane)
 	{
 		Lane l = lane(lane);
-		return l.active==null?0 : (double) l.active.progress/l.active.time;
+		return l.active==null?0: (double)l.active.progress/l.active.time;
 	}
 
 	@ZenMethod
@@ -58,21 +66,22 @@ public final class ProductionAccess
 
 	public int progressValue()
 	{
-		return (int) Math.round(getProgress()*10000);
+		return (int)Math.round(getProgress()*10000);
 	}
 
 	private Lane lane(int index)
 	{
-		if(index<0||index>=lanes.length) throw new IndexOutOfBoundsException("Invalid production lane: "+index);
+		if(index < 0||index >= lanes.length) throw new IndexOutOfBoundsException("Invalid production lane: "+index);
 		return lanes[index];
 	}
+
 	void tick()
 	{
 		if(!storage.isServer()) return;
 		for(Lane lane : lanes)
 		{
 			String before = lane.state;
-			if(handler.redstone()!=null&&storage.get(handler.redstone()).getRedstone()>0) lane.state = "redstone";
+			if(handler.redstone()!=null&&storage.get(handler.redstone()).getRedstone() > 0) lane.state = "redstone";
 			else tick(lane);
 			if(!before.equals(lane.state)) storage.changed();
 		}
@@ -88,7 +97,7 @@ public final class ProductionAccess
 		if(handler.rotary()!=null)
 		{
 			StorageAccess rotary = storage.get(handler.rotary());
-			if(rotary.getRotationSpeed()<handler.minSpeed()||rotary.getRotationSpeed()>handler.maxSpeed()||rotary.getTorque()<handler.torque())
+			if(rotary.getRotationSpeed() < handler.minSpeed()||rotary.getRotationSpeed() > handler.maxSpeed()||rotary.getTorque() < handler.torque())
 			{
 				lane.state = "no_rotary_power";
 				return;
@@ -132,7 +141,7 @@ public final class ProductionAccess
 			lane.state = "output_blocked";
 			return;
 		}
-		if(p.progress<p.time)
+		if(p.progress < p.time)
 		{
 			int cost = energyForTick(p.energy, p.time, p.progress);
 			if(!hasEnergy(cost))
@@ -140,7 +149,7 @@ public final class ProductionAccess
 				lane.state = "no_power";
 				return;
 			}
-			if(cost>0) storage.get(handler.energy()).extractEnergy(cost, false);
+			if(cost > 0) storage.get(handler.energy()).extractEnergy(cost, false);
 			p.progress++;
 			storage.changed();
 		}
@@ -157,17 +166,19 @@ public final class ProductionAccess
 	{
 		return cost==0||(handler.energy()!=null&&storage.get(handler.energy()).extractEnergy(cost, true)==cost);
 	}
+
 	static int energyForTick(int total, int time, int progress)
 	{
-		return (int)((long) total*(progress+1)/time-(long) total*progress/time);
+		return (int)((long)total*(progress+1)/time-(long)total*progress/time);
 	}
+
 	NBTTagCompound save()
 	{
 		NBTTagCompound tag = new NBTTagCompound();
 		NBTTagList list = new NBTTagList();
 		for(Lane lane : lanes)
 		{
-			NBTTagCompound n = lane.blocked!=null?lane.blocked.copy() : lane.active==null?new NBTTagCompound() : lane.active.save();
+			NBTTagCompound n = lane.blocked!=null?lane.blocked.copy(): lane.active==null?new NBTTagCompound(): lane.active.save();
 			n.setString("state", lane.state);
 			list.appendTag(n);
 		}
@@ -175,31 +186,32 @@ public final class ProductionAccess
 		tag.setTag("lanes", list);
 		return tag;
 	}
+
 	void restore(NBTTagCompound tag)
 	{
 		NBTTagList list = tag.getTagList("lanes", 10);
 		retired.clear();
-		for(int i = 0; i<lanes.length; i++)
+		for(int i = 0; i < lanes.length; i++)
 		{
 			Lane lane = lanes[i];
 			lane.active = null;
 			lane.blocked = null;
 			lane.state = "idle";
-			if(i>=list.tagCount()) continue;
+			if(i >= list.tagCount()) continue;
 			NBTTagCompound n = list.getCompoundTagAt(i);
 			lane.state = n.getString("state");
 			if(n.hasKey("recipe")) try
 			{
 				lane.active = new Process(n);
-			}
-			catch(IllegalArgumentException error)
+			} catch(IllegalArgumentException error)
 			{
 				lane.blocked = n.copy();
 				lane.state = "configuration_changed";
 			}
 		}
-		for(int i = lanes.length; i<list.tagCount(); i++) retired.add(list.getCompoundTagAt(i).copy());
+		for(int i = lanes.length; i < list.tagCount(); i++) retired.add(list.getCompoundTagAt(i).copy());
 	}
+
 	List<ItemStack> claimItems()
 	{
 		List<ItemStack> items = new ArrayList<>();
@@ -215,21 +227,24 @@ public final class ProductionAccess
 		retired.clear();
 		return items;
 	}
+
 	static void claimSaved(NBTTagCompound tag, List<ItemStack> items)
 	{
 		NBTTagList list = tag.getTagList("escrow", 10);
-		for(int i = 0; i<list.tagCount(); i++)
+		for(int i = 0; i < list.tagCount(); i++)
 		{
 			ItemStack item = new ItemStack(list.getCompoundTagAt(i));
 			if(!item.isEmpty()) items.add(item);
 		}
 	}
+
 	private static final class Lane
 	{
 		Process active;
 		NBTTagCompound blocked;
 		String state = "idle";
 	}
+
 	private static final class Process
 	{
 		final String recipe, signature;
@@ -237,6 +252,7 @@ public final class ProductionAccess
 		int progress;
 		final List<RecipeValue> outputs = new ArrayList<>();
 		final List<ItemStack> escrow = new ArrayList<>();
+
 		Process(ProductionRecipe recipe, List<ItemStack> claimed)
 		{
 			this.recipe = recipe.getName();
@@ -246,6 +262,7 @@ public final class ProductionAccess
 			for(RecipeValue value : recipe.outputs) outputs.add(RecipeValue.load(value.save()));
 			for(ItemStack item : claimed) escrow.add(item.copy());
 		}
+
 		Process(NBTTagCompound tag)
 		{
 			recipe = tag.getString("recipe");
@@ -253,11 +270,13 @@ public final class ProductionAccess
 			time = tag.getInteger("time");
 			energy = tag.getInteger("energy");
 			progress = tag.getInteger("progress");
-			if(time<=0||energy<0||progress<0||progress> time) throw new IllegalArgumentException("Invalid saved process");
+			if(time <= 0||energy < 0||progress < 0||progress > time)
+				throw new IllegalArgumentException("Invalid saved process");
 			NBTTagList list = tag.getTagList("outputs", 10);
-			for(int i = 0; i<list.tagCount(); i++) outputs.add(RecipeValue.load(list.getCompoundTagAt(i)));
+			for(int i = 0; i < list.tagCount(); i++) outputs.add(RecipeValue.load(list.getCompoundTagAt(i)));
 			claimSaved(tag, escrow);
 		}
+
 		NBTTagCompound save()
 		{
 			NBTTagCompound tag = new NBTTagCompound();

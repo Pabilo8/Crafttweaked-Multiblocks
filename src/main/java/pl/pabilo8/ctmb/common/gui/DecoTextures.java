@@ -323,6 +323,8 @@ public final class DecoTextures
 		if(name==null||!name.matches("[a-z0-9_.:/-]+"))
 			throw new IllegalArgumentException("Invalid Deco texture name "+name);
 		if(REGISTRY.containsKey(name)) throw new IllegalArgumentException("Duplicate Deco texture "+name);
+		if(location==null||!location.matches("[a-z0-9_.-]+:[a-z0-9_./-]+")||location.endsWith("/")||location.endsWith(".png")||location.contains(".."))
+			throw new IllegalArgumentException("Custom Deco textures use namespace:atlas/path without textures/ or .png");
 		DecoTexture texture = new DecoTexture(location);
 		REGISTRY.put(name, texture);
 		return texture;

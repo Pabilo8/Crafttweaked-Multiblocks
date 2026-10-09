@@ -37,8 +37,8 @@ public class DecoTextureBracketHandler implements IBracketHandler
 	@Nullable
 	public IZenSymbol resolve(IEnvironmentGlobal environment, List<Token> tokens)
 	{
-		//<multiblock:id:name>
-		if(tokens.size() >= 3&&"deco".equalsIgnoreCase(tokens.get(0).getValue()))
+		// <deco:name> or <deco:namespace:name>, resolved when the script runs.
+		if(tokens.size() >= 3&&":".equals(tokens.get(1).getValue())&&"deco".equalsIgnoreCase(tokens.get(0).getValue()))
 		{
 			String name = tokens.subList(2, tokens.size()).stream().map(Token::getValue).collect(java.util.stream.Collectors.joining());
 			return new BlockReferenceSymbol(environment, name);

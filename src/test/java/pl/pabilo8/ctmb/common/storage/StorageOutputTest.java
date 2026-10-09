@@ -25,22 +25,26 @@ import org.junit.jupiter.api.Test;
 import pl.pabilo8.ctmb.common.block.MultiblockDefinition;
 import pl.pabilo8.ctmb.common.block.TileEntityMultiblock;
 import pl.pabilo8.ctmb.common.block.crafttweaker.Multiblock;
+import pl.pabilo8.immersiveintelligence.api.crafting.DustStack;
 import pl.pabilo8.immersiveintelligence.api.rotary.CapabilityRotaryEnergy;
 import pl.pabilo8.immersiveintelligence.api.rotary.IRotaryEnergy.RotationSide;
 import pl.pabilo8.immersiveintelligence.api.rotary.RotaryStorage;
-import pl.pabilo8.immersiveintelligence.api.crafting.DustStack;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 class StorageOutputTest
 {
 	private static int sequence;
 
 	@BeforeAll
-	static void bootstrap() {Bootstrap.register();}
+	static void bootstrap()
+	{
+		Bootstrap.register();
+	}
 
 	private static final class TestMultiblock extends Multiblock
 	{
@@ -126,12 +130,27 @@ class StorageOutputTest
 		f.mb.setDustStorage("dust").withSize(100).withOutputPort("out").withOutputRate(10);
 		StorageAccess source = f.freeze("dust");
 		source.dustTank().fill(new DustStack("test_dust", 100), true);
-		CTMBDustTank tank = new CTMBDustTank(8, () -> {});
+		CTMBDustTank tank = new CTMBDustTank(8, () -> {
+		});
 		IDustHandler receiver = new IDustHandler()
 		{
-			@Override public int fill(DustStack stack, boolean execute) {return tank.fill(stack, execute);}
-			@Override public DustStack drain(DustStack stack, boolean execute) {return tank.drain(stack, execute);}
-			@Override public DustStack drainDust(int amount, boolean execute) {return tank.drain(amount, execute);}
+			@Override
+			public int fill(DustStack stack, boolean execute)
+			{
+				return tank.fill(stack, execute);
+			}
+
+			@Override
+			public DustStack drain(DustStack stack, boolean execute)
+			{
+				return tank.drain(stack, execute);
+			}
+
+			@Override
+			public DustStack drainDust(int amount, boolean execute)
+			{
+				return tank.drain(amount, execute);
+			}
 		};
 		when(f.target.getCapability(DustCapability.CAPABILITY, EnumFacing.DOWN)).thenReturn(receiver);
 		f.storage.tickOutputs();
@@ -242,11 +261,15 @@ class StorageOutputTest
 		assertEquals(20f, shaft.getTorque());
 		RotaryStorage source = new RotaryStorage(10, 50)
 		{
-			@Override public RotationSide getSide(EnumFacing face) {return RotationSide.OUTPUT;}
+			@Override
+			public RotationSide getSide(EnumFacing face)
+			{
+				return RotationSide.OUTPUT;
+			}
 		};
 		when(f.target.getCapability(CapabilityRotaryEnergy.ROTARY_ENERGY, EnumFacing.WEST)).thenReturn(source);
 		f.storage.tick();
-		assertTrue(shaft.getRotationSpeed()>0);
+		assertTrue(shaft.getRotationSpeed() > 0);
 		when(f.world.getTileEntity(any(BlockPos.class))).thenReturn(null);
 		f.storage.tick();
 		assertEquals(0f, shaft.getRotationSpeed());
@@ -262,12 +285,16 @@ class StorageOutputTest
 		shaft.setRotaryPower(50, 10);
 		RotaryStorage receiver = new RotaryStorage()
 		{
-			@Override public RotationSide getSide(EnumFacing face) {return RotationSide.INPUT;}
+			@Override
+			public RotationSide getSide(EnumFacing face)
+			{
+				return RotationSide.INPUT;
+			}
 		};
 		when(f.target.getCapability(CapabilityRotaryEnergy.ROTARY_ENERGY, EnumFacing.DOWN)).thenReturn(receiver);
 		f.storage.tickOutputs();
-		assertTrue(receiver.getRotationSpeed()>0);
-		assertTrue(receiver.getTorque()>0);
+		assertTrue(receiver.getRotationSpeed() > 0);
+		assertTrue(receiver.getTorque() > 0);
 		assertEquals(50f, shaft.getRotationSpeed());
 		assertEquals(10f, shaft.getTorque());
 		shaft.setRotaryPower(0, 0);

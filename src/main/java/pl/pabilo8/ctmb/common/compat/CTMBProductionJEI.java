@@ -44,6 +44,10 @@ public final class CTMBProductionJEI implements IModPlugin
 	@Override
 	public void register(IModRegistry registry)
 	{
+		// Hide every CTMB machine, including custom machines without production handlers.
+		for(pl.pabilo8.ctmb.common.block.ItemBlockCTMBMultiblock item : CommonProxy.ITEMBLOCKS)
+			registry.getJeiHelpers().getIngredientBlacklist().addIngredientToBlacklist(
+					new ItemStack(item, 1, net.minecraftforge.oredict.OreDictionary.WILDCARD_VALUE));
 		for(Category category : categories)
 		{
 			ItemStack machine = new ItemStack(category.handler.multiblock.getBlock());

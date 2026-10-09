@@ -53,6 +53,7 @@ public final class MultiblockGuiLayout
 			component.validate(tile);
 			component.freeze();
 		}
+		componentDefinitions(); // Validate nested IDs across the entire plan.
 		return this;
 	}
 
@@ -65,6 +66,25 @@ public final class MultiblockGuiLayout
 		if(links.contains(target)) throw new IllegalArgumentException("Duplicate GUI link "+target.name);
 		links.add(target);
 		return this;
+	}
+
+	public Map<String, GuiComponent> componentDefinitions()
+	{
+		Map<String, GuiComponent> result = new LinkedHashMap<>();
+		Set<GuiComponent> instances = Collections.newSetFromMap(new IdentityHashMap<>());
+		components.forEach((name, component) -> {
+			indexComponent(result, instances, name, component);
+			int index = 0;
+			for(GuiComponent bar : component.bars())
+				indexComponent(result, instances, bar.getName().isEmpty()?name+"/@"+(index++): bar.getName(), bar);
+		});
+		return Collections.unmodifiableMap(result);
+	}
+
+	private void indexComponent(Map<String, GuiComponent> result, Set<GuiComponent> instances, String name, GuiComponent component)
+	{
+		if(!instances.add(component)||result.putIfAbsent(name, component)!=null)
+			throw new IllegalArgumentException("Duplicate component or nested bar ID "+name);
 	}
 
 	public void finish()
@@ -136,7 +156,7 @@ public final class MultiblockGuiLayout
 		for(SlotDefinition slot : slots)
 			out.append('|').append(slot.storage).append(':').append(slot.slot).append(':').append(slot.x).append(',').append(slot.y);
 		out.append('|').append(playerInventory).append(':').append(inventoryX).append(',').append(inventoryY);
-		components.forEach((name, component) -> {
+		componentDefinitions().forEach((name, component) -> {
 			if(component.production()!=null)
 				out.append('|').append(name).append(":production:").append(component.production().handler.uid());
 		});

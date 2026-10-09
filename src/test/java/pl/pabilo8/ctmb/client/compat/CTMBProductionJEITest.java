@@ -14,12 +14,17 @@ import pl.pabilo8.ctmb.common.production.RecipeLayout;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class CTMBProductionJEITest
 {
 	private static int sequence;
-	@BeforeAll static void bootstrap() {Bootstrap.register();}
+
+	@BeforeAll
+	static void bootstrap()
+	{
+		Bootstrap.register();
+	}
 
 	private static final class TestMultiblock extends Multiblock
 	{
@@ -57,8 +62,7 @@ class CTMBProductionJEITest
 			assertEquals(156, narrow.layoutWidth());
 			assertEquals(286, wide.layoutWidth());
 			assertEquals(87, wide.layoutHeight());
-		}
-		finally
+		} finally
 		{
 			CommonProxy.MULTIBLOCKS.clear();
 			CommonProxy.MULTIBLOCKS.addAll(previous);

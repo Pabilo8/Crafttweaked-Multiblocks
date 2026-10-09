@@ -65,7 +65,7 @@ import java.util.*;
 public class BlockCTMBMultiblock extends Block
 {
 	//block properties
-	public final IProperty<?>[] additionalProperties = new IProperty[]{IEProperties.FACING_HORIZONTAL, IEProperties.MULTIBLOCKSLAVE, IEProperties.BOOLEANS[0]};
+	public final IProperty<?>[] additionalProperties = new IProperty[]{IEProperties.FACING_HORIZONTAL, IEProperties.MULTIBLOCKSLAVE, IEProperties.BOOLEANS[0], IEProperties.DYNAMICRENDER};
 
 	//temporary properties, for blockstate creation
 	protected static IProperty<?>[] tempProperties;
@@ -85,7 +85,7 @@ public class BlockCTMBMultiblock extends Block
 
 	public BlockCTMBMultiblock(Multiblock mb)
 	{
-		super(setTempProperties(mb.getMaterial(), IEProperties.FACING_HORIZONTAL, IEProperties.MULTIBLOCKSLAVE, IEProperties.BOOLEANS[0]));
+		super(setTempProperties(mb.getMaterial(), IEProperties.FACING_HORIZONTAL, IEProperties.MULTIBLOCKSLAVE, IEProperties.BOOLEANS[0], IEProperties.DYNAMICRENDER));
 		this.multiblock = mb;
 		this.registryName = "ctmb:"+mb.getFlattenedName();
 
@@ -166,7 +166,7 @@ public class BlockCTMBMultiblock extends Block
 		if(state.getPropertyKeys().contains(IEProperties.FACING_HORIZONTAL))
 			state = state.withProperty(IEProperties.FACING_HORIZONTAL, EnumFacing.NORTH);
 
-		return state;
+		return state.withProperty(IEProperties.DYNAMICRENDER, false);
 	}
 
 	protected <V extends Comparable<V>> IBlockState applyNextProperty(IBlockState in, IProperty<V> prop)

@@ -174,9 +174,14 @@ public final class StorageSystem
 					IRotaryEnergy source = target==null?null: target.getCapability(CapabilityRotaryEnergy.ROTARY_ENERGY, otherSide);
 					if(source==null||!source.getSide(otherSide).canOutput()) continue;
 					float s = source.getOutputRotationSpeed(), t = source.getOutputTorque();
-					if(!Float.isFinite(s)||!Float.isFinite(t)||s<0||t<0) continue;
+					if(!Float.isFinite(s)||!Float.isFinite(t)||s < 0||t < 0) continue;
 					double power = (double)s*t;
-					if(power>bestPower) {bestPower = power; speed = s; torque = t;}
+					if(power > bestPower)
+					{
+						bestPower = power;
+						speed = s;
+						torque = t;
+					}
 				}
 			}
 		if(!input) return; // Output-only providers can be driven by a generator script.
@@ -188,7 +193,9 @@ public final class StorageSystem
 		else provider.rotary().grow(speed, torque, 0.01f);
 	}
 
-	/** Called once by the master after production and script updates. */
+	/**
+	 * Called once by the master after production and script updates.
+	 */
 	public void tickOutputs()
 	{
 		if(!isServer()||outputting) return;
@@ -219,14 +226,15 @@ public final class StorageSystem
 						{
 							// Item declarations may select different slots on the same face.
 							String key = position+":"+side;
-							if(remaining==0||(provider.definition.kind!=StorageDefinition.Kind.ITEM&&!visited.add(key))) continue;
+							if(remaining==0||(provider.definition.kind!=StorageDefinition.Kind.ITEM&&!visited.add(key)))
+								continue;
 							TileEntity target = neighbour(position, side);
-							if(target!=null) remaining -= StoragePortTransfer.push(provider, port, target, side.getOpposite(), remaining);
+							if(target!=null)
+								remaining -= StoragePortTransfer.push(provider, port, target, side.getOpposite(), remaining);
 						}
 					}
 			}
-		}
-		finally {outputting = false;}
+		} finally {outputting = false;}
 	}
 
 	private void outputData(StorageAccess provider)

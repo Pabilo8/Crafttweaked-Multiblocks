@@ -15,21 +15,25 @@ import pl.pabilo8.immersiveintelligence.api.rotary.CapabilityRotaryEnergy;
 import pl.pabilo8.immersiveintelligence.api.rotary.IRotaryConnector;
 import pl.pabilo8.immersiveintelligence.api.rotary.IRotaryEnergy;
 
-/** Adjacent transfers debit only the amount accepted by the destination. */
+/**
+ * Adjacent transfers debit only the amount accepted by the destination.
+ */
 final class StoragePortTransfer
 {
-	private StoragePortTransfer() {}
+	private StoragePortTransfer()
+	{
+	}
 
 	static int push(StorageAccess source, StorageDefinition.Port port, TileEntity target, EnumFacing face, int maximum)
 	{
-		if(maximum<=0||!source.system.isServer()) return 0;
+		if(maximum <= 0||!source.system.isServer()) return 0;
 		switch(source.definition.kind)
 		{
 			case ITEM:
 				IItemHandler items = target.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, face);
 				if(items==null) return 0;
 				int moved = 0;
-				for(int slot = 0; slot<source.getSize()&&moved<maximum; slot++)
+				for(int slot = 0; slot < source.getSize()&&moved < maximum; slot++)
 					if(port.includes(slot))
 					{
 						ItemStack offered = source.extract(slot, maximum-moved, true);
@@ -44,7 +48,7 @@ final class StoragePortTransfer
 				IFluidHandler fluids = target.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, face);
 				if(fluids==null) return 0;
 				FluidStack fluid = source.fluidTank().drain(maximum, false);
-				if(fluid==null||fluid.amount<=0) return 0;
+				if(fluid==null||fluid.amount <= 0) return 0;
 				int filled = accepted(fluid.amount, fluids.fill(fluid.copy(), true));
 				source.fluidTank().drain(filled, true);
 				return filled;

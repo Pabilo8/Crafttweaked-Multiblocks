@@ -1,0 +1,11 @@
+{
+  "bounds": {
+    "arm": [-2, -2, -2, 2, 2, 34],
+    "hook": [-2, -4, -2, 2, 0, 2]
+  },
+  "tactile": {
+    "_schema": "ctmb:models/block/crane.obj.amt",
+    "arm": [{"type": "arm"}],
+    "hook": [{"type": "hook"}]
+  }
+}

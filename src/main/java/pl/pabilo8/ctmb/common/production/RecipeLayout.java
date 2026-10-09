@@ -2,9 +2,12 @@ package pl.pabilo8.ctmb.common.production;
 
 import crafttweaker.annotations.ZenRegister;
 import pl.pabilo8.ctmb.common.storage.StorageDefinition.Kind;
-import stanhebben.zenscript.annotations.*;
+import stanhebben.zenscript.annotations.ZenClass;
+import stanhebben.zenscript.annotations.ZenMethod;
 
-/** Coordinates refer to recipe channels, independently of inventory slot numbers. */
+/**
+ * Coordinates refer to recipe channels, independently of inventory slot numbers.
+ */
 @ZenRegister
 @ZenClass("mods.ctmb.production.RecipeLayout")
 public final class RecipeLayout
@@ -15,7 +18,8 @@ public final class RecipeLayout
 
 	private RecipeLayout(int id, int x, int y, Kind kind, boolean output)
 	{
-		if(id<0||x<0||y<0||x>512||y>512) throw new IllegalArgumentException("Invalid recipe layout coordinates/channel");
+		if(id < 0||x < 0||y < 0||x > 512||y > 512)
+			throw new IllegalArgumentException("Invalid recipe layout coordinates/channel");
 		this.id = id;
 		this.x = x;
 		this.y = y;

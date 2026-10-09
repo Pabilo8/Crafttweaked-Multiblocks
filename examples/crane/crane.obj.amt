@@ -1,0 +1,23 @@
+{
+  "origins": {
+    "root": [0, 0, 0],
+    "arm": [8, 16, 8],
+    "hook": [8, 24, 8],
+    "cargo": [8, 24, 8]
+  },
+  "hierarchy": {
+    "arm": "root",
+    "hook": "arm",
+    "cargo": "hook"
+  },
+  "types": {
+    "root": "locator",
+    "cargo": "item"
+  },
+  "properties": {
+    "cargo": {
+      "stack": {"id": "minecraft:chest", "Count": 1},
+      "drawStacked": false
+    }
+  }
+}

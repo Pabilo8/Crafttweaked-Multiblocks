@@ -1,16 +1,79 @@
 [
   {
-    "modid": ${mod_id_json},
-    "name": ${mod_name_json},
-    "description": ${mod_description_json},
-    "version": ${mod_version_json},
-    "mcversion": ${minecraft_version_json},
-    "url": ${mod_url_json},
-    "updateUrl": ${mod_update_json_json},
-    "authorList": ${mod_authors_json},
-    "credits": ${mod_credits_json},
-    "logoFile": ${mod_logo_path_json},
-    "screenshots": [],
-    "dependencies": ["immersiveengineering", "immersiveintelligence", "crafttweaker"]
+    "modid": $
+    {
+      mod_id_json
+    }
+    ,
+    "name"
+    :
+    $
+    {
+      mod_name_json
+    }
+    ,
+    "description"
+    :
+    $
+    {
+      mod_description_json
+    }
+    ,
+    "version"
+    :
+    $
+    {
+      mod_version_json
+    }
+    ,
+    "mcversion"
+    :
+    $
+    {
+      minecraft_version_json
+    }
+    ,
+    "url"
+    :
+    $
+    {
+      mod_url_json
+    }
+    ,
+    "updateUrl"
+    :
+    $
+    {
+      mod_update_json_json
+    }
+    ,
+    "authorList"
+    :
+    $
+    {
+      mod_authors_json
+    }
+    ,
+    "credits"
+    :
+    $
+    {
+      mod_credits_json
+    }
+    ,
+    "logoFile"
+    :
+    $
+    {
+      mod_logo_path_json
+    }
+    ,
+    "screenshots"
+    :
+    []
+    ,
+    "dependencies"
+    :
+    ["immersiveengineering", "immersiveintelligence", "crafttweaker"]
   }
 ]

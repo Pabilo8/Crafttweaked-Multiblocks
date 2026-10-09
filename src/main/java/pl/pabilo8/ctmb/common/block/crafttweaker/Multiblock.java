@@ -46,6 +46,9 @@ public class Multiblock extends MultiblockStuctureBase<TileEntityMultiblock>
 	public final Map<String, StorageDefinition> storages = new LinkedHashMap<>();
 	public final Map<String, pl.pabilo8.ctmb.common.production.ProductionHandler> productionHandlers = new LinkedHashMap<>();
 	private boolean frozen;
+	private String animatedModel;
+	private ResourceLocation tactileModel;
+	public IMultiblockTactileInteractionFunction onTactileInteract;
 
 	public IMultiblockFunction onUpdate = null;
 	public IMultiblockMessageOutFunction onSendMessage = null;
@@ -86,6 +89,47 @@ public class Multiblock extends MultiblockStuctureBase<TileEntityMultiblock>
 		return mb;
 	}
 
+	@ZenMethod
+	public Multiblock withAnimatedModel()
+	{
+		return withAnimatedModel("ctmb:"+getUniqueName().substring(getUniqueName().indexOf(':')+1)+".obj.ie");
+	}
+
+	@ZenMethod
+	public Multiblock withAnimatedModel(String model)
+	{
+		if(frozen) throw new IllegalStateException("Multiblock is already registered");
+		ResourceLocation resource = new ResourceLocation(model);
+		if(!resource.getResourcePath().endsWith(".obj.ie"))
+			throw new IllegalArgumentException("Animated models must use .obj.ie");
+		animatedModel = resource.toString();
+		return this;
+	}
+
+	@ZenMethod
+	public Multiblock withTactileModel(String resource)
+	{
+		if(frozen) throw new IllegalStateException("Multiblock is already registered");
+		tactileModel = new ResourceLocation(resource);
+		return this;
+	}
+
+	@ZenMethod
+	public void setOnTactileInteract(IMultiblockTactileInteractionFunction function)
+	{
+		onTactileInteract = function;
+	}
+
+	public String animatedModel()
+	{
+		return animatedModel;
+	}
+
+	public ResourceLocation tactileModel()
+	{
+		return tactileModel;
+	}
+
 	public void freeze()
 	{
 		storages.values().forEach(storage -> storage.freeze(definition));
@@ -99,7 +143,8 @@ public class Multiblock extends MultiblockStuctureBase<TileEntityMultiblock>
 					for(int position : definition.getPOI(port.poi))
 						providerFaces.add(position+":"+definition.getDirection(port.direction));
 				for(String face : providerFaces)
-					if(!rotaryFaces.add(face)) throw new IllegalArgumentException("Multiple rotary providers on face "+face);
+					if(!rotaryFaces.add(face))
+						throw new IllegalArgumentException("Multiple rotary providers on face "+face);
 			}
 		productionHandlers.values().forEach(pl.pabilo8.ctmb.common.production.ProductionHandler::freeze);
 		frozen = true;
@@ -257,7 +302,8 @@ public class Multiblock extends MultiblockStuctureBase<TileEntityMultiblock>
 	public pl.pabilo8.ctmb.common.production.ProductionHandler setProductionHandler(String name)
 	{
 		if(frozen) throw new IllegalStateException("Multiblock definitions are frozen");
-		if(productionHandlers.containsKey(name)) throw new IllegalArgumentException("Duplicate production handler: "+name);
+		if(productionHandlers.containsKey(name))
+			throw new IllegalArgumentException("Duplicate production handler: "+name);
 		pl.pabilo8.ctmb.common.production.ProductionHandler handler = new pl.pabilo8.ctmb.common.production.ProductionHandler(this, name);
 		productionHandlers.put(name, handler);
 		return handler;
@@ -280,7 +326,8 @@ public class Multiblock extends MultiblockStuctureBase<TileEntityMultiblock>
 	@ZenMethod
 	public pl.pabilo8.ctmb.common.production.ProductionRecipe addProductionRecipe(crafttweaker.api.item.IIngredient... arguments)
 	{
-		if(productionHandlers.size()!=1) throw new IllegalArgumentException("Select a production handler when the machine has more than one");
+		if(productionHandlers.size()!=1)
+			throw new IllegalArgumentException("Select a production handler when the machine has more than one");
 		return productionHandlers.values().iterator().next().add(arguments);
 	}
 

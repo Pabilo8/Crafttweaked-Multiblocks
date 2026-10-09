@@ -22,7 +22,9 @@ import java.nio.charset.StandardCharsets;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
-/** Port regressions use the unchanged IIToolkit example, not rewritten rotations. */
+/**
+ * Port regressions use the unchanged IIToolkit example, not rewritten rotations.
+ */
 class MelterPortTest
 {
 	private static int sequence;

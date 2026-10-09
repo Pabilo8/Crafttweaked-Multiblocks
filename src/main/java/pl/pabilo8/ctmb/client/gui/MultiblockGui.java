@@ -75,7 +75,7 @@ public class MultiblockGui extends DecoGui<TileEntityMultiblock, MultiblockConta
 		}
 		// Preserve user-entered control state on resizing; bound storage views keep native suppliers.
 		previous.forEach((name, data) -> {
-			GuiComponent definition = layout.components.get(name);
+			GuiComponent definition = layout.componentDefinitions().get(name);
 			if(definition!=null&&definition.source()==null&&definition.production()==null&&components.containsKey(name))
 				components.get(name).setData(data);
 		});
@@ -117,6 +117,42 @@ public class MultiblockGui extends DecoGui<TileEntityMultiblock, MultiblockConta
 			case "text":
 				component = new CTMBDecoTextField(x, y).withOnTextChanged(value -> activated(name));
 				break;
+			case "image":
+				component = new CTMBDecoImage(x, y);
+				break;
+			case "gauge":
+				component = new CTMBDecoGauge(x, y).withOnValueChanged(value -> activated(name));
+				break;
+			case "bar_group":
+				CTMBDecoBarGroup group = new CTMBDecoBarGroup(x, y);
+				int index = 0;
+				for(GuiComponent child : definition.bars())
+				{
+					String childName = child.getName().isEmpty()?name+"/@"+(index++): child.getName();
+					group.withBar(bar -> {
+						bar.withSize(child.width(), child.height());
+						CTMBDecoData.apply(bar, CraftTweakerMC.getIData(child.getOptions().unwrap()));
+						if(child.source()!=null) bar.withLimits(0, child.source().getSize(), child.source()::getEnergy);
+						if(child.production()!=null) bar.withLimits(0, 10000, child.production()::progressValue);
+						components.put(childName, new DecoComponentAccess()
+						{
+							public crafttweaker.api.data.IData getData()
+							{
+								return CTMBDecoData.read(bar);
+							}
+
+							public void setData(crafttweaker.api.data.IData value)
+							{
+								EasyNBT options = EasyNBT.wrapNBT(CraftTweakerMC.getNBTCompound(value));
+								if((child.source()!=null||child.production()!=null)&&(options.hasKey("value")||options.hasKey("min")||options.hasKey("max")))
+									throw new IllegalArgumentException("Bound displays are read-only");
+								CTMBDecoData.apply(bar, value);
+							}
+						});
+					});
+				}
+				component = group;
+				break;
 			case "bar":
 			case "energy":
 				component = new CTMBDecoBar(x, y);
@@ -137,11 +173,13 @@ public class MultiblockGui extends DecoGui<TileEntityMultiblock, MultiblockConta
 			default:
 				component = new CTMBDecoButton(x, y).withOnLMBPressed(() -> activated(name));
 		}
+		if(definition.getType().equals("image")||definition.getType().equals("bar_group"))
+			component.withOnLMBPressed(() -> activated(name));
 		component.withSize(definition.width(), definition.height());
 		DecoComponentAccess access = (DecoComponentAccess)component;
 		access.setData(CraftTweakerMC.getIData(data.unwrap()));
 		if(definition.getType().equals("energy")) ((CTMBDecoBar)component).bindEnergy(definition.source());
-		if(definition.production()!=null)((CTMBDecoBar)component).bindProduction(definition.production());
+		if(definition.production()!=null) ((CTMBDecoBar)component).bindProduction(definition.production());
 		component.withOnHovered((widget, button, mx, my) -> {
 			if(definition.hover()!=null)
 				definition.hover().execute(access, wrapper, context.getMbWrapper(), mx-getScreenLeft(), my-getScreenTop(), CraftTweakerMC.getIPlayer(playerContainer.player));
@@ -153,7 +191,7 @@ public class MultiblockGui extends DecoGui<TileEntityMultiblock, MultiblockConta
 
 	private void activated(String name)
 	{
-		GuiComponent definition = layout.components.get(name);
+		GuiComponent definition = layout.componentDefinitions().get(name);
 		if(definition!=null&&definition.press()!=null)
 		{
 			Minecraft minecraft = Minecraft.getMinecraft();

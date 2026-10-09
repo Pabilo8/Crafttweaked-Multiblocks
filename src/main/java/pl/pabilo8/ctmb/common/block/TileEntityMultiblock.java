@@ -28,7 +28,6 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.energy.CapabilityEnergy;
-import pl.pabilo8.immersiveintelligence.api.rotary.CapabilityRotaryEnergy;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
@@ -38,6 +37,7 @@ import pl.pabilo8.ctmb.common.CommonProxy;
 import pl.pabilo8.ctmb.common.block.crafttweaker.Multiblock;
 import pl.pabilo8.ctmb.common.block.crafttweaker.MultiblockTileCTWrapper;
 import pl.pabilo8.ctmb.common.storage.*;
+import pl.pabilo8.immersiveintelligence.api.rotary.CapabilityRotaryEnergy;
 import pl.pabilo8.immersiveintelligence.common.network.IIPacketHandler;
 
 import javax.annotation.Nonnull;
@@ -50,7 +50,7 @@ import java.util.List;
  * @since 30.01.2022
  */
 @SuppressWarnings("unused")
-public class TileEntityMultiblock extends TileEntityMultiblockMetal<TileEntityMultiblock, IMultiblockRecipe> implements pl.pabilo8.immersiveintelligence.api.data.device.IDataDevice, IRedstoneOutput, IPlayerInteraction, IGuiTile, IAdvancedCollisionBounds, IAdvancedSelectionBounds, IBlockOverlayText
+public class TileEntityMultiblock extends TileEntityMultiblockMetal<TileEntityMultiblock, IMultiblockRecipe> implements pl.pabilo8.immersiveintelligence.api.data.device.IDataDevice, IRedstoneOutput, IPlayerInteraction, IGuiTile, IAdvancedCollisionBounds, IAdvancedSelectionBounds, IBlockOverlayText, pl.pabilo8.immersiveintelligence.common.entity.tactile.TactileManager.ITactileListener
 {
 	/**
 	 * Multiblock Instance for easy access
@@ -63,6 +63,8 @@ public class TileEntityMultiblock extends TileEntityMultiblockMetal<TileEntityMu
 	private pl.pabilo8.ctmb.common.production.ProductionSystem production;
 
 	private boolean shouldSendUpdate = false;
+	private final pl.pabilo8.ctmb.common.amt.CTMBAMTState amtState = new pl.pabilo8.ctmb.common.amt.CTMBAMTState();
+	private pl.pabilo8.ctmb.common.amt.CTMBTactileManager tactile;
 
 	public TileEntityMultiblock()
 	{
@@ -314,6 +316,7 @@ public class TileEntityMultiblock extends TileEntityMultiblockMetal<TileEntityMu
 		if(!isDummy()&&storage!=null) nbt.setTag("storage", storage.save());
 
 		if(!isDummy()&&production!=null) nbt.setTag("production", production.save());
+		if(!isDummy()) nbt.setTag("amt", amtState.save());
 
 		if(mbWrapper!=null)
 		{
@@ -346,6 +349,7 @@ public class TileEntityMultiblock extends TileEntityMultiblockMetal<TileEntityMu
 			if(nbt.hasKey("storage", NBT.TAG_COMPOUND)) getStorageSystem().restore(nbt.getCompoundTag("storage"));
 			getProductionSystem().restore(nbt.getCompoundTag("production"));
 			getMbWrapper().loadData(nbt.getCompoundTag("custom"));
+			amtState.restore(nbt.getCompoundTag("amt"));
 		}
 
 	}
@@ -355,6 +359,11 @@ public class TileEntityMultiblock extends TileEntityMultiblockMetal<TileEntityMu
 	@Override
 	public void update()
 	{
+		if(!formed&&tactile!=null)
+		{
+			tactile.forceReload();
+			tactile = null;
+		}
 		ApiUtils.checkForNeedlessTicking(this);
 		tickedProcesses = 0;
 		if(!hasWorld()||world.isRemote||isDummy()||!formed) //||isRSDisabled()
@@ -366,6 +375,18 @@ public class TileEntityMultiblock extends TileEntityMultiblockMetal<TileEntityMu
 		if(multiblock!=Multiblock.DEFAULT_MULTIBLOCK&&multiblock.onUpdate!=null)
 			multiblock.onUpdate.execute(getMbWrapper());
 
+		pl.pabilo8.ctmb.common.amt.CTMBTactileManager tactile = getTactileHandler();
+		if(tactile!=null)
+		{
+			java.util.Map<net.minecraft.util.ResourceLocation, Float> samples = amtState.samples();
+			pl.pabilo8.immersiveintelligence.common.util.ResLoc[] locations = samples.keySet().stream()
+					.map(pl.pabilo8.immersiveintelligence.common.util.ResLoc::of).toArray(pl.pabilo8.immersiveintelligence.common.util.ResLoc[]::new);
+			float[] times = new float[samples.size()];
+			int index = 0;
+			for(float value : samples.values()) times[index++] = value;
+			tactile.update(locations, times);
+		}
+
 		getStorageSystem().tickOutputs();
 
 		if(shouldSendUpdate)
@@ -376,6 +397,61 @@ public class TileEntityMultiblock extends TileEntityMultiblockMetal<TileEntityMu
 		}
 
 		// TODO: 30.05.2022 processes
+	}
+
+	public pl.pabilo8.ctmb.common.amt.CTMBAMTState getAMTState()
+	{
+		TileEntityMultiblock master = isDummy()?master(): this;
+		if(master==null) throw new IllegalStateException("Missing AMT master");
+		return master.amtState;
+	}
+
+	@Nullable
+	@Override
+	public pl.pabilo8.ctmb.common.amt.CTMBTactileManager getTactileHandler()
+	{
+		if(!hasWorld()||world.isRemote||!formed) return null;
+		if(isDummy())
+		{
+			TileEntityMultiblock master = master();
+			return master==null?null: master.getTactileHandler();
+		}
+		if(multiblock.tactileModel()==null) return null;
+		if(tactile==null) tactile = new pl.pabilo8.ctmb.common.amt.CTMBTactileManager(this, multiblock.tactileModel());
+		return tactile;
+	}
+
+	@Override
+	public boolean onTactileInteract(pl.pabilo8.immersiveintelligence.common.entity.tactile.EntityAMTTactile part, EntityPlayer player, EnumHand hand)
+	{
+		return tactile!=null&&multiblock.onTactileInteract!=null&&multiblock.onTactileInteract.execute(
+				getMbWrapper(), tactile.partName(part), CraftTweakerMC.getIPlayer(player), hand==EnumHand.MAIN_HAND);
+	}
+
+	@Override
+	public void invalidate()
+	{
+		if(tactile!=null) tactile.forceReload();
+		super.invalidate();
+	}
+
+	@Override
+	public void onChunkUnload()
+	{
+		if(tactile!=null)
+		{
+			tactile.forceReload();
+			tactile = null;
+		}
+		super.onChunkUnload();
+	}
+
+	@Override
+	public AxisAlignedBB getRenderBoundingBox()
+	{
+		if(multiblock==Multiblock.DEFAULT_MULTIBLOCK) return super.getRenderBoundingBox();
+		// Animations can extend beyond the static formation bounds (e.g. a crane arm).
+		return isDummy()?super.getRenderBoundingBox(): INFINITE_EXTENT_AABB;
 	}
 
 	//--- Utility Methods ---//

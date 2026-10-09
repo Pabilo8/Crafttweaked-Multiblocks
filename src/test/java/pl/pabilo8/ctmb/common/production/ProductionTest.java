@@ -12,23 +12,34 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import pl.pabilo8.ctmb.common.block.TileEntityMultiblock;
 import pl.pabilo8.ctmb.common.block.crafttweaker.Multiblock;
-import pl.pabilo8.ctmb.common.storage.*;
-import java.util.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import pl.pabilo8.ctmb.common.storage.StorageDefinition;
+import pl.pabilo8.ctmb.common.storage.StorageSystem;
 
-/** Regression sources for native matching, shared capacity and save/reload boundaries. */
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+/**
+ * Regression sources for native matching, shared capacity and save/reload boundaries.
+ */
 class ProductionTest
 {
 	private static int sequence;
+
 	@BeforeAll
 	static void bootstrap()
 	{
 		Bootstrap.register();
 	}
+
 	private static final class TestMultiblock extends Multiblock
 	{
 		TestMultiblock()
@@ -36,13 +47,19 @@ class ProductionTest
 			super("test:production_"+(++sequence), new ResourceLocation("test:unused"), Material.IRON, null);
 		}
 	}
+
 	private static final class Fixture
 	{
 		final Multiblock mb = new TestMultiblock();
 		final TileEntityMultiblock tile = mock(TileEntityMultiblock.class);
 		final StorageSystem storage;
 		final ProductionHandler handler;
-		Fixture(int lanes) {this(lanes, false);}
+
+		Fixture(int lanes)
+		{
+			this(lanes, false);
+		}
+
 		Fixture(int lanes, boolean rotary)
 		{
 			mb.setItemStorage("items").withSize(2);
@@ -59,16 +76,19 @@ class ProductionTest
 			storage = new StorageSystem(tile);
 			when(tile.getStorageSystem()).thenReturn(storage);
 		}
+
 		ProductionRecipe recipe()
 		{
 			return handler.add(new IIngredient[]{CraftTweakerMC.getIItemStack(new ItemStack(Items.IRON_INGOT)), new MCLiquidStack(new FluidStack(FluidRegistry.LAVA, 1000))});
 		}
+
 		void supply(int items, int energy)
 		{
 			storage.get("items").setItem(1, CraftTweakerMC.getIItemStack(new ItemStack(Items.IRON_INGOT, items)));
 			storage.get("power").fillEnergy(energy);
 		}
 	}
+
 	@Test
 	void rotaryRequirementsPauseBeforeConsumptionAndResumeReservedInputs()
 	{
@@ -96,22 +116,25 @@ class ProductionTest
 		assertEquals(1000, f.storage.get("fluid").fluidTank().getFluidAmount());
 		assertEquals(0, f.storage.get("power").getEnergy());
 	}
+
 	@Test
 	void chargesNonDivisibleEnergyExactlyWithoutOverflow()
 	{
-		for(int total : new int[]{0, 1, 2, 1601, Integer.MAX_VALUE}) for(int time : new int[]{1, 3, 100, 201})
-		{
-			long sum = 0;
-			for(int tick = 0; tick<time; tick++)
+		for(int total : new int[]{0, 1, 2, 1601, Integer.MAX_VALUE})
+			for(int time : new int[]{1, 3, 100, 201})
 			{
-				int cost = ProductionAccess.energyForTick(total, time, tick);
-				assertTrue(cost>=0);
-				sum+=cost;
-				assertEquals((long) total*(tick+1)/time, sum);
+				long sum = 0;
+				for(int tick = 0; tick < time; tick++)
+				{
+					int cost = ProductionAccess.energyForTick(total, time, tick);
+					assertTrue(cost >= 0);
+					sum += cost;
+					assertEquals((long)total*(tick+1)/time, sum);
+				}
+				assertEquals(total, sum);
 			}
-			assertEquals(total, sum);
-		}
 	}
+
 	@Test
 	void reloadResumesReservedInputWithoutConsumingTwice()
 	{
@@ -131,6 +154,7 @@ class ProductionTest
 		assertEquals(0, f.storage.get("power").getEnergy());
 		assertTrue(restored.claimItems().isEmpty());
 	}
+
 	@Test
 	void missingPowerAndFullOutputDoNotAdvanceOrDiscardEscrow()
 	{
@@ -155,6 +179,7 @@ class ProductionTest
 		assertEquals(1000, f.storage.get("fluid").fluidTank().getFluidAmount());
 		assertTrue(p.claimItems().isEmpty());
 	}
+
 	@Test
 	void redstonePausesAndDisassemblyRefundsOnceAcrossLanes()
 	{
@@ -175,6 +200,7 @@ class ProductionTest
 		assertEquals(3, p.claimItems().stream().mapToInt(ItemStack::getCount).sum());
 		assertTrue(p.claimItems().isEmpty());
 	}
+
 	@Test
 	void aggregateOutputsCannotOverbookOneTankAndSimulationIsIsolated()
 	{
@@ -195,6 +221,7 @@ class ProductionTest
 		assertTrue(f.storage.get("items").item(1).isEmpty());
 		assertEquals(0, f.storage.get("fluid").fluidTank().getFluidAmount());
 	}
+
 	@Test
 	void removedHandlersRetainEscrowAndChangedBindingsPause()
 	{

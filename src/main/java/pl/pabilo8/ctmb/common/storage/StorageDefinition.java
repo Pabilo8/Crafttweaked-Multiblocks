@@ -46,12 +46,14 @@ public final class StorageDefinition
 		return this;
 	}
 
-	/** Maximum items, fluid/dust mB or IF pushed per provider per tick, shared by its ports. */
+	/**
+	 * Maximum items, fluid/dust mB or IF pushed per provider per tick, shared by its ports.
+	 */
 	@ZenMethod
 	public StorageDefinition withOutputRate(int amount)
 	{
 		mutable();
-		if(amount<=0||(kind!=Kind.ITEM&&kind!=Kind.FLUID&&kind!=Kind.DUST&&kind!=Kind.ENERGY))
+		if(amount <= 0||(kind!=Kind.ITEM&&kind!=Kind.FLUID&&kind!=Kind.DUST&&kind!=Kind.ENERGY))
 			throw new IllegalArgumentException("Output rate requires item, fluid, dust or energy storage and a positive amount");
 		outputRate = amount;
 		return this;
@@ -69,17 +71,32 @@ public final class StorageDefinition
 	public StorageDefinition withRotaryLimits(float speed, float torque)
 	{
 		mutable();
-		if(kind!=Kind.ROTARY||!Float.isFinite(speed)||!Float.isFinite(torque)||speed<=0||torque<=0)
+		if(kind!=Kind.ROTARY||!Float.isFinite(speed)||!Float.isFinite(torque)||speed <= 0||torque <= 0)
 			throw new IllegalArgumentException("Rotary limits require positive finite D/t and IT values");
 		maxSpeed = speed;
 		maxTorque = torque;
 		return this;
 	}
 
-	public int outputRate() {return outputRate;}
-	public boolean autoOutput() {return autoOutput;}
-	public float maxSpeed() {return maxSpeed;}
-	public float maxTorque() {return maxTorque;}
+	public int outputRate()
+	{
+		return outputRate;
+	}
+
+	public boolean autoOutput()
+	{
+		return autoOutput;
+	}
+
+	public float maxSpeed()
+	{
+		return maxSpeed;
+	}
+
+	public float maxTorque()
+	{
+		return maxTorque;
+	}
 
 	@ZenMethod
 	public StorageDefinition withInputPort(String poi)

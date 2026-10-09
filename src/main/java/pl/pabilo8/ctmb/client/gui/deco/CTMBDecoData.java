@@ -30,11 +30,12 @@ public final class CTMBDecoData
 		if(component instanceof CTMBDecoSlider) data.withFloat("value", ((CTMBDecoSlider)component).getValue());
 		if(component instanceof CTMBDecoDropdown) data.withInt("selected", ((CTMBDecoDropdown)component).selectedEntry);
 		if(component instanceof CTMBDecoTextField) data.withString("text", ((CTMBDecoTextField)component).getText());
-		if(component instanceof CTMBDecoBar)
+		if(component instanceof pl.pabilo8.immersiveintelligence.client.gui.deco.component.storage.DecoBar)
 		{
-			CTMBDecoBar bar = (CTMBDecoBar)component;
+			pl.pabilo8.immersiveintelligence.client.gui.deco.component.storage.DecoBar bar = (pl.pabilo8.immersiveintelligence.client.gui.deco.component.storage.DecoBar)component;
 			data.withInt("value", bar.getCurrentValue()).withInt("min", bar.getMinValue()).withInt("max", bar.getMaxValue());
 		}
+		if(component instanceof CTMBDecoGauge) data.withFloat("angle", ((CTMBDecoGauge)component).getAngle());
 		return CraftTweakerMC.getIData(data.unwrap());
 	}
 
@@ -51,6 +52,32 @@ public final class CTMBDecoData
 			if(data.getBoolean("translated")) text.withText(data.getString("text"));
 			else text.withRawText(data.getString("text"));
 		}
+		if(component instanceof CTMBDecoGauge)
+		{
+			CTMBDecoGauge gauge = (CTMBDecoGauge)component;
+			if(data.hasKey("angle_min")||data.hasKey("angle_max"))
+			{
+				if(!data.hasKey("angle_min")||!data.hasKey("angle_max")||!Float.isFinite(data.getFloat("angle_min"))
+						||!Float.isFinite(data.getFloat("angle_max"))||data.getFloat("angle_max") <= data.getFloat("angle_min"))
+					throw new IllegalArgumentException("Gauge range requires two ordered finite angles");
+				gauge.withRange(data.getFloat("angle_min"), data.getFloat("angle_max"));
+			}
+			if(data.hasKey("angle")) gauge.withAngle(data.getFloat("angle"));
+			if(data.hasKey("inverted")) gauge.withInverted(data.getBoolean("inverted"));
+			if(data.hasKey("display_cross")) gauge.withDisplayCross(data.getBoolean("display_cross"));
+			if(data.hasKey("display_values")) gauge.withDisplayValues(data.getBoolean("display_values"));
+			if(data.hasKey("color")) gauge.withLineColors(null, IIColor.fromPackedRGB(data.getInt("color")));
+		}
+		if(component instanceof CTMBDecoImage)
+		{
+			CTMBDecoImage image = (CTMBDecoImage)component;
+			if(data.hasKey("image"))
+				image.withImageLocation(new net.minecraft.util.ResourceLocation(data.getString("image")), true);
+			if(data.hasKey("texture_size"))
+				image.withUV(data.getFloat("texture_size"), data.getFloat("u"), data.getFloat("v"), data.getFloat("uu"), data.getFloat("vv"));
+			if(data.hasKey("rotation")) image.withRotation(data.getFloat("rotation"));
+			if(data.hasKey("color")) image.withColor(IIColor.fromPackedRGB(data.getInt("color")));
+		}
 		if(component instanceof CTMBDecoCheckbox&&data.hasKey("checked"))
 			((CTMBDecoCheckbox)component).withChecked(data.getBoolean("checked"));
 		if(component instanceof CTMBDecoSwitch&&data.hasKey("state"))
@@ -61,9 +88,9 @@ public final class CTMBDecoData
 			((CTMBDecoDropdown)component).setScriptSelection(data.getInt("selected"));
 		if(component instanceof CTMBDecoTextField&&data.hasKey("text"))
 			((CTMBDecoTextField)component).withText(data.getString("text"));
-		if(component instanceof CTMBDecoBar)
+		if(component instanceof pl.pabilo8.immersiveintelligence.client.gui.deco.component.storage.DecoBar)
 		{
-			CTMBDecoBar bar = (CTMBDecoBar)component;
+			pl.pabilo8.immersiveintelligence.client.gui.deco.component.storage.DecoBar bar = (pl.pabilo8.immersiveintelligence.client.gui.deco.component.storage.DecoBar)component;
 			if(data.hasKey("value"))
 			{
 				int min = data.hasKey("min")?data.getInt("min"): bar.getMinValue();

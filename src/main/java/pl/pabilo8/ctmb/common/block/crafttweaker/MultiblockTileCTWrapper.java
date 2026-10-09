@@ -131,6 +131,33 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 		return te.getMultiblock().definition.direction(name, te.facing, te.mirrored).getName();
 	}
 
+	@ZenMethod
+	public void setAnimation(String animation, float progress)
+	{
+		if(te.hasWorld()&&!te.getWorld().isRemote&&te.getAMTState().set(animation, progress)) te.forceUpdate();
+	}
+
+	@ZenMethod
+	public void clearAnimation(String animation)
+	{
+		if(te.hasWorld()&&!te.getWorld().isRemote&&te.getAMTState().clear(animation)) te.forceUpdate();
+	}
+
+	@ZenMethod
+	public void clearAnimations()
+	{
+		if(te.hasWorld()&&!te.getWorld().isRemote&&te.getAMTState().clear()) te.forceUpdate();
+	}
+
+	@ZenMethod
+	@Nullable
+	public crafttweaker.api.world.IVector3d getTactilePosition(String part)
+	{
+		pl.pabilo8.immersiveintelligence.common.entity.tactile.TactileManager handler = te.getTactileHandler();
+		if(handler==null||handler.getPart(part)==null) return null;
+		return new MCVector3d(handler.getPosition(part));
+	}
+
 	//--- Miscellaneous ---//
 
 	@ZenMethod
@@ -204,6 +231,13 @@ public class MultiblockTileCTWrapper implements ICTWrapper
 	public interface IMultiblockInteractionFunction
 	{
 		boolean execute(MultiblockTileCTWrapper mb, int pos, IPlayer player, boolean hand, MCVector3d hitVec);
+	}
+
+	@ZenRegister
+	@ZenClass("mods.ctmb.multiblock.IMultiblockTactileInteractionFunction")
+	public interface IMultiblockTactileInteractionFunction
+	{
+		boolean execute(MultiblockTileCTWrapper mb, String part, IPlayer player, boolean mainHand);
 	}
 
 	@ZenRegister

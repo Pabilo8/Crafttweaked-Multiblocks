@@ -56,7 +56,11 @@ public class ClientProxy extends CommonProxy implements ISelectiveResourceReload
 	{
 		if(event.phase!=net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END) return;
 		ClientProxy proxy = (ClientProxy)CTMB.proxy;
-		if(proxy.manualCheckTicks++%20==0) proxy.manualCategories.forEach(CTMBIIManualCategory::ensureRegistered);
+		if(proxy.manualCheckTicks++%20==0)
+		{
+			proxy.manualCategories.forEach(CTMBIIManualCategory::ensureRegistered);
+			pl.pabilo8.ctmb.client.render.CTMBAMTRenderer.INSTANCE.prune();
+		}
 	}
 
 	@Override
@@ -98,6 +102,9 @@ public class ClientProxy extends CommonProxy implements ISelectiveResourceReload
 	{
 		super.init();
 
+		net.minecraftforge.fml.client.registry.ClientRegistry.bindTileEntitySpecialRenderer(TileEntityMultiblock.class,
+				pl.pabilo8.ctmb.client.render.CTMBAMTRenderer.INSTANCE);
+
 		//for handling languages
 		((IReloadableResourceManager)ClientUtils.mc().getResourceManager()).registerReloadListener(this);
 	}
@@ -118,6 +125,8 @@ public class ClientProxy extends CommonProxy implements ISelectiveResourceReload
 	@SubscribeEvent
 	public static void registerModels(ModelRegistryEvent evt)
 	{
+		// Make newly generated blockstates available before Forge loads their variants.
+		RESOURCE_LOADER.autoGenerateFiles();
 		//itemblock models
 		for(ItemBlockCTMBMultiblock item : ITEMBLOCKS)
 		{
@@ -149,6 +158,8 @@ public class ClientProxy extends CommonProxy implements ISelectiveResourceReload
 	@Override
 	public void onResourceManagerReload(@Nonnull IResourceManager resourceManager, Predicate<IResourceType> resourcePredicate)
 	{
+		if(resourcePredicate.test(VanillaResourceType.MODELS)||resourcePredicate.test(VanillaResourceType.TEXTURES))
+			pl.pabilo8.ctmb.client.render.CTMBAMTRenderer.INSTANCE.reload();
 		if(resourcePredicate.test(VanillaResourceType.LANGUAGES))
 		{
 			manualCategories.forEach(CTMBIIManualCategory::reload);

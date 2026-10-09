@@ -1,20 +1,20 @@
 {
-	"bounds": {
-		"full_block": [0, 0, 0, 16, 16, 16]
-	},
-	"name": "example:melter",
-	"master": [1, 0, 0],
-	"positions": {
-		"0,1,2,3,4,5,6,7,8,9,10,11,27,28,29,30,31,32": "full_block"
-	},
-	"poi": {
-		"input": 13,
-		"energy_in": 29,
-		"fluid_out": 21
-	},
-	"rotations": {
-		"input": "clockwise_180",
-		"fluid_out": "clockwise_90",
-		"energy_in": "counterclockwise_90"
-	}
+  "bounds": {
+    "full_block": [0, 0, 0, 16, 16, 16]
+  },
+  "name": "example:melter",
+  "master": [1, 0, 0],
+  "positions": {
+    "0,1,2,3,4,5,6,7,8,9,10,11,27,28,29,30,31,32": "full_block"
+  },
+  "poi": {
+    "input": 13,
+    "energy_in": 29,
+    "fluid_out": 21
+  },
+  "rotations": {
+    "input": "clockwise_180",
+    "fluid_out": "clockwise_90",
+    "energy_in": "counterclockwise_90"
+  }
 }

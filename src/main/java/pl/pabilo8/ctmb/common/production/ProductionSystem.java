@@ -3,9 +3,15 @@ package pl.pabilo8.ctmb.common.production;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import pl.pabilo8.ctmb.common.storage.StorageSystem;
-import java.util.*;
 
-/** Master ownership and named persistence, including definitions removed by a script edit. */
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Master ownership and named persistence, including definitions removed by a script edit.
+ */
 public final class ProductionSystem
 {
 	private final StorageSystem storage;
@@ -40,8 +46,9 @@ public final class ProductionSystem
 	public void restore(NBTTagCompound tag)
 	{
 		orphaned = tag.copy();
-		handlers.forEach((name, p) ->  {
-			p.restore(tag.getCompoundTag(name)); orphaned.removeTag(name);
+		handlers.forEach((name, p) -> {
+			p.restore(tag.getCompoundTag(name));
+			orphaned.removeTag(name);
 		});
 	}
 
@@ -52,7 +59,7 @@ public final class ProductionSystem
 		for(String name : orphaned.getKeySet())
 		{
 			net.minecraft.nbt.NBTTagList lanes = orphaned.getCompoundTag(name).getTagList("lanes", 10);
-			for(int i = 0; i<lanes.tagCount(); i++) ProductionAccess.claimSaved(lanes.getCompoundTagAt(i), items);
+			for(int i = 0; i < lanes.tagCount(); i++) ProductionAccess.claimSaved(lanes.getCompoundTagAt(i), items);
 		}
 		orphaned = new NBTTagCompound();
 		storage.changed();
